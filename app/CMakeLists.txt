@@ -10,6 +10,8 @@ target_sources(app PRIVATE
     src/main.c
     src/config/config.c
     src/shell/shell_cmd.c
+    src/bridge/channel_manager.c
+    src/user/user_channels.c
 )
 
 target_include_directories(app PRIVATE src)

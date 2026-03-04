@@ -11,7 +11,6 @@
 
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
-#include <std_msgs/msg/int32.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
@@ -19,11 +18,21 @@
 
 #include <string.h>
 #include "config/config.h"
+#include "bridge/channel_manager.h"
+#include "user/user_channels.h"
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not CDC ACM UART");
+
+#define RCCHECK(fn) do { \
+	rcl_ret_t rc = fn; \
+	if (rc != RCL_RET_OK) { \
+		LOG_ERR("RCL error %d (line %d)", (int)rc, __LINE__); \
+		while (1) k_sleep(K_MSEC(1000)); \
+	} \
+} while (0)
 
 /* ------------------------------------------------------------------ */
 /*  Hálózati konfig alkalmazása (DHCP vagy statikus)                  */
@@ -77,29 +86,9 @@ static void apply_network_config(void)
 	}
 }
 
-#define RCCHECK(fn) do { \
-	rcl_ret_t rc = fn; \
-	if (rc != RCL_RET_OK) { \
-		LOG_ERR("RCL error %d (line %d)", (int)rc, __LINE__); \
-		while (1) k_sleep(K_MSEC(1000)); \
-	} \
-} while (0)
-
-static rcl_publisher_t publisher;
-static std_msgs__msg__Int32 msg;
-
-static void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
-{
-	ARG_UNUSED(last_call_time);
-	if (timer == NULL) {
-		return;
-	}
-	rcl_ret_t rc = rcl_publish(&publisher, &msg, NULL);
-	if (rc == RCL_RET_OK) {
-		LOG_INF("publish: %d", msg.data);
-	}
-	msg.data++;
-}
+/* ------------------------------------------------------------------ */
+/*  Main                                                               */
+/* ------------------------------------------------------------------ */
 
 int main(void)
 {
@@ -116,7 +105,7 @@ int main(void)
 	}
 
 	/* ------------------------------------------------------------ */
-	/*  Konfig betöltés LittleFS-ből (vagy alapértékek első induláskor) */
+	/*  Konfig betöltés                                              */
 	/* ------------------------------------------------------------ */
 	config_init();
 
@@ -124,11 +113,19 @@ int main(void)
 	LOG_INF("Node: %s%s", g_config.ros.namespace_, g_config.ros.node_name);
 	LOG_INF("Agent: %s:%s", g_config.network.agent_ip, g_config.network.agent_port);
 
-	/* Hálózati konfig alkalmazása (DHCP vagy statikus, config.json alapján) */
+	/* ------------------------------------------------------------ */
+	/*  Csatornák regisztrálása és hardware init                    */
+	/* ------------------------------------------------------------ */
+	user_register_channels();
+	channel_manager_init_channels();
+
+	/* ------------------------------------------------------------ */
+	/*  Hálózati konfig alkalmazása                                 */
+	/* ------------------------------------------------------------ */
 	apply_network_config();
 
 	/* ------------------------------------------------------------ */
-	/*  micro-ROS UDP transport — konfigból veszi az agent adatokat  */
+	/*  micro-ROS UDP transport                                     */
 	/* ------------------------------------------------------------ */
 	memset(&default_params, 0, sizeof(default_params));
 	strncpy(default_params.ip,   g_config.network.agent_ip,   sizeof(default_params.ip)   - 1);
@@ -144,7 +141,7 @@ int main(void)
 	);
 
 	/* ------------------------------------------------------------ */
-	/*  micro-ROS init — node neve konfigból jön                    */
+	/*  micro-ROS init                                              */
 	/* ------------------------------------------------------------ */
 	rcl_allocator_t allocator = rcl_get_default_allocator();
 	rclc_support_t support;
@@ -157,28 +154,33 @@ int main(void)
 		g_config.ros.namespace_,
 		&support));
 
-	RCCHECK(rclc_publisher_init_default(
-		&publisher, &node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-		"counter"));
+	/* ------------------------------------------------------------ */
+	/*  ROS2 publisher / subscriber entitások létrehozása           */
+	/* ------------------------------------------------------------ */
+	channel_manager_create_entities(&node, &allocator);
 
-	rcl_timer_t timer;
-	RCCHECK(rclc_timer_init_default(
-		&timer, &support,
-		RCL_MS_TO_NS(1000),
-		timer_callback));
+	/* ------------------------------------------------------------ */
+	/*  Executor — handle count = subscriber csatornák száma        */
+	/* ------------------------------------------------------------ */
+	int sub_count = channel_manager_sub_count();
+	int handle_count = (sub_count > 0) ? sub_count : 1;
 
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
-	RCCHECK(rclc_executor_add_timer(&executor, &timer));
+	RCCHECK(rclc_executor_init(&executor, &support.context,
+				   handle_count, &allocator));
 
-	LOG_INF("micro-ROS node kész. Topic: %s%s/counter",
-		g_config.ros.namespace_, g_config.ros.node_name);
-	LOG_INF("Shell: 'bridge config show' a beállításokhoz");
+	channel_manager_add_subs_to_executor(&executor);
 
-	msg.data = 0;
+	LOG_INF("Bridge kész. %d csatorna aktív, %d subscriber.",
+		0, sub_count);
+	LOG_INF("Shell: 'bridge config show'");
+
+	/* ------------------------------------------------------------ */
+	/*  Fő loop                                                     */
+	/* ------------------------------------------------------------ */
 	while (1) {
-		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		k_msleep(100);
+		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+		channel_manager_publish();
+		k_msleep(10);
 	}
 }
