@@ -21,19 +21,21 @@ import random
 import string
 import os
 
-# ── ANSI színek ──────────────────────────────────────────────────────────────
-R  = "\033[31m"   # piros
-G  = "\033[32m"   # zöld
-Y  = "\033[33m"   # sárga
-B  = "\033[34m"   # kék
-M  = "\033[35m"   # magenta
-C  = "\033[36m"   # cián
-W  = "\033[37m"   # fehér
-DIM = "\033[2m"
-RST = "\033[0m"
+# ── ANSI colors ──────────────────────────────────────────────────────────────
+R    = "\033[31m"
+G    = "\033[32m"
+Y    = "\033[33m"
+B    = "\033[34m"
+M    = "\033[35m"
+C    = "\033[36m"
+W    = "\033[37m"
+DIM  = "\033[2m"
+RST  = "\033[0m"
 BOLD = "\033[1m"
 
-# ── Globális eredmény tárolás ─────────────────────────────────────────────────
+COL = 60   # fixed width for test name column
+
+# ── Result store ──────────────────────────────────────────────────────────────
 results = []  # (id, name, category, status, note)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -78,55 +80,67 @@ def drain(ser, duration=1.0):
 
 test_counter = [0]
 
+def _badge(status):
+    """Return a fixed-width colored status badge."""
+    badges = {
+        "PASS":  f"{G} PASS {RST}",
+        "FAIL":  f"{R} FAIL {RST}",
+        "ERROR": f"{R} ERR  {RST}",
+        "SKIP":  f"{Y} SKIP {RST}",
+    }
+    return badges.get(status, f" {status} ")
+
 def section(title):
-    print(f"\n{BOLD}{B}{'─'*70}{RST}")
-    print(f"{BOLD}{B}  {title}{RST}")
-    print(f"{BOLD}{B}{'─'*70}{RST}")
+    """Print a section header."""
+    print(f"\n{BOLD}{B}┌{'─'*68}┐{RST}")
+    print(f"{BOLD}{B}│  {title:<66}│{RST}")
+    print(f"{BOLD}{B}└{'─'*68}┘{RST}")
 
 def auto_test(tid, name, category, func, *args, **kwargs):
+    """Run an automated test and print a single result line."""
     test_counter[0] += 1
-    print(f"\n{DIM}[{tid}]{RST} {BOLD}{name}{RST}  {DIM}({category}){RST}")
+    label = f"[{tid}] {name}"
+    print(f"  {DIM}{label:<{COL}}{RST}", end="", flush=True)
     try:
         ok, note = func(*args, **kwargs)
         status = "PASS" if ok else "FAIL"
-        color = G if ok else R
-        print(f"  {color}{'✓ PASS' if ok else '✗ FAIL'}{RST}  {DIM}{note}{RST}")
+        note_str = f"  {DIM}{note[:40]}{RST}" if note else ""
+        print(f"{_badge(status)}{note_str}")
         results.append((tid, name, category, status, note))
         return ok
     except Exception as e:
-        print(f"  {R}✗ ERROR{RST}  {e}")
+        print(f"{_badge('ERROR')}  {DIM}{str(e)[:40]}{RST}")
         results.append((tid, name, category, "ERROR", str(e)))
         return False
 
 def manual_test(tid, name, category, instructions, expected):
-    """Interaktív manuális teszt — megáll és vár."""
+    """Interactive manual test — prints steps, waits for user input."""
     test_counter[0] += 1
-    print(f"\n{DIM}[{tid}]{RST} {BOLD}{M}[MANUÁLIS]{RST} {BOLD}{name}{RST}  {DIM}({category}){RST}")
-    print(f"\n  {Y}Lépések:{RST}")
+    print(f"\n  {BOLD}{M}[MANUAL]{RST} {BOLD}[{tid}] {name}{RST}  {DIM}({category}){RST}")
+    print(f"  {'─'*66}")
     for i, step in enumerate(instructions, 1):
-        print(f"    {i}. {step}")
-    print(f"\n  {C}Elvárt eredmény:{RST} {expected}")
-    print(f"\n  {DIM}ENTER = sikeres | 'f' = sikertelen | 's' = skip{RST}")
+        print(f"  {Y}{i}.{RST} {step}")
+    print(f"  {DIM}Expected:{RST} {C}{expected}{RST}")
+    print(f"  {DIM}─────────────────────────────────────────────────────────{RST}")
+    print(f"  {DIM}ENTER=pass  f=fail  s=skip{RST}  ", end="", flush=True)
     try:
-        ans = input("  > ").strip().lower()
+        ans = input().strip().lower()
     except (KeyboardInterrupt, EOFError):
         ans = "s"
     if ans == "f":
-        note = input("  Rövid megjegyzés (mi ment rosszul?): ").strip()
-        print(f"  {R}✗ FAIL{RST}  {note}")
+        print(f"  Note (what went wrong?): ", end="", flush=True)
+        note = input().strip()
+        print(f"  {_badge('FAIL')}  {DIM}{note}{RST}")
         results.append((tid, name, category, "FAIL", note))
         return False
     elif ans == "s":
-        print(f"  {Y}⊘ SKIP{RST}")
-        results.append((tid, name, category, "SKIP", "kihagyva"))
+        print(f"  {_badge('SKIP')}")
+        results.append((tid, name, category, "SKIP", "skipped"))
         return None
     else:
-        print(f"  {G}✓ PASS{RST}")
+        print(f"  {_badge('PASS')}")
         results.append((tid, name, category, "PASS", ""))
         return True
-
-def info(msg):
-    print(f"  {DIM}ℹ  {msg}{RST}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  T01–T05  Alap kommunikáció
@@ -325,44 +339,41 @@ def t17_concurrent_usb_serial(ser):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def print_summary():
-    print(f"\n\n{BOLD}{W}{'═'*70}{RST}")
-    print(f"{BOLD}{W}  STRESSZTESZT ÖSSZEFOGLALÓ{RST}")
-    print(f"{BOLD}{W}{'═'*70}{RST}\n")
-
-    categories = {}
-    for tid, name, cat, status, note in results:
-        categories.setdefault(cat, []).append((tid, name, status, note))
-
     total_pass = sum(1 for *_, s, _ in results if s == "PASS")
     total_fail = sum(1 for *_, s, _ in results if s == "FAIL")
     total_skip = sum(1 for *_, s, _ in results if s == "SKIP")
     total_err  = sum(1 for *_, s, _ in results if s == "ERROR")
     total      = len(results)
+    ran        = total - total_skip
+    rate       = (total_pass / ran * 100) if ran > 0 else 0
+    rate_color = G if rate >= 90 else (Y if rate >= 70 else R)
+
+    print(f"\n{BOLD}{'═'*70}{RST}")
+    print(f"{BOLD}  STRESS TEST RESULTS{RST}")
+    print(f"{'═'*70}")
+
+    # Group by category
+    categories = {}
+    for tid, name, cat, status, note in results:
+        categories.setdefault(cat, []).append((tid, name, status, note))
 
     for cat, items in sorted(categories.items()):
-        print(f"  {BOLD}{C}{cat}{RST}")
+        print(f"\n  {BOLD}{C}{cat}{RST}")
+        print(f"  {'─'*66}")
         for tid, name, status, note in items:
-            if status == "PASS":
-                icon, color = "✓", G
-            elif status == "FAIL":
-                icon, color = "✗", R
-            elif status == "ERROR":
-                icon, color = "!", R
-            else:
-                icon, color = "⊘", Y
-            note_str = f"  {DIM}{note[:60]}{RST}" if note else ""
-            print(f"    {color}{icon}{RST} [{tid}] {name}{note_str}")
-        print()
+            label = f"[{tid}] {name}"
+            note_str = f"  {DIM}{note[:36]}{RST}" if note else ""
+            print(f"  {label:<{COL}}{_badge(status)}{note_str}")
 
-    print(f"{'─'*70}")
-    print(f"  Összesen: {total}  |  "
-          f"{G}PASS: {total_pass}{RST}  "
-          f"{R}FAIL: {total_fail}{RST}  "
-          f"{Y}SKIP: {total_skip}{RST}  "
-          f"{R}ERROR: {total_err}{RST}")
-    rate = (total_pass / (total - total_skip) * 100) if (total - total_skip) > 0 else 0
-    color = G if rate >= 90 else (Y if rate >= 70 else R)
-    print(f"  {color}Sikerességi arány: {rate:.1f}%{RST}")
+    print(f"\n{'─'*70}")
+    print(
+        f"  Total: {total}   "
+        f"{G}PASS: {total_pass}{RST}   "
+        f"{R}FAIL: {total_fail}{RST}   "
+        f"{Y}SKIP: {total_skip}{RST}   "
+        f"{R}ERROR: {total_err}{RST}"
+    )
+    print(f"  {rate_color}Success rate: {rate:.1f}%{RST}  ({total_pass}/{ran} tests run)")
     print(f"{'═'*70}\n")
 
     # JSON mentés
@@ -393,8 +404,8 @@ def main():
                         help="Manuális tesztek kihagyása (CI/CD mód)")
     args = parser.parse_args()
 
-    print(f"\n{BOLD}{W}W6100 EVB Pico — Komplex Stresszteszt{RST}")
-    print(f"{DIM}Indítás: {time.strftime('%Y-%m-%d %H:%M:%S')}{RST}\n")
+    print(f"\n{BOLD}W6100 EVB Pico  —  Stress Test Suite{RST}")
+    print(f"{DIM}Started: {time.strftime('%Y-%m-%d %H:%M:%S')}{RST}")
 
     # ── Port keresés ──────────────────────────────────────────────────────────
     port = args.port or find_port()
@@ -410,293 +421,198 @@ def main():
         sys.exit(1)
 
     # DTR + boot wait
-    print(f"{DIM}Indulási idő megvárása (3s)...{RST}")
+    print(f"{DIM}Waiting for boot (3s)...{RST}")
     time.sleep(3)
     drain(ser, 2.0)
 
     skip = args.skip_manual
 
     # ══════════════════════════════════════════════════════════════════════════
-    section("1. ALAP KOMMUNIKÁCIÓ")
+    section("1 / 4   BASIC COMMUNICATION  (automated)")
     # ══════════════════════════════════════════════════════════════════════════
-    auto_test("T01", "Shell életjel",              "Kommunikáció",  t01_shell_alive,     ser)
-    auto_test("T02", "Config roundtrip",            "Kommunikáció",  t02_config_roundtrip, ser)
-    auto_test("T03", "Összes kulcs set/show",       "Kommunikáció",  t03_config_all_keys,  ser)
-    auto_test("T04", "Save → Load perzisztencia",   "Kommunikáció",  t04_config_save_load, ser)
-    auto_test("T05", "Config reset alapértékre",    "Kommunikáció",  t05_config_reset,     ser)
-
-    # ══════════════════════════════════════════════════════════════════════════
-    section("2. HATÁRESETEK ÉS ROBUSZTUSSÁG")
-    # ══════════════════════════════════════════════════════════════════════════
-    auto_test("T06", "Üres érték set",              "Robusztusság",  t06_empty_value,     ser)
-    auto_test("T07", "Ismeretlen kulcs",            "Robusztusság",  t07_unknown_key,     ser)
-    auto_test("T08", "200 karakter hosszú érték",   "Robusztusság",  t08_very_long_value, ser)
-    auto_test("T09", "Speciális karakterek",        "Robusztusság",  t09_special_chars,   ser)
-    auto_test("T10", "50 gyors parancs (rapid fire)","Robusztusság", t10_rapid_fire,      ser)
+    auto_test("T01", "Shell alive",                 "Communication", t01_shell_alive,      ser)
+    auto_test("T02", "Config roundtrip",            "Communication", t02_config_roundtrip, ser)
+    auto_test("T03", "All keys set/show",           "Communication", t03_config_all_keys,  ser)
+    auto_test("T04", "Save → Load persistence",     "Communication", t04_config_save_load, ser)
+    auto_test("T05", "Config reset to defaults",    "Communication", t05_config_reset,     ser)
 
     # ══════════════════════════════════════════════════════════════════════════
-    section("3. CONFIG / FLASH INTEGRITÁS")
+    section("2 / 4   EDGE CASES & ROBUSTNESS  (automated)")
     # ══════════════════════════════════════════════════════════════════════════
-    auto_test("T11", "Mentett JSON mezők teljesek",  "Flash/Config", t11_save_verify_json, ser)
-    auto_test("T12", "20× ismételt mentés",          "Flash/Config", t12_repeated_save,    ser)
-    auto_test("T13", "DHCP on/off toggle (5×)",      "Flash/Config", t13_dhcp_toggle,      ser)
-    auto_test("T14", "Port értékek határon",         "Flash/Config", t14_port_boundary,    ser)
-    auto_test("T15", "Érvénytelen IP formátumok",    "Flash/Config", t15_ip_format,        ser)
-
-    # ══════════════════════════════════════════════════════════════════════════
-    section("4. TELJESÍTMÉNY / TIMING")
-    # ══════════════════════════════════════════════════════════════════════════
-    auto_test("T16", "Shell válaszidő (10 minta)",   "Teljesítmény", t16_shell_latency,        ser)
-    auto_test("T17", "100 burst parancs stabilitás", "Teljesítmény", t17_concurrent_usb_serial, ser)
+    auto_test("T06", "Empty value set",             "Robustness",    t06_empty_value,      ser)
+    auto_test("T07", "Unknown key",                 "Robustness",    t07_unknown_key,      ser)
+    auto_test("T08", "200-char value (overflow)",   "Robustness",    t08_very_long_value,  ser)
+    auto_test("T09", "Special characters",          "Robustness",    t09_special_chars,    ser)
+    auto_test("T10", "50 rapid-fire commands",      "Robustness",    t10_rapid_fire,       ser)
 
     # ══════════════════════════════════════════════════════════════════════════
-    section("5. HÁLÓZATI STRESSZ — MANUÁLIS")
+    section("3 / 4   FLASH INTEGRITY & PERFORMANCE  (automated)")
     # ══════════════════════════════════════════════════════════════════════════
+    auto_test("T11", "Saved JSON fields complete",  "Flash/Config",  t11_save_verify_json,      ser)
+    auto_test("T12", "20× repeated save",           "Flash/Config",  t12_repeated_save,         ser)
+    auto_test("T13", "DHCP on/off toggle (5×)",     "Flash/Config",  t13_dhcp_toggle,           ser)
+    auto_test("T14", "Port boundary values",        "Flash/Config",  t14_port_boundary,         ser)
+    auto_test("T15", "Invalid IP formats",          "Flash/Config",  t15_ip_format,             ser)
+    auto_test("T16", "Shell latency (10 samples)",  "Performance",   t16_shell_latency,         ser)
+    auto_test("T17", "100-command burst stability", "Performance",   t17_concurrent_usb_serial, ser)
 
-    if not skip:
-        manual_test("M01", "Ethernet kábel kihúzás — agent elvesztés",
-            "Hálózat/Manuális",
-            [
-                "Győződj meg, hogy az agent fut (docker: ros2 run micro_ros_agent ...)",
-                "Nézd a soros monitort: LED égjen, 'session aktív' legyen a logban",
-                "Húzd ki az Ethernet kábelt",
-                "Várd meg: LED aludjon ki, log: 'Agent kapcsolat megszakadt'",
-                "Dugd vissza a kábelt",
-                "Várd meg: LED visszagyúljon (max ~20s: link UP + DHCP/statikus + agent ping)",
-            ],
-            "LED: ki → be. Log: disconnect → reconnect. Nincs WDT reboot."
-        )
-
-        manual_test("M02", "Agent leállítás, majd újraindítás",
-            "Hálózat/Manuális",
-            [
-                "Session legyen aktív (LED ég)",
-                "A ROS2 gépen állítsd le az agentet (Ctrl+C)",
-                "Figyeld: LED alszik, log: 'Agent keresése...'",
-                "Indítsd újra az agentet",
-                "Figyeld: LED visszagyúl, session újraindul",
-            ],
-            "Automatikus újracsatlakozás agent nélkül is. Nincs crash, nincs WDT."
-        )
-
-        manual_test("M03", "Gyors agent restart (5× egymás után)",
-            "Hálózat/Manuális",
-            [
-                "5× egymás után: stop agent → 2s várakozás → start agent",
-                "Minden ciklusban figyeld a LED-et és a logot",
-            ],
-            "Minden ciklusban reconnect. Nincs memória-szivárgás, nincs crash."
-        )
-
-        manual_test("M04", "Ethernet kábel csere futás közben",
-            "Hálózat/Manuális",
-            [
-                "Session aktív",
-                "Cseréld ki az Ethernet kábelt egy másik (de működő) kábelre",
-                "Figyeld: rövid disconnect → reconnect",
-            ],
-            "Reconnect ≤30s. LED visszagyúl."
-        )
-
-        manual_test("M05", "Hálózati switch kikapcsolás",
-            "Hálózat/Manuális",
-            [
-                "Session aktív (LED ég)",
-                "Kapcsold ki a switcht / routert",
-                "Várd meg a disconnect detektálást (log: 'Agent keresése')",
-                "Kapcsold vissza a switcht",
-                "Várd meg az automatikus reconnectet",
-            ],
-            "Reconnect ≤45s a switch boot idejével együtt."
-        )
+    if skip:
+        print(f"\n  {Y}Manual tests skipped (--skip-manual){RST}")
+        ser.close()
+        print_summary()
+        return
 
     # ══════════════════════════════════════════════════════════════════════════
-    section("6. TÁPELLÁTÁS STRESSZ — MANUÁLIS")
+    section("4 / 4   MANUAL TESTS  (you perform — script waits)")
     # ══════════════════════════════════════════════════════════════════════════
+    print(f"  {DIM}ENTER=pass  f=fail  s=skip{RST}\n")
 
-    if not skip:
-        manual_test("M06", "Hideg újraindítás (power cycle)",
-            "Tápellátás/Manuális",
-            [
-                "Húzd ki a táp USB-t (NEM a konzol USB-t)",
-                "Várd meg: 3 másodperc",
-                "Dugd vissza",
-                "Figyeld a bootot: watchdog init, config load, network, agent keresés",
-            ],
-            "Normális boot ≤15s. Config megmarad flash-ben. LED végül visszagyúl."
-        )
+    # ── Network ───────────────────────────────────────────────────────────────
+    manual_test("M01", "Ethernet cable pull — agent loss", "Network", [
+        "Confirm agent is running  (ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888)",
+        "LED should be ON (session active)",
+        "Pull the Ethernet cable",
+        "Wait: LED turns OFF, log shows 'Agent connection lost'",
+        "Re-plug the cable",
+        "Wait: LED turns ON again  (max ~20s: link UP + IP + agent ping)",
+    ], "LED: off → on.  Log: disconnect → reconnect.  No WDT reboot.")
 
-        manual_test("M07", "Power cut config save közben",
-            "Tápellátás/Manuális",
-            [
-                "Soros konzolon: 'bridge config set ros.node_name crash_test'",
-                "Azonnal húzd ki a táp USB-t (lehetőleg a 'bridge config save' alatt)",
-                "Dugd vissza, boot",
-                "Ellenőrizd: 'bridge config show' — mi az értéke a node_name-nek?",
-            ],
-            "Vagy az új érték, vagy az előző — de NEM korrupt JSON. Boot sikeres."
-        )
+    manual_test("M02", "Agent stop and restart", "Network", [
+        "Session active (LED ON)",
+        "On ROS2 host: stop the agent  (Ctrl+C)",
+        "Watch: LED turns off, log shows 'Searching for agent'",
+        "Restart the agent",
+        "Watch: LED turns on, session re-established",
+    ], "Automatic reconnect without crash or WDT trigger.")
 
-        manual_test("M08", "10× gyors power cycle",
-            "Tápellátás/Manuális",
-            [
-                "10× gyorsan: táp ki → 1s → táp be → boot bevárása (LED ég) → repeat",
-                "Utolsó boot után: bridge config show",
-            ],
-            "Config intakt, boot mindig sikeres, nincs LittleFS korrupció."
-        )
+    manual_test("M03", "Rapid agent restart  (5× in a row)", "Network", [
+        "Repeat 5 times: stop agent → wait 2s → start agent",
+        "Watch LED and log on every cycle",
+    ], "Reconnect on every cycle.  No memory leak, no crash.")
 
-        manual_test("M09", "Reset gomb megnyomása futás közben",
-            "Tápellátás/Manuális",
-            [
-                "Session aktív (LED ég, ROS2 topic aktív)",
-                "Nyomd meg a RESET gombot",
-                "Figyeld a bootot és a reconnectet",
-            ],
-            "Boot ≤15s. Automatikus reconnect. Config megmarad."
-        )
+    manual_test("M04", "Hot-swap Ethernet cable", "Network", [
+        "Session active",
+        "Swap Ethernet cable with a different (working) cable",
+        "Watch: brief disconnect → reconnect",
+    ], "Reconnect within 30s.  LED turns on again.")
 
-        manual_test("M10", "BOOTSEL gomb véletlenszerű megnyomása",
-            "Tápellátás/Manuális",
-            [
-                "Session aktív",
-                "Nyomd meg a BOOTSEL gombot (NE tartsd nyomva!)",
-                "Figyeld: a firmware NE lépjen BOOTSEL módba rövid megnyomásra",
-            ],
-            "Nincs hatása rövid megnyomásra. Firmware fut tovább."
-        )
+    manual_test("M05", "Network switch power off", "Network", [
+        "Session active (LED ON)",
+        "Power off the switch / router",
+        "Wait for disconnect  (log: 'Searching for agent')",
+        "Power the switch back on",
+        "Wait for automatic reconnect",
+    ], "Reconnect within 45s (including switch boot time).")
 
-    # ══════════════════════════════════════════════════════════════════════════
-    section("7. USB KONZOL STRESSZ — MANUÁLIS")
-    # ══════════════════════════════════════════════════════════════════════════
+    # ── Power ─────────────────────────────────────────────────────────────────
+    manual_test("M06", "Cold power cycle", "Power", [
+        "Unplug the power USB  (NOT the console USB)",
+        "Wait 3 seconds",
+        "Re-plug",
+        "Watch boot: watchdog init, config load, network, agent search",
+    ], "Clean boot within 15s.  Config preserved.  LED turns on.")
 
-    if not skip:
-        manual_test("M11", "USB konzol lecsatlakoztatás futás közben",
-            "USB/Manuális",
-            [
-                "Session aktív (LED ég)",
-                "Húzd ki a konzol USB kábelt",
-                "Várd meg: 5 másodperc (DTR timeout lejár)",
-                "Figyeld: LED marad ég? (autonóm mód)",
-                "Dugd vissza a konzolt",
-                "bridge config show — válaszol?",
-            ],
-            "LED nem alszik ki USB lecsatkor. Konzol visszadugás után shell él."
-        )
+    manual_test("M07", "Power cut during config save", "Power", [
+        "On serial console: type  bridge config set ros.node_name crash_test",
+        "Immediately unplug power during  bridge config save",
+        "Re-plug, boot",
+        "Check:  bridge config show — what is node_name?",
+    ], "Either new or previous value — NOT corrupted JSON.  Boot succeeds.")
 
-        manual_test("M12", "USB konzol nélküli boot (autonóm mód)",
-            "USB/Manuális",
-            [
-                "Húzd ki a konzol USB-t",
-                "Végezz power cycle-t",
-                "Várd meg: 5 másodperc (DTR timeout)",
-                "Figyeld: LED kell gyúljon (agent csatlakozás nélkül autonóm mode)",
-                "Csatlakoztasd vissza a konzolt",
-            ],
-            "Boot DTR nélkül sikeres. LED viselkedés normális. Shell él visszadugás után."
-        )
+    manual_test("M08", "10× rapid power cycle", "Power", [
+        "Repeat 10 times: power off → 1s → power on → wait for LED → repeat",
+        "After last boot: bridge config show",
+    ], "Config intact.  Every boot succeeds.  No LittleFS corruption.")
 
-        manual_test("M13", "Monitor lecsatlakoztatás config mentés közben",
-            "USB/Manuális",
-            [
-                "Indíts: 'bridge config save' (soros konzolon)",
-                "Azonnal húzd ki a konzol USB-t",
-                "Dugd vissza, ellenőrizd: bridge config show",
-            ],
-            "Nincs flash korrupció. Config valid marad."
-        )
+    manual_test("M09", "RESET button during operation", "Power", [
+        "Session active (LED ON, ROS2 topic streaming)",
+        "Press the RESET button",
+        "Watch boot and reconnect",
+    ], "Boot within 15s.  Automatic reconnect.  Config preserved.")
 
-    # ══════════════════════════════════════════════════════════════════════════
-    section("8. HÁLÓZATI KONFIG VÁLTÁS — MANUÁLIS")
-    # ══════════════════════════════════════════════════════════════════════════
+    manual_test("M10", "Short BOOTSEL button press", "Power", [
+        "Session active",
+        "Press BOOTSEL briefly  (do NOT hold)",
+        "Confirm: firmware does NOT enter BOOTSEL mode on a short press",
+    ], "No effect from short press.  Firmware continues running.")
 
-    if not skip:
-        manual_test("M14", "Statikus IP → DHCP váltás + reboot",
-            "Konfig/Manuális",
-            [
-                "bridge config set network.dhcp true",
-                "bridge config save",
-                "bridge reboot",
-                "Figyeld: DHCP kiosztás logban",
-                "Ellenőrizd: ping a Picóra (DHCP által kiosztott IP)",
-            ],
-            "DHCP IP kiosztva. Ping sikeres. ROS2 agent csatlakozik."
-        )
+    # ── USB Console ───────────────────────────────────────────────────────────
+    manual_test("M11", "USB console unplug during operation", "USB Console", [
+        "Session active (LED ON)",
+        "Unplug the console USB cable",
+        "Wait 5 seconds  (DTR timeout expires)",
+        "Watch: does LED stay ON?  (autonomous mode)",
+        "Re-plug console",
+        "Run: bridge config show — does shell respond?",
+    ], "LED stays ON after USB unplug.  Shell responds after re-plug.")
 
-        manual_test("M15", "DHCP → Statikus IP váltás + reboot",
-            "Konfig/Manuális",
-            [
-                "bridge config set network.dhcp false",
-                "bridge config set network.ip 192.168.68.114",
-                "bridge config save",
-                "bridge reboot",
-                "Ellenőrizd: ping 192.168.68.114",
-            ],
-            "Statikus IP aktív. Ping sikeres. LED visszagyúl."
-        )
+    manual_test("M12", "Boot without USB console  (autonomous mode)", "USB Console", [
+        "Unplug the console USB",
+        "Power cycle the board",
+        "Wait 5 seconds  (DTR timeout)",
+        "Watch: LED should turn ON  (agent connect in autonomous mode)",
+        "Re-plug console",
+    ], "Boot succeeds without DTR.  LED behavior normal.  Shell alive after re-plug.")
 
-        manual_test("M16", "Agent IP megváltoztatása futás közben",
-            "Konfig/Manuális",
-            [
-                "bridge config set network.agent_ip 192.168.68.125",
-                "bridge config save",
-                "bridge reboot",
-                "Figyeld: az agent az új IP-n elérhető-e?",
-            ],
-            "Reboot után az új agent IP-vel csatlakozik."
-        )
+    manual_test("M13", "Console unplug during config save", "USB Console", [
+        "Send:  bridge config save  on serial console",
+        "Immediately unplug the console USB",
+        "Re-plug, check:  bridge config show",
+    ], "No flash corruption.  Config remains valid.")
 
-    # ══════════════════════════════════════════════════════════════════════════
-    section("9. HOSSZÚ FUTÁS — MANUÁLIS")
-    # ══════════════════════════════════════════════════════════════════════════
+    # ── Config Switching ──────────────────────────────────────────────────────
+    manual_test("M14", "Static IP → DHCP switch + reboot", "Config Switch", [
+        "bridge config set network.dhcp true",
+        "bridge config save",
+        "bridge reboot",
+        "Watch: DHCP lease in log",
+        "Verify: ping Pico at DHCP-assigned IP",
+    ], "DHCP IP assigned.  Ping OK.  ROS2 agent connects.")
 
-    if not skip:
-        manual_test("M17", "15 perces folyamatos futás stabilitás",
-            "Hosszú futás/Manuális",
-            [
-                "Indítsd el a ROS2 agentet",
-                "Hagyd futni 15 percig (LED égjen végig)",
-                "ROS2 gépen: ros2 topic echo <topic> — folyamatos adat?",
-                "Utána: bridge config show — shell válaszol?",
-            ],
-            "LED végig ég. Topic folyamatos. Shell válaszol. Nincs WDT reboot."
-        )
+    manual_test("M15", "DHCP → Static IP switch + reboot", "Config Switch", [
+        "bridge config set network.dhcp false",
+        "bridge config set network.ip 192.168.68.114",
+        "bridge config save",
+        "bridge reboot",
+        "Verify: ping 192.168.68.114",
+    ], "Static IP active.  Ping OK.  LED turns on.")
 
-        manual_test("M18", "Ethernet kábel rázás / gyenge kontaktus",
-            "Hosszú futás/Manuális",
-            [
-                "Session aktív",
-                "Rázkódtasd/hajlítsd az Ethernet kábelt 30 másodpercig",
-                "Adj meg intermittáló kontaktust (részlegesen húzd ki és tedd vissza)",
-                "Figyeld a logot és a LED-et",
-            ],
-            "Átmeneti disconnect → auto reconnect. Nincs crash. Nincs WDT trigger."
-        )
+    manual_test("M16", "Change agent IP + reboot", "Config Switch", [
+        "bridge config set network.agent_ip 192.168.68.125",
+        "bridge config save",
+        "bridge reboot",
+        "Confirm: agent reachable at new IP?",
+    ], "After reboot: connects to new agent IP.")
 
-        manual_test("M19", "Hőmérséklet stressz szimulálás",
-            "Hosszú futás/Manuális",
-            [
-                "Session aktív",
-                "Fedd be a boardot egy kis dobozzal (hő felhalmozódás, ~5 perc)",
-                "Figyeld: folyamatos működés",
-                "Vedd le a borítást (hirtelen hűlés)",
-            ],
-            "Folyamatos működés hőmérséklet-váltás alatt. Nincs crash."
-        )
+    # ── Long-run & Environmental ──────────────────────────────────────────────
+    manual_test("M17", "15-minute continuous stability", "Long-run", [
+        "Start ROS2 agent",
+        "Let it run for 15 minutes  (LED ON the whole time)",
+        "On ROS2 host:  ros2 topic echo <topic>  — continuous data?",
+        "After 15 min:  bridge config show  — shell responds?",
+    ], "LED stays ON.  Topic continuous.  Shell responds.  No WDT reboot.")
 
-        manual_test("M20", "Vibráció teszt",
-            "Hosszú futás/Manuális",
-            [
-                "Session aktív",
-                "Tedd a boardot egy rezgő felületre (pl. hangszóró, motor) 1 percig",
-                "Figyeld: LED, log, topic adat",
-            ],
-            "Folyamatos működés. Nincs disconnect a vibráció miatt."
-        )
+    manual_test("M18", "Ethernet cable wiggling / intermittent contact", "Long-run", [
+        "Session active",
+        "Shake / bend the Ethernet cable for 30 seconds",
+        "Simulate intermittent contact  (partially pull and re-insert)",
+        "Watch log and LED",
+    ], "Transient disconnect → auto reconnect.  No crash.  No WDT trigger.")
 
-    # ══════════════════════════════════════════════════════════════════════════
-    #  ÖSSZEFOGLALÓ
-    # ══════════════════════════════════════════════════════════════════════════
+    manual_test("M19", "Temperature stress simulation", "Long-run", [
+        "Session active",
+        "Cover board with a small box  (heat accumulation, ~5 minutes)",
+        "Confirm: continuous operation",
+        "Remove cover  (sudden cooling)",
+    ], "Continuous operation through temperature change.  No crash.")
+
+    manual_test("M20", "Vibration test", "Long-run", [
+        "Session active",
+        "Place board on a vibrating surface  (speaker, motor) for 1 minute",
+        "Watch: LED, log, topic data",
+    ], "Continuous operation.  No disconnect due to vibration.")
+
+    # ── Done ──────────────────────────────────────────────────────────────────
     ser.close()
     print_summary()
 
