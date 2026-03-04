@@ -242,15 +242,17 @@ def t09_special_chars(ser):
     return len(failed) == 0, f"sikertelen: {failed}" if failed else "mind OK"
 
 def t10_rapid_fire(ser):
-    """50 parancs gyors egymás után — shell nem fagy."""
+    """50 rapid commands — shell must survive."""
     for i in range(50):
         ser.write(f"bridge config set ros.node_name node_{i}\r\n".encode())
         time.sleep(0.04)
-    time.sleep(1.5)
-    ser.reset_input_buffer()
-    alive, _ = send_cmd(ser, "bridge config show", wait=1.5, expect="agent_ip")
+        # Drain output every 10 commands to prevent OS-level buffer stalls
+        if i % 10 == 9:
+            ser.read(ser.in_waiting or 1)
+    drain(ser, 3.0)  # wait for shell to finish all pending output
+    alive, _ = send_cmd(ser, "bridge config show", wait=3.0, expect="agent_ip")
     send_cmd(ser, "bridge config set ros.node_name pico_bridge", wait=0.4)
-    return alive, f"50 gyors parancs után shell él: {alive}"
+    return alive, f"shell alive after 50 rapid commands: {alive}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  T11–T15  Config JSON integritás
