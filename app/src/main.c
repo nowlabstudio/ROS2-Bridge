@@ -2,6 +2,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/net/net_if.h>
 #include <zephyr/net/net_core.h>
 #include <zephyr/net/net_ip.h>
@@ -22,6 +23,18 @@
 #include "user/user_channels.h"
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
+
+/* ------------------------------------------------------------------ */
+/*  Státusz LED — GP25 (beépített LED)                                 */
+/* ------------------------------------------------------------------ */
+
+static const struct gpio_dt_spec status_led =
+	GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
+
+static void led_set(bool on)
+{
+	gpio_pin_set_dt(&status_led, on ? 1 : 0);
+}
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not CDC ACM UART");
@@ -94,6 +107,10 @@ int main(void)
 {
 	const struct device *console = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 	uint32_t dtr = 0;
+
+	/* LED init */
+	gpio_pin_configure_dt(&status_led, GPIO_OUTPUT_INACTIVE);
+	led_set(false);
 
 	/* USB CDC ACM init + DTR várás */
 	if (usb_enable(NULL)) {
@@ -178,9 +195,28 @@ int main(void)
 	/* ------------------------------------------------------------ */
 	/*  Fő loop                                                     */
 	/* ------------------------------------------------------------ */
+	int64_t last_ping_ms = 0;
+	bool    agent_ok     = false;
+
 	while (1) {
 		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
 		channel_manager_publish();
+
+		/* Agent ping — 1 másodpercenként */
+		int64_t now = k_uptime_get();
+
+		if ((now - last_ping_ms) >= 1000) {
+			last_ping_ms = now;
+			bool connected = (rmw_uros_ping_agent(100, 1) == RMW_RET_OK);
+
+			if (connected != agent_ok) {
+				agent_ok = connected;
+				led_set(agent_ok);
+				LOG_INF("ROS2 agent: %s",
+					agent_ok ? "KAPCSOLÓDVA" : "LEKAPCSOLÓDVA");
+			}
+		}
+
 		k_msleep(10);
 	}
 }

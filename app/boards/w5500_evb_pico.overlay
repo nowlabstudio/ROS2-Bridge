@@ -3,6 +3,18 @@
 		zephyr,console = &cdc_acm_uart0;
 		zephyr,shell-uart = &cdc_acm_uart0;
 	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led_0 {
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+			label = "User LED (GP25)";
+		};
+	};
+
+	aliases {
+		led0 = &user_led;
+	};
 };
 
 &zephyr_udc0 {
