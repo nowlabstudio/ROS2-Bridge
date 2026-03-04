@@ -162,6 +162,8 @@ int main(void)
 	memset(&default_params, 0, sizeof(default_params));
 	strncpy(default_params.ip,   g_config.network.agent_ip,   sizeof(default_params.ip)   - 1);
 	strncpy(default_params.port, g_config.network.agent_port, sizeof(default_params.port) - 1);
+	default_params.ip[sizeof(default_params.ip)   - 1] = '\0';
+	default_params.port[sizeof(default_params.port) - 1] = '\0';
 
 	rmw_uros_set_custom_transport(
 		MICRO_ROS_FRAMING_REQUIRED,
@@ -189,7 +191,9 @@ int main(void)
 	/* ------------------------------------------------------------ */
 	/*  ROS2 publisher / subscriber entitások létrehozása           */
 	/* ------------------------------------------------------------ */
-	channel_manager_create_entities(&node, &allocator);
+	if (channel_manager_create_entities(&node, &allocator) < 0) {
+		LOG_ERR("Channel entitás létrehozási hiba");
+	}
 
 	/* ------------------------------------------------------------ */
 	/*  Executor — handle count = subscriber csatornák száma        */
@@ -203,8 +207,8 @@ int main(void)
 
 	channel_manager_add_subs_to_executor(&executor);
 
-	LOG_INF("Bridge kész. %d csatorna aktív, %d subscriber.",
-		0, sub_count);
+	LOG_INF("Bridge kész. %d csatorna regisztrálva, %d subscriber.",
+		channel_manager_count(), sub_count);
 	LOG_INF("Shell: 'bridge config show'");
 
 	/* ------------------------------------------------------------ */

@@ -57,6 +57,9 @@ static const rosidl_message_type_support_t *get_type_support(msg_type_t t)
 
 static void *get_sub_msg(int idx)
 {
+	if (idx < 0 || idx >= CHANNEL_MAX || !channels[idx]) {
+		return &msg_sub_float32[0];
+	}
 	switch (channels[idx]->msg_type) {
 	case MSG_BOOL:    return &msg_sub_bool[idx];
 	case MSG_INT32:   return &msg_sub_int32[idx];
@@ -79,7 +82,7 @@ static void sub_callback(const void *msg_in, void *context)
 
 	const channel_t *ch = channels[idx];
 
-	if (!ch->write) {
+	if (!ch || !ch->write) {
 		return;
 	}
 
@@ -119,9 +122,17 @@ int channel_register(const channel_t *ch)
 	return 0;
 }
 
+int channel_manager_count(void)
+{
+	return channel_count;
+}
+
 void channel_manager_init_channels(void)
 {
 	for (int i = 0; i < channel_count; i++) {
+		if (!channels[i]) {
+			continue;
+		}
 		if (channels[i]->init) {
 			int rc = channels[i]->init();
 			if (rc < 0) {
@@ -136,8 +147,17 @@ void channel_manager_init_channels(void)
 int channel_manager_create_entities(rcl_node_t *node,
 				    const rcl_allocator_t *allocator)
 {
+	if (!node || !allocator) {
+		return -EINVAL;
+	}
+
 	for (int i = 0; i < channel_count; i++) {
 		const channel_t *ch = channels[i];
+
+		if (!ch) {
+			continue;
+		}
+
 		const rosidl_message_type_support_t *ts = get_type_support(ch->msg_type);
 
 		/* Publisher */
@@ -183,6 +203,10 @@ int channel_manager_sub_count(void)
 
 int channel_manager_add_subs_to_executor(rclc_executor_t *executor)
 {
+	if (!executor) {
+		return -EINVAL;
+	}
+
 	for (int i = 0; i < channel_count; i++) {
 		if (!sub_active[i]) {
 			continue;
@@ -216,6 +240,10 @@ void channel_manager_publish(void)
 		}
 
 		const channel_t *ch = channels[i];
+
+		if (!ch || !ch->read) {
+			continue;
+		}
 
 		if ((now - last_publish_ms[i]) < (int64_t)ch->period_ms) {
 			continue;

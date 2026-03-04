@@ -36,6 +36,11 @@ int channel_manager_create_entities(rcl_node_t *node,
 				    const rcl_allocator_t *allocator);
 
 /**
+ * Adja a regisztrált csatornák teljes számát.
+ */
+int channel_manager_count(void);
+
+/**
  * Adja a subscribe-olható csatornák számát.
  * Az executor init-hez kell (handle count).
  */

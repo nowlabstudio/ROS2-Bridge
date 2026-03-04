@@ -322,15 +322,19 @@ Az `app/config.json` a teljes referencia konfig (csatornákkal együtt) — ez a
 |---------|---------|
 | Zephyr alap firmware | ✅ KÉSZ |
 | W6100 Ethernet driver | ✅ KÉSZ |
-| DHCP / statikus IP (config.json-ból) | ✅ KÉSZ |
+| DHCP / statikus IP (config.json-ból) | ✅ KÉSZ, tesztelt |
+| Ethernet link UP detektálás (boot stabilitás) | ✅ KÉSZ |
 | micro-ROS UDP transport | ✅ KÉSZ |
 | ROS2 kapcsolat (publish) | ✅ KÉSZ, tesztelt |
+| Státusz LED (GP25) — ROS2 agent jelzés | ✅ KÉSZ, tesztelt |
 | LittleFS flash partíció | ✅ KÉSZ |
 | JSON konfig read/write | ✅ KÉSZ |
 | Soros shell (bridge parancsok) | ✅ KÉSZ, tesztelt |
-| Python konfig uploader | ✅ KÉSZ |
+| Python konfig uploader + tesztelő | ✅ KÉSZ, tesztelt |
+| Channel Manager (pub/sub keretrendszer) | ✅ KÉSZ |
+| User kódtér (user_channels.c) | ✅ KÉSZ |
+| Kódbázis biztonsági audit + hardening | ✅ KÉSZ |
 | Runtime IP konfig (reboot nélkül, hot-reload) | 🔄 TERVEZETT |
-| Channel manager | 🔄 TERVEZETT |
 | GPIO driver | 🔄 TERVEZETT |
 | Serial driver | 🔄 TERVEZETT |
 | ADC driver | 🔄 TERVEZETT |

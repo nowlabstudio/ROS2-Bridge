@@ -32,28 +32,46 @@ static struct fs_mount_t bridge_lfs_mount = {
 bridge_config_t g_config;
 
 /* ------------------------------------------------------------------ */
+/*  Segédmakró: biztonságos string másolás null terminálással          */
+/* ------------------------------------------------------------------ */
+
+#define SAFE_STRCPY(dst, src) \
+	do { \
+		strncpy((dst), (src), sizeof(dst) - 1); \
+		(dst)[sizeof(dst) - 1] = '\0'; \
+	} while (0)
+
+/* ------------------------------------------------------------------ */
 /*  Alapértékek                                                        */
 /* ------------------------------------------------------------------ */
 
 void config_reset_defaults(void)
 {
+	memset(&g_config, 0, sizeof(g_config));
 	g_config.network.dhcp = false;
-	strncpy(g_config.network.ip,         "192.168.68.114", CFG_STR_LEN - 1);
-	strncpy(g_config.network.netmask,    "255.255.255.0",  CFG_STR_LEN - 1);
-	strncpy(g_config.network.gateway,    "192.168.68.1",   CFG_STR_LEN - 1);
-	strncpy(g_config.network.agent_ip,   "192.168.68.125", CFG_STR_LEN - 1);
-	strncpy(g_config.network.agent_port, "8888",           sizeof(g_config.network.agent_port) - 1);
-	strncpy(g_config.ros.node_name,      "pico_bridge",    CFG_STR_LEN - 1);
-	strncpy(g_config.ros.namespace_,     "/",              CFG_STR_LEN - 1);
+	SAFE_STRCPY(g_config.network.ip,         "192.168.68.114");
+	SAFE_STRCPY(g_config.network.netmask,    "255.255.255.0");
+	SAFE_STRCPY(g_config.network.gateway,    "192.168.68.1");
+	SAFE_STRCPY(g_config.network.agent_ip,   "192.168.68.125");
+	SAFE_STRCPY(g_config.network.agent_port, "8888");
+	SAFE_STRCPY(g_config.ros.node_name,      "pico_bridge");
+	SAFE_STRCPY(g_config.ros.namespace_,     "/");
 }
 
 /* ------------------------------------------------------------------ */
 /*  Egyszerű JSON érték kinyerők                                       */
 /* ------------------------------------------------------------------ */
 
+/* Maximális keresőpuffer méret: idézőjelek + kulcs + kettőspont + null */
+#define JSON_SEARCH_BUF (CFG_STR_LEN + 4)
+
 static int json_get_bool(const char *json, const char *key, bool *out)
 {
-	char search[64];
+	char search[JSON_SEARCH_BUF];
+
+	if (strlen(key) >= CFG_STR_LEN) {
+		return -EINVAL;
+	}
 	snprintf(search, sizeof(search), "\"%s\"", key);
 
 	const char *pos = strstr(json, search);
@@ -78,7 +96,11 @@ static int json_get_bool(const char *json, const char *key, bool *out)
 static int json_get_str(const char *json, const char *key,
 			char *out, size_t out_len)
 {
-	char search[64];
+	char search[JSON_SEARCH_BUF];
+
+	if (strlen(key) >= CFG_STR_LEN || out_len == 0) {
+		return -EINVAL;
+	}
 	snprintf(search, sizeof(search), "\"%s\"", key);
 
 	const char *pos = strstr(json, search);
@@ -104,11 +126,18 @@ static int json_get_str(const char *json, const char *key,
 		out[i++] = *pos++;
 	}
 	out[i] = '\0';
+
+	/* Ellenőrzés: záró idézőjel megvolt? */
+	if (*pos != '"') {
+		out[0] = '\0';
+		return -EINVAL;
+	}
+
 	return 0;
 }
 
 /* ------------------------------------------------------------------ */
-/*  JSON generátor — a g_config struktúrából írja a config.json-t     */
+/*  JSON generátor                                                     */
 /* ------------------------------------------------------------------ */
 
 static void config_to_json(char *buf, size_t buf_len)
@@ -145,7 +174,8 @@ static void config_to_json(char *buf, size_t buf_len)
 int config_load(void)
 {
 	struct fs_file_t f;
-	char buf[1024];
+	/* static: nem a stacken foglal helyet */
+	static char buf[1024];
 	ssize_t bytes_read;
 
 	fs_file_t_init(&f);
@@ -167,15 +197,15 @@ int config_load(void)
 	}
 	buf[bytes_read] = '\0';
 
-	/* JSON mezők kinyerése */
-	json_get_bool(buf, "dhcp",        &g_config.network.dhcp);
-	json_get_str(buf, "ip",           g_config.network.ip,         CFG_STR_LEN);
-	json_get_str(buf, "netmask",      g_config.network.netmask,    CFG_STR_LEN);
-	json_get_str(buf, "gateway",      g_config.network.gateway,    CFG_STR_LEN);
-	json_get_str(buf, "agent_ip",     g_config.network.agent_ip,   CFG_STR_LEN);
-	json_get_str(buf, "agent_port",   g_config.network.agent_port, sizeof(g_config.network.agent_port));
-	json_get_str(buf, "node_name",    g_config.ros.node_name,      CFG_STR_LEN);
-	json_get_str(buf, "namespace",    g_config.ros.namespace_,     CFG_STR_LEN);
+	/* JSON mezők kinyerése — hibák logolva, alapérték megmarad */
+	json_get_bool(buf, "dhcp",      &g_config.network.dhcp);
+	json_get_str(buf,  "ip",        g_config.network.ip,         CFG_STR_LEN);
+	json_get_str(buf,  "netmask",   g_config.network.netmask,    CFG_STR_LEN);
+	json_get_str(buf,  "gateway",   g_config.network.gateway,    CFG_STR_LEN);
+	json_get_str(buf,  "agent_ip",  g_config.network.agent_ip,   CFG_STR_LEN);
+	json_get_str(buf,  "agent_port",g_config.network.agent_port, sizeof(g_config.network.agent_port));
+	json_get_str(buf,  "node_name", g_config.ros.node_name,      CFG_STR_LEN);
+	json_get_str(buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
 
 	LOG_INF("Konfig betöltve: %s", CFG_FILE_PATH);
 	return 0;
@@ -188,7 +218,8 @@ int config_load(void)
 int config_save(void)
 {
 	struct fs_file_t f;
-	char buf[512];
+	/* static: nem a stacken foglal helyet */
+	static char buf[512];
 
 	config_to_json(buf, sizeof(buf));
 
@@ -217,24 +248,27 @@ int config_save(void)
 
 int config_set(const char *key, const char *value)
 {
+	if (!key || !value) {
+		return -EINVAL;
+	}
+
 	if (strcmp(key, "network.dhcp") == 0) {
 		g_config.network.dhcp = (strcmp(value, "true") == 0 ||
 					 strcmp(value, "1") == 0);
 	} else if (strcmp(key, "network.ip") == 0) {
-		strncpy(g_config.network.ip, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.network.ip, value);
 	} else if (strcmp(key, "network.netmask") == 0) {
-		strncpy(g_config.network.netmask, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.network.netmask, value);
 	} else if (strcmp(key, "network.gateway") == 0) {
-		strncpy(g_config.network.gateway, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.network.gateway, value);
 	} else if (strcmp(key, "network.agent_ip") == 0) {
-		strncpy(g_config.network.agent_ip, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.network.agent_ip, value);
 	} else if (strcmp(key, "network.agent_port") == 0) {
-		strncpy(g_config.network.agent_port, value,
-			sizeof(g_config.network.agent_port) - 1);
+		SAFE_STRCPY(g_config.network.agent_port, value);
 	} else if (strcmp(key, "ros.node_name") == 0) {
-		strncpy(g_config.ros.node_name, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.ros.node_name, value);
 	} else if (strcmp(key, "ros.namespace") == 0) {
-		strncpy(g_config.ros.namespace_, value, CFG_STR_LEN - 1);
+		SAFE_STRCPY(g_config.ros.namespace_, value);
 	} else {
 		return -ENOENT;
 	}
