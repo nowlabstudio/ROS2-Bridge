@@ -12,6 +12,7 @@ target_sources(app PRIVATE
     src/shell/shell_cmd.c
     src/bridge/channel_manager.c
     src/user/user_channels.c
+    src/user/test_channels.c
 )
 
 target_include_directories(app PRIVATE src)

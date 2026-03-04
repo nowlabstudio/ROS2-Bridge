@@ -1,5 +1,6 @@
 #include "user_channels.h"
 #include "bridge/channel_manager.h"
+#include "test_channels.h"
 
 /* ------------------------------------------------------------------ */
 /*  Add your channel headers here:                                     */
@@ -12,11 +13,8 @@
 
 void user_register_channels(void)
 {
-	/* Register all active channels here:                            */
-	/*                                                               */
-	/* channel_register(&motor_left_channel);                        */
-	/* channel_register(&distance_sensor_channel);                   */
-	/* channel_register(&imu_channel);                               */
-	/*                                                               */
-	/* Comment out a channel to disable it.                          */
+	/* Test channels — no hardware required, remove when not needed  */
+	channel_register(&test_counter_channel);
+	channel_register(&test_heartbeat_channel);
+	channel_register(&test_echo_channel);
 }
