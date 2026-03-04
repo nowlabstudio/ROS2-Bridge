@@ -51,7 +51,7 @@ BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 /*  Hálózati konfig alkalmazása (DHCP vagy statikus)                  */
 /* ------------------------------------------------------------------ */
 
-static K_SEM_DEFINE(dhcp_got_ip, 0, 1);
+static K_SEM_DEFINE(net_event_sem, 0, 1);
 static struct net_mgmt_event_callback net_mgmt_cb;
 
 static void net_event_handler(struct net_mgmt_event_callback *cb,
@@ -59,8 +59,9 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
 {
 	ARG_UNUSED(cb);
 	ARG_UNUSED(iface);
-	if (event == NET_EVENT_IPV4_DHCP_BOUND) {
-		k_sem_give(&dhcp_got_ip);
+	if (event == NET_EVENT_IF_UP ||
+	    event == NET_EVENT_IPV4_DHCP_BOUND) {
+		k_sem_give(&net_event_sem);
 	}
 }
 
@@ -68,13 +69,27 @@ static void apply_network_config(void)
 {
 	struct net_if *iface = net_if_get_default();
 
+	/* Ethernet link UP várás (max 10 másodperc) */
+	if (!net_if_is_up(iface)) {
+		LOG_INF("Ethernet link várás...");
+		net_mgmt_init_event_callback(&net_mgmt_cb, net_event_handler,
+					     NET_EVENT_IF_UP);
+		net_mgmt_add_event_callback(&net_mgmt_cb);
+		if (k_sem_take(&net_event_sem, K_SECONDS(10)) == 0) {
+			LOG_INF("Ethernet link UP");
+		} else {
+			LOG_WRN("Ethernet link timeout, folytatás...");
+		}
+		net_mgmt_del_event_callback(&net_mgmt_cb);
+	}
+
 	if (g_config.network.dhcp) {
 		LOG_INF("Hálózat: DHCP indítva...");
 		net_mgmt_init_event_callback(&net_mgmt_cb, net_event_handler,
 					     NET_EVENT_IPV4_DHCP_BOUND);
 		net_mgmt_add_event_callback(&net_mgmt_cb);
 		net_dhcpv4_start(iface);
-		if (k_sem_take(&dhcp_got_ip, K_SECONDS(15)) == 0) {
+		if (k_sem_take(&net_event_sem, K_SECONDS(15)) == 0) {
 			LOG_INF("DHCP: IP kiosztva");
 		} else {
 			LOG_WRN("DHCP: timeout, folytatás IP nélkül");
@@ -95,7 +110,7 @@ static void apply_network_config(void)
 		net_if_ipv4_router_add(iface, &gw, true, 0);
 
 		LOG_INF("Hálózat: statikus IP %s", g_config.network.ip);
-		k_sleep(K_MSEC(200));
+		k_sleep(K_MSEC(500));
 	}
 }
 
