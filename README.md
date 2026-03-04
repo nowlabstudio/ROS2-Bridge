@@ -144,7 +144,9 @@ W6100_EVB_Pico_Zephyr_MicroROS/
         │
         └── user/
             ├── user_channels.h      ← Declaration: user_register_channels()
-            └── user_channels.c      ← WRITE YOUR CHANNELS HERE (the only file you edit)
+            ├── user_channels.c      ← WRITE YOUR CHANNELS HERE (the only file you edit)
+            ├── test_channels.h      ← Built-in test channels (no hardware required)
+            └── test_channels.c      ← counter / heartbeat / echo — remove when adding real hardware
 ```
 
 ---
@@ -585,6 +587,32 @@ const channel_t motor_channel = {
 
 - Maximum **16 channels** (`CHANNEL_MAX = 16` in `channel_manager.h`)
 - Executor handle count = number of subscriber channels
+
+---
+
+### Built-in test channels (no hardware required)
+
+The firmware ships with three pre-registered channels in `app/src/user/test_channels.c`.
+They require no sensors, no wiring, and no `prj.conf` changes — useful for verifying the full
+ROS2 pipeline before connecting real hardware.
+
+| Channel | Topic (pub) | Topic (sub) | Type | Period | Description |
+|---------|------------|-------------|------|--------|-------------|
+| `test_counter` | `pico/counter` | — | INT32 | 500 ms | Counts up from 0 |
+| `test_heartbeat` | `pico/heartbeat` | — | BOOL | 1000 ms | Toggles true/false |
+| `test_echo` | `pico/echo_out` | `pico/echo_in` | INT32 | 1000 ms | Echoes received value |
+
+**Verify on ROS2:**
+```bash
+ros2 topic list
+ros2 topic echo /pico/counter              # INT32 counting up every 500 ms
+ros2 topic echo /pico/heartbeat            # BOOL toggling every 1 s
+ros2 topic pub /pico/echo_in std_msgs/msg/Int32 "data: 42"
+ros2 topic echo /pico/echo_out             # echoes 42 back
+```
+
+**Remove when adding real hardware** — just delete the three `channel_register()` calls
+from `user_channels.c` (and optionally remove `test_channels.c/h` from the build).
 
 ---
 
