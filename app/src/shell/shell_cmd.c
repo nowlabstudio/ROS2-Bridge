@@ -57,6 +57,9 @@ static int cmd_config_set(const struct shell *sh, size_t argc, char **argv)
 		shell_error(sh, "  network.agent_ip, network.agent_port");
 		shell_error(sh, "  ros.node_name, ros.namespace");
 		return rc;
+	} else if (rc == -ENAMETOOLONG) {
+		shell_error(sh, "Value too long (max %d chars): %s", CFG_STR_LEN - 1, argv[1]);
+		return rc;
 	}
 
 	shell_print(sh, "OK: %s = %s", argv[1], argv[2]);

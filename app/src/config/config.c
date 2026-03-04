@@ -252,6 +252,10 @@ int config_set(const char *key, const char *value)
 		return -EINVAL;
 	}
 
+	if (strlen(value) >= CFG_STR_LEN) {
+		return -ENAMETOOLONG;
+	}
+
 	if (strcmp(key, "network.dhcp") == 0) {
 		g_config.network.dhcp = (strcmp(value, "true") == 0 ||
 					 strcmp(value, "1") == 0);
