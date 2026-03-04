@@ -26,13 +26,13 @@ static struct fs_mount_t bridge_lfs_mount = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Globális konfig példány                                            */
+/*  Global config instance                                             */
 /* ------------------------------------------------------------------ */
 
 bridge_config_t g_config;
 
 /* ------------------------------------------------------------------ */
-/*  Segédmakró: biztonságos string másolás null terminálással          */
+/*  Helper macro: safe string copy with explicit null termination      */
 /* ------------------------------------------------------------------ */
 
 #define SAFE_STRCPY(dst, src) \
@@ -42,7 +42,7 @@ bridge_config_t g_config;
 	} while (0)
 
 /* ------------------------------------------------------------------ */
-/*  Alapértékek                                                        */
+/*  Factory defaults                                                   */
 /* ------------------------------------------------------------------ */
 
 void config_reset_defaults(void)
@@ -59,10 +59,10 @@ void config_reset_defaults(void)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Egyszerű JSON érték kinyerők                                       */
+/*  Simple JSON value extractors                                       */
 /* ------------------------------------------------------------------ */
 
-/* Maximális keresőpuffer méret: idézőjelek + kulcs + kettőspont + null */
+/* Search buffer size: quotes + key + colon + null terminator */
 #define JSON_SEARCH_BUF (CFG_STR_LEN + 4)
 
 static int json_get_bool(const char *json, const char *key, bool *out)
@@ -110,7 +110,7 @@ static int json_get_str(const char *json, const char *key,
 
 	pos += strlen(search);
 
-	/* Whitespace és kettőspont átugrása */
+	/* Skip whitespace and colon */
 	while (*pos == ' ' || *pos == ':' || *pos == '\t' ||
 	       *pos == '\r' || *pos == '\n') {
 		pos++;
@@ -119,7 +119,7 @@ static int json_get_str(const char *json, const char *key,
 	if (*pos != '"') {
 		return -EINVAL;
 	}
-	pos++; /* nyitó idézőjel átugrása */
+	pos++; /* skip opening quote */
 
 	size_t i = 0;
 	while (*pos && *pos != '"' && i < out_len - 1) {
@@ -127,7 +127,7 @@ static int json_get_str(const char *json, const char *key,
 	}
 	out[i] = '\0';
 
-	/* Ellenőrzés: záró idézőjel megvolt? */
+	/* Verify: closing quote found? */
 	if (*pos != '"') {
 		out[0] = '\0';
 		return -EINVAL;
@@ -137,7 +137,7 @@ static int json_get_str(const char *json, const char *key,
 }
 
 /* ------------------------------------------------------------------ */
-/*  JSON generátor                                                     */
+/*  JSON generator                                                     */
 /* ------------------------------------------------------------------ */
 
 static void config_to_json(char *buf, size_t buf_len)
@@ -168,13 +168,13 @@ static void config_to_json(char *buf, size_t buf_len)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Betöltés flash-ből                                                 */
+/*  Load from flash                                                    */
 /* ------------------------------------------------------------------ */
 
 int config_load(void)
 {
 	struct fs_file_t f;
-	/* static: nem a stacken foglal helyet */
+	/* static: allocated in BSS, not on stack */
 	static char buf[1024];
 	ssize_t bytes_read;
 
@@ -182,7 +182,7 @@ int config_load(void)
 
 	int rc = fs_open(&f, CFG_FILE_PATH, FS_O_READ);
 	if (rc < 0) {
-		LOG_WRN("config.json nem található, alapértékek betöltése");
+		LOG_WRN("config.json not found, loading defaults");
 		config_reset_defaults();
 		return rc;
 	}
@@ -191,13 +191,13 @@ int config_load(void)
 	fs_close(&f);
 
 	if (bytes_read < 0) {
-		LOG_ERR("Olvasási hiba: %d", (int)bytes_read);
+		LOG_ERR("Read error: %d", (int)bytes_read);
 		config_reset_defaults();
 		return (int)bytes_read;
 	}
 	buf[bytes_read] = '\0';
 
-	/* JSON mezők kinyerése — hibák logolva, alapérték megmarad */
+	/* Extract JSON fields — errors logged, defaults preserved */
 	json_get_bool(buf, "dhcp",      &g_config.network.dhcp);
 	json_get_str(buf,  "ip",        g_config.network.ip,         CFG_STR_LEN);
 	json_get_str(buf,  "netmask",   g_config.network.netmask,    CFG_STR_LEN);
@@ -207,18 +207,18 @@ int config_load(void)
 	json_get_str(buf,  "node_name", g_config.ros.node_name,      CFG_STR_LEN);
 	json_get_str(buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
 
-	LOG_INF("Konfig betöltve: %s", CFG_FILE_PATH);
+	LOG_INF("Config loaded: %s", CFG_FILE_PATH);
 	return 0;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Mentés flash-be                                                    */
+/*  Save to flash                                                      */
 /* ------------------------------------------------------------------ */
 
 int config_save(void)
 {
 	struct fs_file_t f;
-	/* static: nem a stacken foglal helyet */
+	/* static: allocated in BSS, not on stack */
 	static char buf[512];
 
 	config_to_json(buf, sizeof(buf));
@@ -226,7 +226,7 @@ int config_save(void)
 	fs_file_t_init(&f);
 	int rc = fs_open(&f, CFG_FILE_PATH, FS_O_CREATE | FS_O_WRITE | FS_O_TRUNC);
 	if (rc < 0) {
-		LOG_ERR("Fájl megnyitási hiba: %d", rc);
+		LOG_ERR("File open error: %d", rc);
 		return rc;
 	}
 
@@ -234,16 +234,16 @@ int config_save(void)
 	fs_close(&f);
 
 	if (written < 0) {
-		LOG_ERR("Írási hiba: %d", (int)written);
+		LOG_ERR("Write error: %d", (int)written);
 		return (int)written;
 	}
 
-	LOG_INF("Konfig elmentve (%d bájt)", (int)written);
+	LOG_INF("Config saved (%d bytes)", (int)written);
 	return 0;
 }
 
 /* ------------------------------------------------------------------ */
-/*  Kulcs=érték beállítás (shell-ből hívva)                            */
+/*  Key=value setter (called from shell)                               */
 /* ------------------------------------------------------------------ */
 
 int config_set(const char *key, const char *value)
@@ -276,12 +276,12 @@ int config_set(const char *key, const char *value)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Kiírás logba                                                       */
+/*  Print to log                                                       */
 /* ------------------------------------------------------------------ */
 
 void config_print(void)
 {
-	LOG_INF("--- Bridge konfiguráció ---");
+	LOG_INF("--- Bridge configuration ---");
 	LOG_INF("[network]");
 	LOG_INF("  dhcp:       %s", g_config.network.dhcp ? "true" : "false");
 	LOG_INF("  ip:         %s", g_config.network.ip);
@@ -295,28 +295,28 @@ void config_print(void)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Inicializálás (LittleFS mount + config betöltés)                   */
+/*  Initialization (LittleFS mount + config load)                     */
 /* ------------------------------------------------------------------ */
 
 int config_init(void)
 {
 	int rc;
 
-	/* LittleFS mount */
+	/* Mount LittleFS */
 	rc = fs_mount(&bridge_lfs_mount);
 	if (rc < 0) {
-		LOG_ERR("LittleFS mount hiba: %d", rc);
-		LOG_WRN("Alapértékekkel folytatás");
+		LOG_ERR("LittleFS mount error: %d", rc);
+		LOG_WRN("Continuing with defaults");
 		config_reset_defaults();
 		return rc;
 	}
-	LOG_INF("LittleFS mountolva: %s", CFG_MOUNT_PT);
+	LOG_INF("LittleFS mounted: %s", CFG_MOUNT_PT);
 
-	/* Config betöltés */
+	/* Load config */
 	rc = config_load();
 	if (rc < 0) {
-		/* Első indulás: mentsük el az alapértékeket */
-		LOG_INF("Első indulás — alapértékek mentése");
+		/* First boot: save defaults to flash */
+		LOG_INF("First boot — saving defaults");
 		config_save();
 	}
 

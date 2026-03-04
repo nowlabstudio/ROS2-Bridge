@@ -16,33 +16,33 @@
 LOG_MODULE_REGISTER(channel_manager, LOG_LEVEL_INF);
 
 /* ------------------------------------------------------------------ */
-/*  Belső állapot                                                      */
+/*  Internal state                                                     */
 /* ------------------------------------------------------------------ */
 
 static const channel_t *channels[CHANNEL_MAX];
 static int              channel_count;
 
-/* ROS2 entitások csatornánként */
+/* ROS2 entities per channel */
 static rcl_publisher_t    pub[CHANNEL_MAX];
 static rcl_subscription_t sub[CHANNEL_MAX];
 static bool               pub_active[CHANNEL_MAX];
 static bool               sub_active[CHANNEL_MAX];
 
-/* Publish üzenet storage */
+/* Publish message storage */
 static std_msgs__msg__Bool    msg_pub_bool[CHANNEL_MAX];
 static std_msgs__msg__Int32   msg_pub_int32[CHANNEL_MAX];
 static std_msgs__msg__Float32 msg_pub_float32[CHANNEL_MAX];
 
-/* Subscribe üzenet storage */
+/* Subscribe message storage */
 static std_msgs__msg__Bool    msg_sub_bool[CHANNEL_MAX];
 static std_msgs__msg__Int32   msg_sub_int32[CHANNEL_MAX];
 static std_msgs__msg__Float32 msg_sub_float32[CHANNEL_MAX];
 
-/* Publish időzítők */
+/* Publish timers */
 static int64_t last_publish_ms[CHANNEL_MAX];
 
 /* ------------------------------------------------------------------ */
-/*  Segédfüggvények — típus alapján                                    */
+/*  Helper functions — type-based dispatch                            */
 /* ------------------------------------------------------------------ */
 
 static const rosidl_message_type_support_t *get_type_support(msg_type_t t)
@@ -69,7 +69,7 @@ static void *get_sub_msg(int idx)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Subscribe callback — generikus, minden csatornához                 */
+/*  Subscribe callback — generic, shared by all channels              */
 /* ------------------------------------------------------------------ */
 
 static void sub_callback(const void *msg_in, void *context)
@@ -104,13 +104,13 @@ static void sub_callback(const void *msg_in, void *context)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Publikus API                                                       */
+/*  Public API                                                         */
 /* ------------------------------------------------------------------ */
 
 int channel_register(const channel_t *ch)
 {
 	if (channel_count >= CHANNEL_MAX) {
-		LOG_ERR("channel_register: max %d csatorna regisztrálható", CHANNEL_MAX);
+		LOG_ERR("channel_register: max %d channels allowed", CHANNEL_MAX);
 		return -ENOMEM;
 	}
 	if (!ch || !ch->name) {
@@ -118,7 +118,7 @@ int channel_register(const channel_t *ch)
 	}
 
 	channels[channel_count++] = ch;
-	LOG_INF("Csatorna regisztrálva: %s", ch->name);
+	LOG_INF("Channel registered: %s", ch->name);
 	return 0;
 }
 
@@ -136,7 +136,7 @@ void channel_manager_init_channels(void)
 		if (channels[i]->init) {
 			int rc = channels[i]->init();
 			if (rc < 0) {
-				LOG_ERR("%s init hiba: %d", channels[i]->name, rc);
+				LOG_ERR("%s init error: %d", channels[i]->name, rc);
 			} else {
 				LOG_INF("%s init OK", channels[i]->name);
 			}
@@ -169,7 +169,7 @@ int channel_manager_create_entities(rcl_node_t *node,
 				last_publish_ms[i] = k_uptime_get();
 				LOG_INF("%s publisher: %s", ch->name, ch->topic_pub);
 			} else {
-				LOG_ERR("%s publisher hiba: %d", ch->name, (int)rc);
+				LOG_ERR("%s publisher error: %d", ch->name, (int)rc);
 			}
 		}
 
@@ -181,7 +181,7 @@ int channel_manager_create_entities(rcl_node_t *node,
 				sub_active[i] = true;
 				LOG_INF("%s subscriber: %s", ch->name, ch->topic_sub);
 			} else {
-				LOG_ERR("%s subscriber hiba: %d", ch->name, (int)rc);
+				LOG_ERR("%s subscriber error: %d", ch->name, (int)rc);
 			}
 		}
 	}
@@ -221,7 +221,7 @@ int channel_manager_add_subs_to_executor(rclc_executor_t *executor)
 			ON_NEW_DATA);
 
 		if (rc != RCL_RET_OK) {
-			LOG_ERR("%s executor sub hiba: %d",
+			LOG_ERR("%s executor sub error: %d",
 				channels[i]->name, (int)rc);
 			return -EIO;
 		}
@@ -245,7 +245,7 @@ void channel_manager_destroy_entities(rcl_node_t *node,
 			sub_active[i] = false;
 		}
 	}
-	LOG_INF("Channel entitások törölve");
+	LOG_INF("Channel entities destroyed");
 }
 
 void channel_manager_publish(void)

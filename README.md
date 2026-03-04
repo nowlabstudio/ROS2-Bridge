@@ -1,299 +1,342 @@
 # W6100 EVB Pico — Zephyr + micro-ROS Universal Bridge
 
-## Mi ez?
+> **Developer Reference Documentation**
+> Last updated: 2026-03-04 | Version: v1.4 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
 
-Ez egy univerzális ROS2 bridge mikrokontrollerre (Raspberry Pi Pico / RP2040 + WIZnet W6100 Ethernet chip).
+---
 
-A Pico fizikai eszközöket (szenzorok, motorok, GPIO, Serial, I2C, SPI) köt össze a ROS2 hálózattal Ethernet-en keresztül. Minden csatolt eszköz ROS2 node-ként jelenik meg a hálózaton — publish és subscribe irányban egyaránt.
+## What is this project?
+
+A **universal ROS2 bridge** for microcontrollers. The hardware is a **WIZnet W6100 EVB Pico** board — a Raspberry Pi RP2040 microcontroller paired with the WIZnet W6100 hardwired TCP/IP Ethernet chip.
+
+The goal: connect physical devices (sensors, motors, GPIO, Serial, I2C, SPI, encoders) to a ROS2 network over Ethernet UDP. Every connected device appears as a ROS2 **node** on the network — capable of both **publishing** (device → ROS2) and **subscribing** (ROS2 → device).
 
 ```
-[Szenzorok / Motorok / GPIO / Serial / I2C / SPI]
-                      │
-             [W6100 EVB Pico]
-          Zephyr RTOS + micro-ROS
-                      │ Ethernet UDP
-             [micro-ros-agent]
-                      │ DDS
-               [ROS2 hálózat]
+[Physical Devices]
+  Sensors, motors, GPIO, ADC, PWM, Serial, I2C, SPI, Encoders
+            │
+   [W6100 EVB Pico]
+  Zephyr RTOS + micro-ROS
+  USB CDC ACM console (debug/config)
+            │ Ethernet UDP
+  [micro-ros-agent]
+  (running on ROS2 host, Docker)
+            │ DDS (cyclonedds)
+     [ROS2 Network]
+  ros2 topic list / echo / pub
 ```
 
----
+### Why this approach?
 
-## Hardver
-
-| Komponens | Leírás |
-|-----------|--------|
-| Board | WIZnet W6100 EVB Pico |
-| MCU | Raspberry Pi RP2040 (dual-core Cortex-M0+) |
-| Ethernet chip | WIZnet W6100 (hardwired TCP/IP) |
-| Flash | 16MB |
-| RAM | 264KB |
-| PIO | 2 db (enkóderhez használva) |
-
-**Hálózati beállítások (jelenlegi):**
-- Pico IP: `192.168.68.114` (statikus, `config.json`-ban — DHCP-re is átállítható)
-- ROS2 gép IP: `192.168.68.125`
-- micro-ros-agent port: `8888` (UDP)
+- **No custom driver needed** on the ROS2 host — the agent is the single entry point
+- **Flexible channel system** — adding a new sensor requires editing just one file
+- **Robust** — hardware watchdog, automatic reconnection state machine, DTR timeout for autonomous mode
+- **Runtime configuration** — IP address, node name, namespace, agent IP — all changeable without recompilation
 
 ---
 
-## Szoftver stack
+## Hardware
 
-| Réteg | Technológia |
-|-------|-------------|
-| RTOS | Zephyr RTOS (main branch) |
-| Hálózat | Zephyr networking, W6100 driver |
-| ROS2 kommunikáció | micro-ROS (Jazzy libs, Humble agent kompatibilis) |
-| Transport | UDP (custom Zephyr transport) |
-| Konfiguráció | LittleFS + JSON — **KÉSZ, MŰKÖDIK** |
-| Shell | Zephyr shell, USB CDC ACM konzolon |
-| Build | west (Zephyr build tool), Docker |
+### Board Specification
+
+| Component | Details |
+|-----------|---------|
+| Board name | WIZnet W6100 EVB Pico |
+| MCU | Raspberry Pi RP2040 (dual-core Cortex-M0+ @ 133MHz) |
+| RAM | 264 KB SRAM (internal) |
+| Flash | 16 MB (W25Q128JV, SPI) |
+| Ethernet chip | WIZnet W6100 (hardwired TCP/IP stack, SPI interface) |
+| USB | Micro-USB, USB 2.0 Full Speed (CDC ACM console) |
+| GPIO | 26 user GPIO pins |
+| PIO | 2 PIO blocks (for encoders, custom protocols) |
+| ADC | 3 channels (GP26, GP27, GP28) + internal temperature |
+| PWM | 8 PWM slices, 16 channels |
+| I2C | 2 I2C peripherals |
+| SPI | 2 SPI peripherals |
+| UART | 2 UARTs |
+
+### Pinout — Important Pins
+
+| Pin | Function | Note |
+|-----|----------|------|
+| GP25 | Built-in LED (status LED) | HIGH = LED on |
+| GP26 | ADC0 | Analog input |
+| GP27 | ADC1 | Analog input |
+| GP28 | ADC2 | Analog input |
+| GP0–GP1 | UART0 TX/RX | Serial devices |
+| GP4–GP5 | I2C0 SDA/SCL | I2C devices |
+| GP16–GP19 | SPI0 | SPI interface devices |
+
+### Current Network Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| Pico IP | `192.168.68.114` (static, from config.json) |
+| ROS2 host IP | `192.168.68.125` |
+| micro-ROS agent port | `8888` (UDP) |
+
+> These are configurable in config.json without recompilation.
 
 ---
 
-## Könyvtárstruktúra
+## Software Stack
+
+| Layer | Technology | Notes |
+|-------|-----------|-------|
+| RTOS | Zephyr RTOS (main branch, v4.3.99) | Real-time kernel |
+| Network stack | Zephyr networking, W6100 driver | UDP, DHCP, static IP |
+| ROS2 comms | micro-ROS (Jazzy libs) | Compatible with Humble agent |
+| Transport | UDP custom Zephyr transport | `microros_transports.h` |
+| Configuration | LittleFS + custom JSON parser | Flash at 15MB offset, 1MB partition |
+| Shell | Zephyr shell, USB CDC ACM | `bridge` commands |
+| Build | west (Zephyr build tool), Docker | `w6100-zephyr-microros:latest` |
+
+---
+
+## Directory Structure (complete, current)
 
 ```
 W6100_EVB_Pico_Zephyr_MicroROS/
 │
-├── README.md                        ← ez a fájl
-├── Makefile                         ← build, flash, monitor parancsok
+├── README.md                        ← this file (English)
+├── README.hu.md                     ← Hungarian version
+├── Makefile                         ← build, flash, monitor commands
 │
 ├── docker/
-│   └── Dockerfile                   ← Docker image definíció
+│   └── Dockerfile                   ← Docker image: zephyrprojectrtos/ci:v0.28.8
 │
 ├── tools/
-│   └── upload_config.py             ← Python konfig feltöltő (Mac-ről)
+│   ├── upload_config.py             ← Python config uploader (Mac/Linux)
+│   ├── stress_test.py               ← Comprehensive stress test (automated + manual)
+│   └── stress_report.json           ← Auto-generated test report
 │
-├── workspace/                       ← Zephyr workspace (west init, NE szerkeszd)
-│   ├── zephyr/
-│   ├── modules/lib/micro_ros_zephyr_module/
-│   └── build/zephyr/zephyr.uf2      ← fordítás kimenete, ez kerül a Picóra
+├── workspace/                       ← Zephyr workspace (result of west init, do NOT edit)
+│   ├── zephyr/                      ← Zephyr RTOS source (main branch)
+│   ├── modules/
+│   │   └── lib/micro_ros_zephyr_module/  ← micro-ROS Zephyr module
+│   └── build/
+│       └── zephyr/
+│           ├── zephyr.elf           ← ELF with debug symbols
+│           └── zephyr.uf2           ← FLASHABLE FIRMWARE (copy this to Pico)
 │
-└── app/                             ← A MI KÓDUNK — itt dolgozunk
-    ├── CMakeLists.txt               ← build konfiguráció, új fájlokat ide kell felvenni
-    ├── prj.conf                     ← Zephyr Kconfig (modulok engedélyezése)
-    ├── west.yml                     ← függőségek (Zephyr, micro-ROS)
-    ├── config.json                  ← konfig minta / referencia dokumentum
+└── app/                             ← OUR CODE — work here
+    ├── CMakeLists.txt               ← build config, add new .c files here
+    ├── prj.conf                     ← Zephyr Kconfig (module enable/disable)
+    ├── west.yml                     ← Zephyr + micro-ROS dependencies
+    ├── config.json                  ← Reference config (Python uploader source)
     │
     ├── boards/
-    │   └── w5500_evb_pico.overlay   ← hardver overlay (W6100, USB CDC, LittleFS partíció)
+    │   └── w5500_evb_pico.overlay   ← DTS overlay: USB CDC ACM, LED, LittleFS, W6100
     │
     └── src/
-        ├── main.c                   ← belépési pont
+        ├── main.c                   ← Entry point, reconnection loop, watchdog
+        │
         ├── config/
-        │   ├── config.h             ← bridge_config_t struktúra, API deklarációk
-        │   └── config.c             ← LittleFS mount, JSON read/write, config_set()
-        └── shell/
-            └── shell_cmd.c          ← 'bridge' shell parancsok
+        │   ├── config.h             ← bridge_config_t struct, API declarations
+        │   └── config.c             ← LittleFS mount, JSON parser, config_set/save/load
+        │
+        ├── shell/
+        │   └── shell_cmd.c          ← 'bridge' shell commands (show/set/save/load/reset/reboot)
+        │
+        ├── bridge/
+        │   ├── channel.h            ← channel_t struct, msg_type_t, channel_value_t
+        │   └── channel_manager.c/.h ← Pub/sub framework, entity lifecycle management
+        │
+        └── user/
+            ├── user_channels.h      ← Declaration: user_register_channels()
+            └── user_channels.c      ← WRITE YOUR CHANNELS HERE (the only file you edit)
 ```
 
 ---
 
-## Tervezett könyvtárstruktúra (következő lépések után)
+## Developer Environment Setup (first time)
 
-```
-app/src/
-├── main.c
-├── config/
-│   ├── config.h / config.c          ← KÉSZ
-├── shell/
-│   └── shell_cmd.c                  ← KÉSZ
-├── bridge/
-│   ├── channel_manager.h / .c       ← csatornák dinamikus kezelése (TERVEZETT)
-│   └── ros_bridge.h / .c            ← micro-ROS pub/sub dinamikusan (TERVEZETT)
-├── drivers/                         ← beépített driverek (NE SZERKESZD)
-│   ├── drv_gpio.h / .c
-│   ├── drv_serial.h / .c
-│   ├── drv_adc.h / .c
-│   ├── drv_pwm.h / .c
-│   └── drv_i2c.h / .c
-└── user/                            ← TE IDE ÍRSZ
-    ├── user_channels.c              ← csatornák regisztrálása
-    ├── motor_left.c                 ← bal motor + enkóder + PID
-    ├── motor_right.c                ← jobb motor + enkóder + PID
-    └── custom_sensor.c              ← egyéb eszköz
-```
+### Prerequisites
 
----
+- **macOS** (arm64 or x86_64) or Linux
+- **Docker Desktop** installed and running
+- **Python 3** (for config uploader): `pip3 install pyserial`
+- **Git**
 
-## Belépési pontok fejlesztéshez
-
-### 1. Konfiguráció megváltoztatása — újrafordítás NÉLKÜL
-
-**Soros shell-en** (`make monitor`):
-```
-bridge config show
-bridge config set network.dhcp false
-bridge config set network.ip 192.168.68.114
-bridge config set network.netmask 255.255.255.0
-bridge config set network.gateway 192.168.68.1
-bridge config set network.agent_ip 192.168.68.125
-bridge config set network.agent_port 8888
-bridge config set ros.node_name my_robot
-bridge config set ros.namespace /robot1
-bridge config save
-bridge reboot
-```
-
-**Python feltöltővel** (Mac-ről, `app/config.json` szerkesztése után):
-
-Telepítési feltétel (egyszer):
-```bash
-pip3 install pyserial
-```
-
-Használat:
-```bash
-# Szerkeszd az app/config.json-t, majd:
-python3 tools/upload_config.py
-
-# Ha a port nem található automatikusan:
-python3 tools/upload_config.py --port /dev/tty.usbmodem231401
-
-# Egyedi config fájl:
-python3 tools/upload_config.py --config app/config.json --port /dev/tty.usbmodem231401
-```
-
-**Fontos:** A Python uploader és a `make monitor` (screen) NEM futhatnak egyszerre — mindkettő a soros portot használja. Zárd be a screen-t (`Ctrl+A K Y`) mielőtt a Python scriptet futtatod.
-
-### 2. Saját szenzor / aktuátor hozzáadása
-
-**Fájl:** `app/src/user/` könyvtár *(tervezett, még nem létezik)*
-
-A bridge core nem változik — csak ide kell megírni az eszköz logikát, és regisztrálni a channel manager-ben.
-
-### 3. Új forrásfájl hozzáadása a buildhez
-
-**Fájl:** `app/CMakeLists.txt`
-```cmake
-target_sources(app PRIVATE
-    src/main.c
-    src/config/config.c
-    src/shell/shell_cmd.c
-    src/user/motor_left.c      ← új fájl
-)
-```
-
----
-
-## Build és flash parancsok
+### 1. Build the Docker image (once)
 
 ```bash
-# Docker image build (csak egyszer kell)
 make docker-build
+```
 
-# Zephyr workspace letöltés (csak egyszer kell, ~2GB)
+This builds the `w6100-zephyr-microros:latest` Docker image, which contains:
+- Zephyr SDK 0.17.4 (ARM Cortex-M0+ toolchain)
+- Python west
+- micro-ROS build tools
+
+### 2. Download the Zephyr workspace (once, ~2GB)
+
+```bash
 make workspace-init
+```
 
-# Firmware fordítás
+This downloads Zephyr RTOS and the micro-ROS module into the `workspace/` directory.
+
+> **Important:** The `workspace/` directory must NOT be inside Dropbox. Docker's virtiofs
+> and Dropbox sync cause a deadlock. Keep the workspace in `~/Dev/`.
+
+### 3. Build the firmware
+
+```bash
 make build
+```
 
-# Flash (BOOTSEL gomb + USB csatlakoztatás, majd)
+Output: `workspace/build/zephyr/zephyr.uf2`
+
+Build stats: ~289 KB flash (1.72% of 16 MB), ~220 KB RAM (81% of 264 KB).
+
+### 4. Flash the firmware
+
+Put the Pico in BOOTSEL mode:
+1. Hold down the **BOOTSEL** button
+2. Connect USB to the computer
+3. Release the button
+4. The `/Volumes/RPI-RP2/` drive will appear
+
+```bash
 cp workspace/build/zephyr/zephyr.uf2 /Volumes/RPI-RP2/
+```
 
-# Soros monitor (115200 baud, DTR trigger)
+The Pico reboots automatically after flashing.
+
+### 5. Open the serial monitor
+
+```bash
 make monitor
+```
 
-# Docker shell (manuális parancsokhoz)
-make shell
+This runs: `screen /dev/tty.usbmodem231401 115200`
 
-# Build törlése
-make clean
+Exit screen:
+```
+Ctrl+A  then  K  then  Y
+```
+
+If port is busy (previous screen session didn't close):
+```bash
+screen -ls           # list running sessions
+screen -X quit       # close all sessions
 ```
 
 ---
 
-## Soros konzol és shell
+## Normal Boot Sequence (what you see on the console)
 
-A board USB-n CDC ACM soros portként jelenik meg.
+```
+*** Booting Zephyr OS build v4.3.99 ***
+[main] Watchdog active (30000 ms timeout)
+[main] USB console connected          ← or: "autonomous mode" if no DTR
+[config] LittleFS mounted: /lfs
+[config] Config loaded: /lfs/config.json
+[config] --- Bridge configuration ---
+[config]   dhcp: false
+[config]   ip: 192.168.68.114
+[config]   agent_ip: 192.168.68.125
+[config]   agent_port: 8888
+[main] W6100 EVB Pico - micro-ROS Bridge
+[main] Node: /pico_bridge
+[main] Agent: 192.168.68.125:8888
+[main] Waiting for Ethernet link (max 15s)...
+[main] Ethernet link UP
+[main] Network: static IP 192.168.68.114
+[main] Starting bridge main loop
+[main] Searching for agent: 192.168.68.125:8888 ...
+[main] Agent found — initializing session
+[main] micro-ROS session active. 0 channels, 0 subscribers.
+```
 
-**macOS port:** `/dev/tty.usbmodem231401`
+**LED behavior:**
+- `OFF` = booting / searching for agent
+- `ON (steady)` = micro-ROS session active, agent connected
 
-**Fontos:** A firmware a DTR jelet várja induláshoz — a board csak akkor indul el teljesen, ha a soros monitor csatlakozva van.
+---
 
-### Monitor indítása és kilépés
+## Shell Commands (detailed)
+
+The shell is accessible on the USB CDC ACM console (`make monitor`).
+
+### `bridge config show`
+
+Display the current configuration (in RAM):
+
+```
+--- Bridge configuration ---
+[network]
+  dhcp:       false
+  ip:         192.168.68.114
+  netmask:    255.255.255.0
+  gateway:    192.168.68.1
+  agent_ip:   192.168.68.125
+  agent_port: 8888
+[ros]
+  node_name:  pico_bridge
+  namespace:  /
+```
+
+### `bridge config set <key> <value>`
+
+Set a value in RAM (**does NOT save automatically**):
 
 ```bash
-make monitor          # megnyitja: screen /dev/tty.usbmodem231401 115200
+bridge config set network.dhcp        true
+bridge config set network.dhcp        false
+bridge config set network.ip          192.168.68.114
+bridge config set network.netmask     255.255.255.0
+bridge config set network.gateway     192.168.68.1
+bridge config set network.agent_ip    192.168.68.125
+bridge config set network.agent_port  8888
+bridge config set ros.node_name       my_robot
+bridge config set ros.namespace       /robot1
 ```
 
-Kilépés a screen-ből:
-```
-Ctrl+A  majd  K  majd  Y
-```
+> **Important:** `set` only changes RAM. Use `save` to persist to flash.
+> Values only take effect after a reboot if saved.
 
-Ha a port foglalt (pl. előző screen nem zárult be):
+### `bridge config save`
+
+Persist RAM → flash (`/lfs/config.json`):
+
 ```bash
-screen -ls            # listázza a futó screen session-öket
-screen -X quit        # bezárja az összes screen session-t
-```
-
-### Elérhető shell parancsok
-
-```
-bridge config show              ← teljes konfig megjelenítése
-bridge config set <key> <val>   ← érték beállítása (NEM ment automatikusan)
-bridge config save              ← mentés flash-be (LittleFS /lfs/config.json)
-bridge config load              ← újratöltés flash-ből
-bridge config reset             ← gyári alapértékek visszaállítása (nem ment)
-bridge reboot                   ← újraindítás (betölti az elmentett konfigot)
-```
-
-**Tipikus munkafolyamat:**
-```
-bridge config set ros.node_name my_robot
-bridge config set network.agent_ip 192.168.1.100
 bridge config save
+```
+
+### `bridge config load`
+
+Reload flash → RAM (refreshes RAM during running session):
+
+```bash
+bridge config load
+```
+
+### `bridge config reset`
+
+Restore factory defaults in RAM (does not save):
+
+```bash
+bridge config reset
+bridge config save  # if you want to persist
+```
+
+### `bridge reboot`
+
+Reboot the device (to activate saved config):
+
+```bash
 bridge reboot
 ```
 
-**Érvényes kulcsok a `config set`-hez:**
-
-Minden kulcs újrafordítás NÉLKÜL változtatható (reboot után él):
-```
-network.dhcp        ← DHCP be/ki: true vagy false
-network.ip          ← Pico saját IP-je (ha dhcp=false)
-network.netmask     ← alhálózati maszk (ha dhcp=false)
-network.gateway     ← alapértelmezett átjáró (ha dhcp=false)
-network.agent_ip    ← micro-ROS agent IP (ROS2 gép)
-network.agent_port  ← micro-ROS agent port (alapértelmezett: 8888)
-ros.node_name       ← ROS2 node neve
-ros.namespace       ← ROS2 namespace (pl. /robot1)
-```
-
 ---
 
-## micro-ROS agent indítása (ROS2 gépen, Docker-ben)
+## Configuration — Detailed Reference
 
-A ROS2 egy Docker containerben fut a `192.168.68.125` gépen.
+### The config.json structure
 
-```bash
-# Belépés a futó ROS2 containerbe
-docker exec -it <container_neve> bash
-
-# Majd a containerben:
-source /opt/ros/humble/setup.bash
-ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
-```
-
-Ha a micro_ros_agent nincs telepítve:
-```bash
-apt install ros-humble-micro-ros-agent
-```
-
-**A Pico csatlakozása után ellenőrzés:**
-```bash
-ros2 topic list                       # látszik a /counter topic
-ros2 topic echo /counter              # növekvő Int32 értékek
-ros2 node list                        # látszik a /pico_bridge node
-```
-
-**Fontos:** Az agent-nek futnia kell MIELŐTT a Pico bootol — ha az agent nem elérhető, a Pico az `RCCHECK` hibán megakad és újraindításig vár.
-
----
-
-## Konfig fájl struktúra (LittleFS: /lfs/config.json)
+`config.json` is stored on the LittleFS flash partition at: `/lfs/config.json`
 
 ```json
 {
@@ -312,92 +355,533 @@ ros2 node list                        # látszik a /pico_bridge node
 }
 ```
 
-Az `app/config.json` a teljes referencia konfig (csatornákkal együtt) — ez a dokumentáció és a Python uploader forrása.
+### Three ways to modify config
+
+**1. Via serial shell (`make monitor`):**
+```bash
+bridge config set network.agent_ip 192.168.1.100
+bridge config save
+bridge reboot
+```
+
+**2. Via Python uploader (from Mac, after editing `app/config.json`):**
+```bash
+python3 tools/upload_config.py
+# or with explicit port:
+python3 tools/upload_config.py --port /dev/tty.usbmodem231401
+```
+
+> **Important:** The Python uploader and `make monitor` cannot run simultaneously —
+> both use the serial port. Close screen (`Ctrl+A K Y`) before running the script.
+
+**3. Programmatically from C (at initialization):**
+```c
+config_reset_defaults();
+SAFE_STRCPY(g_config.network.agent_ip, "192.168.1.100");
+config_save();
+```
+
+### DHCP vs Static IP
+
+Switch to DHCP:
+```bash
+bridge config set network.dhcp true
+bridge config save
+bridge reboot
+```
+
+Switch back to static:
+```bash
+bridge config set network.dhcp false
+bridge config set network.ip 192.168.68.114
+bridge config set network.netmask 255.255.255.0
+bridge config set network.gateway 192.168.68.1
+bridge config save
+bridge reboot
+```
 
 ---
 
-## Jelenlegi állapot
+## Channel Manager System
 
-| Funkció | Állapot |
-|---------|---------|
-| Zephyr alap firmware | ✅ KÉSZ |
-| W6100 Ethernet driver | ✅ KÉSZ |
-| DHCP / statikus IP (config.json-ból) | ✅ KÉSZ, tesztelt |
-| Ethernet link UP detektálás (boot stabilitás) | ✅ KÉSZ |
-| micro-ROS UDP transport | ✅ KÉSZ |
-| ROS2 kapcsolat (publish) | ✅ KÉSZ, tesztelt |
-| Státusz LED (GP25) — ROS2 agent jelzés | ✅ KÉSZ, tesztelt |
-| LittleFS flash partíció | ✅ KÉSZ |
-| JSON konfig read/write | ✅ KÉSZ |
-| Soros shell (bridge parancsok) | ✅ KÉSZ, tesztelt |
-| Python konfig uploader + tesztelő | ✅ KÉSZ, tesztelt |
-| Channel Manager (pub/sub keretrendszer) | ✅ KÉSZ |
-| User kódtér (user_channels.c) | ✅ KÉSZ |
-| Kódbázis biztonsági audit + hardening | ✅ KÉSZ |
-| Runtime IP konfig (reboot nélkül, hot-reload) | 🔄 TERVEZETT |
-| GPIO driver | 🔄 TERVEZETT |
-| Serial driver | 🔄 TERVEZETT |
-| ADC driver | 🔄 TERVEZETT |
-| PWM / motor driver | 🔄 TERVEZETT |
-| Enkóder (PIO) | 🔄 TERVEZETT |
-| PID szabályozó | 🔄 TERVEZETT |
-| Subscribe irány (ROS2 → Pico) | 🔄 TERVEZETT |
-| Channel konfig JSON-ból | 🔄 TERVEZETT |
+### Concepts
+
+A **channel** is a logical bridge between a physical device and a ROS2 topic.
+
+Each channel can:
+- **Publish**: read from hardware (`read()`) → send to ROS2 topic periodically
+- **Subscribe**: receive from ROS2 topic → write to hardware (`write()`)
+- Be publish-only, subscribe-only, or bidirectional
+- Run at a configurable period (e.g., every 100ms)
+
+### The `channel_t` struct
+
+```c
+// app/src/bridge/channel.h
+
+typedef enum {
+    MSG_BOOL    = 0,   // std_msgs/Bool
+    MSG_INT32   = 1,   // std_msgs/Int32
+    MSG_FLOAT32 = 2,   // std_msgs/Float32
+} msg_type_t;
+
+typedef union {
+    bool    b;     // for MSG_BOOL
+    int32_t i32;   // for MSG_INT32
+    float   f32;   // for MSG_FLOAT32
+} channel_value_t;
+
+typedef struct {
+    const char    *name;       // Channel name (shown in logs)
+    const char    *topic_pub;  // ROS2 publish topic (NULL = no publish)
+    const char    *topic_sub;  // ROS2 subscribe topic (NULL = no subscribe)
+    msg_type_t     msg_type;   // Message type (Bool/Int32/Float32)
+    uint32_t       period_ms;  // Publish period in milliseconds
+    int  (*init)(void);                        // Hardware init (can be NULL)
+    void (*read)(channel_value_t *val);        // Read from hardware (can be NULL)
+    void (*write)(const channel_value_t *val); // Write to hardware (can be NULL)
+} channel_t;
+```
+
+### How to add a new sensor or actuator
+
+#### Step 1 — Create a device file (e.g., `app/src/user/my_sensor.c`)
+
+```c
+#include "bridge/channel.h"
+#include <zephyr/drivers/gpio.h>
+
+/* --- Hardware init --- */
+static int my_sensor_init(void)
+{
+    // Initialize GPIO, ADC, I2C, SPI, etc.
+    return 0;  // return 0 on success, negative on error
+}
+
+/* --- Read data (publish direction) --- */
+static void my_sensor_read(channel_value_t *val)
+{
+    // Read a value from hardware
+    val->f32 = 23.5f;  // e.g., temperature in Celsius
+}
+
+/* --- Channel definition --- */
+const channel_t my_sensor_channel = {
+    .name       = "my_sensor",
+    .topic_pub  = "robot/temperature",   // ROS2 topic name
+    .topic_sub  = NULL,                  // no subscribe direction
+    .msg_type   = MSG_FLOAT32,
+    .period_ms  = 1000,                  // publish once per second
+    .init       = my_sensor_init,
+    .read       = my_sensor_read,
+    .write      = NULL,
+};
+```
+
+#### Step 2 — Declare in a header (`app/src/user/my_sensor.h`)
+
+```c
+#ifndef MY_SENSOR_H
+#define MY_SENSOR_H
+#include "bridge/channel.h"
+extern const channel_t my_sensor_channel;
+#endif
+```
+
+#### Step 3 — Register in `user_channels.c`
+
+```c
+// app/src/user/user_channels.c
+#include "user_channels.h"
+#include "bridge/channel_manager.h"
+#include "my_sensor.h"
+
+void user_register_channels(void)
+{
+    channel_register(&my_sensor_channel);
+}
+```
+
+#### Step 4 — Add to the build (`app/CMakeLists.txt`)
+
+```cmake
+target_sources(app PRIVATE
+    src/main.c
+    src/config/config.c
+    src/shell/shell_cmd.c
+    src/bridge/channel_manager.c
+    src/user/user_channels.c
+    src/user/my_sensor.c          # ← new line
+)
+```
+
+#### Step 5 — Build and flash
+
+```bash
+make build
+cp workspace/build/zephyr/zephyr.uf2 /Volumes/RPI-RP2/
+```
+
+#### Step 6 — Verify on ROS2
+
+```bash
+ros2 topic list                         # shows /robot/temperature
+ros2 topic echo /robot/temperature      # continuous data stream
+```
+
+### Subscribe direction (ROS2 → Pico)
+
+For actuators (motor, LED, relay) that receive commands from ROS2:
+
+```c
+static void my_led_write(const channel_value_t *val)
+{
+    gpio_pin_set(led_dev, LED_PIN, val->b ? 1 : 0);
+}
+
+const channel_t my_led_channel = {
+    .name       = "my_led",
+    .topic_pub  = NULL,              // no publish
+    .topic_sub  = "robot/led",       // receives from ROS2
+    .msg_type   = MSG_BOOL,
+    .period_ms  = 0,                 // irrelevant for subscribe-only
+    .init       = my_led_init,
+    .read       = NULL,
+    .write      = my_led_write,
+};
+```
+
+Send a command from ROS2:
+```bash
+ros2 topic pub /robot/led std_msgs/Bool "data: true"
+```
+
+### Bidirectional channel (publish + subscribe)
+
+Motor example: publish encoder position, subscribe to setpoint:
+
+```c
+const channel_t motor_channel = {
+    .name       = "motor_left",
+    .topic_pub  = "robot/motor_left/position",   // encoder position → ROS2
+    .topic_sub  = "robot/motor_left/setpoint",   // ROS2 command → motor
+    .msg_type   = MSG_INT32,
+    .period_ms  = 50,                            // 20 Hz position update
+    .init       = motor_left_init,
+    .read       = motor_left_read_position,
+    .write      = motor_left_write_setpoint,
+};
+```
+
+### Message type selection guide
+
+| Type | ROS2 message | Use for |
+|------|-------------|---------|
+| `MSG_BOOL` | `std_msgs/Bool` | GPIO, relay, switch, LED, digital I/O |
+| `MSG_INT32` | `std_msgs/Int32` | Encoder ticks, PWM duty cycle, discrete values |
+| `MSG_FLOAT32` | `std_msgs/Float32` | ADC, temperature, speed, PID output, distance |
+
+### Constraints
+
+- Maximum **16 channels** (`CHANNEL_MAX = 16` in `channel_manager.h`)
+- Executor handle count = number of subscriber channels
 
 ---
 
-## Implementációs sorrend (következő lépések)
+## Robustness and Reliability
 
-### 2. lépés — Channel manager
-- Csatorna struktúra (`channel_t`) definíció
-- Csatornák regisztrálása config.json alapján
-- Soft real-time loop (10ms, magas prioritású thread)
-- `app/src/bridge/channel_manager.h/.c`
+### Hardware Watchdog
 
-### 3. lépés — Built-in driverek
-- GPIO (be/kimenet)
-- ADC (analóg olvasás)
-- PWM (motor, szervó)
-- Serial (UART)
-- `app/src/drivers/`
+The RP2040 internal watchdog timer runs with a **30-second timeout**. If the firmware freezes (deadlock, infinite loop, stack overflow), the watchdog automatically reboots the board.
 
-### 4. lépés — micro-ROS pub/sub dinamikusan
-- Publisher és subscriber létrehozása a channel config alapján
-- Üzenettípus kezelés (Bool, Int32, Float32, String)
-- Subscribe irány: ROS2 parancs → Pico → aktuátor
+`wdt_feed()` is called in:
+- Agent search loop
+- ROS2 session run loop
+- DTR wait loop
+- Every boot phase
 
-### 5. lépés — Enkóder + PID
-- PIO alapú enkóder driver (2 csatorna, hardware quadrature)
-- PID könyvtár (soft real-time, ~10ms loop)
-- Motor+enkóder csatorna típus
+### Reconnection State Machine
 
-### 6. lépés — User kódtér
-- `app/src/user/` könyvtár kialakítása
-- API: `channel_register()`, `channel_publish()`, `channel_get_setpoint()`
-- Példa kód: motor_left.c, custom_sensor.c
+`bridge_run()` implements a **perpetual reconnection loop**:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Phase 1: Agent search                              │
+│  rmw_uros_ping_agent(200ms, 1) — until agent found  │
+│  → watchdog_feed() + 2s delay per iteration         │
+├─────────────────────────────────────────────────────┤
+│  Phase 2: Session initialization                    │
+│  ros_session_init() — support, node, entities, exec │
+│  → on failure: 2s delay + retry                     │
+├─────────────────────────────────────────────────────┤
+│  Phase 3: Running                                   │
+│  executor_spin + channel_publish + watchdog_feed    │
+│  → ping every 1s → if disconnected: break           │
+├─────────────────────────────────────────────────────┤
+│  Phase 4: Cleanup                                   │
+│  ros_session_fini() → LED off → back to Phase 1    │
+└─────────────────────────────────────────────────────┘
+```
+
+### DTR Timeout (autonomous mode)
+
+If USB console is **not connected** (e.g., robot running standalone), the firmware waits at most **3 seconds** for DTR signal, then continues automatically. No USB monitor is needed for normal operation.
+
+### Ethernet Link UP Wait
+
+After boot, the firmware waits up to **15 seconds** for the `NET_EVENT_IF_UP` event before applying IP configuration. This prevents "ping: host unreachable" errors during cable-less boot.
 
 ---
 
-## Ismert korlátok
+## micro-ROS Agent Setup (on the ROS2 host)
 
-| Korlát | Magyarázat |
-|--------|------------|
-| Max 2 enkóder | RP2040 csak 2 PIO blokkot tartalmaz |
-| RAM: ~48KB szabad | micro-ROS + shell + LittleFS ~216KB-t használ |
-| Soft real-time | Hard real-time nem garantált Zephyrrel |
-| IP reboot nélkül nem változtatható | `config save` + `bridge reboot` szükséges az IP-váltáshoz |
-| Zephyr board neve `w5500_evb_pico` | Zephyr még nem tartalmaz `w6100_evb_pico` definíciót |
+### In Docker
+
+```bash
+# Enter the ROS2 Docker container
+docker exec -it <container_name> bash
+
+# Start the agent
+source /opt/ros/humble/setup.bash
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+```
+
+If not installed:
+```bash
+apt install ros-humble-micro-ros-agent
+```
+
+### Verify after Pico connects
+
+```bash
+ros2 node list                    # shows /pico_bridge (or your configured name)
+ros2 topic list                   # shows registered topics
+ros2 topic echo /robot/sensor     # data stream
+```
+
+### Stale nodes in node list
+
+DDS (Cyclone DDS) caches node information. If old node names appear in `ros2 node list`:
+```bash
+# Restart the agent to clear the cache:
+Ctrl+C   # stop agent
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+```
 
 ---
 
-## Fejlesztői környezet
+## Python Config Uploader — Detailed
 
-| | |
-|-|-|
-| Host gép | macOS |
+`tools/upload_config.py` automatically uploads the contents of `app/config.json` to the Pico over the serial port.
+
+### Usage
+
+```bash
+# Auto-detect port:
+python3 tools/upload_config.py
+
+# Explicit port:
+python3 tools/upload_config.py --port /dev/tty.usbmodem231401
+
+# Custom config file:
+python3 tools/upload_config.py --config app/config.json --port /dev/tty.usbmodem231401
+```
+
+### What it does
+
+1. Opens serial port (115200 baud)
+2. Waits for DTR (Pico boot)
+3. Sends `bridge config set <key> <value>` for each field
+4. Sends `bridge config save` — persists to flash
+5. Sends `bridge config show` — verifies the result
+6. Does **NOT reboot** — run `bridge reboot` manually to activate
+
+---
+
+## Stress Test
+
+`tools/stress_test.py` is a comprehensive test suite combining automated and manual tests.
+
+### Usage
+
+```bash
+python3 tools/stress_test.py
+# or
+python3 tools/stress_test.py --port /dev/tty.usbmodem231401
+# skip manual tests (CI/CD mode):
+python3 tools/stress_test.py --skip-manual
+```
+
+### Test categories
+
+**Automated (run by the script):**
+- T01–T05: Basic communication, config roundtrip, save/load
+- T06–T10: Edge cases (buffer overflow, empty values, special chars, rapid fire)
+- T11–T15: Flash integrity (20× save, DHCP toggle, port boundary values)
+- T16–T17: Performance (shell latency, 100 burst commands)
+
+**Manual (you perform, script waits):**
+- M01–M05: Network stress (Ethernet cable pull, agent kill/restart, switch off)
+- M06–M10: Power stress (power cycle, pull during config save)
+- M11–M13: USB console stress (disconnect during operation, autonomous boot)
+- M14–M16: Config switching (DHCP↔static, agent IP change)
+- M17–M20: Long-run (15 minutes, vibration, temperature, cable wiggling)
+
+### Report
+
+At the end of the test, `tools/stress_report.json` is generated with all results.
+
+---
+
+## Current Status
+
+| Feature | Status | Since |
+|---------|--------|-------|
+| Zephyr base firmware | ✅ Done | v1.0 |
+| W6100 Ethernet driver | ✅ Done | v1.0 |
+| USB CDC ACM console | ✅ Done | v1.0 |
+| DHCP / static IP (from config.json) | ✅ Done, tested | v1.1 |
+| Ethernet link UP boot stability | ✅ Done | v1.1 |
+| micro-ROS UDP transport | ✅ Done | v1.0 |
+| ROS2 publish | ✅ Done, tested | v1.0 |
+| Status LED (GP25) | ✅ Done, tested | v1.2 |
+| LittleFS flash partition | ✅ Done | v1.1 |
+| JSON config read/write | ✅ Done | v1.1 |
+| Serial shell (bridge commands) | ✅ Done, tested | v1.1 |
+| Python config uploader | ✅ Done, tested | v1.1 |
+| Python stress test suite | ✅ Done | v1.4 |
+| Channel Manager framework | ✅ Done | v1.3 |
+| User code space (user_channels.c) | ✅ Done | v1.3 |
+| Hardware watchdog (30s) | ✅ Done | v1.4 |
+| Reconnection state machine | ✅ Done | v1.4 |
+| Security audit (buffer overflow, null ptr) | ✅ Done | v1.3 |
+| Subscribe direction (ROS2 → Pico) | ✅ Done (framework) | v1.3 |
+| GPIO driver | 🔄 Planned | — |
+| ADC driver | 🔄 Planned | — |
+| PWM / motor driver | 🔄 Planned | — |
+| Serial (UART) driver | 🔄 Planned | — |
+| Encoder (PIO) driver | 🔄 Planned | — |
+| PID controller | 🔄 Planned | — |
+| I2C driver | 🔄 Planned | — |
+| Channel config from JSON (runtime) | 🔄 Planned | — |
+| Runtime IP reload (no reboot) | 🔄 Planned | — |
+
+---
+
+## Planned Next Steps
+
+### Step 3 — Built-in hardware drivers
+
+Will live in `app/src/drivers/`, each compatible with the `channel_t` interface:
+
+```
+drivers/
+├── drv_gpio.h / .c     ← digital I/O (MSG_BOOL)
+├── drv_adc.h  / .c     ← analog input (MSG_FLOAT32)
+├── drv_pwm.h  / .c     ← PWM output, motor control (MSG_INT32)
+├── drv_uart.h / .c     ← Serial communication
+└── drv_i2c.h  / .c     ← I2C master devices
+```
+
+Each driver exports a `const channel_t drv_xxx_channel` global.
+
+### Step 4 — PIO quadrature encoder driver
+
+The RP2040 PIO hardware is ideal for quadrature encoder reading. Planned API:
+
+```c
+// 2 encoder channels (2 PIO blocks):
+extern const channel_t encoder_left_channel;
+extern const channel_t encoder_right_channel;
+```
+
+### Step 5 — PID controller
+
+Soft real-time PID library with 10ms loop period:
+
+```c
+typedef struct {
+    float kp, ki, kd;
+    float setpoint;
+    float integral;
+    float last_error;
+} pid_t;
+
+float pid_compute(pid_t *pid, float measurement, float dt_s);
+```
+
+### Step 6 — Channel config from JSON
+
+Goal: define channels (topic names, period) in `config.json` at runtime, not only in C.
+
+---
+
+## Known Limitations
+
+| Limitation | Explanation | Workaround |
+|------------|-------------|------------|
+| Max 16 channels | `CHANNEL_MAX = 16` | Increase value, costs RAM |
+| Max 2 encoders | RP2040 has only 2 PIO blocks | — |
+| RAM: ~44KB free | 220KB / 264KB used | Avoid large stack allocations |
+| Soft real-time | Hard real-time not guaranteed | Improve with thread priorities |
+| IP requires reboot | IP config only activates after reboot | Runtime reload planned |
+| Zephyr board name | `w5500_evb_pico` (not w6100) | Filename kept as-is |
+| Message types | Only Bool/Int32/Float32 | String, Array planned |
+
+---
+
+## Troubleshooting
+
+### "ping: host unreachable" after boot
+
+**Cause:** Static IP was applied before Ethernet link came up.
+**Solution:** The firmware waits for `NET_EVENT_IF_UP` event (max 15s). Check the cable.
+
+### LED stays off
+
+**Cause:** Agent is not reachable.
+**Check:**
+```bash
+# On ROS2 host:
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+# In Pico log:
+# [main] Searching for agent: 192.168.68.125:8888 ...
+```
+
+### Shell not responding
+
+```bash
+screen -X quit          # close any stuck screen sessions
+make monitor            # open fresh
+```
+
+### Config doesn't load (LittleFS error)
+
+**Cause:** First boot, or flash corruption.
+**Fix:** On first boot, defaults are written automatically. If corrupted:
+```bash
+bridge config reset
+bridge config save
+bridge reboot
+```
+
+### Watchdog reboot loop
+
+**Cause:** `wdt_feed()` not called for 30 seconds in some phase.
+**Debug:** Check logs — which phase is hanging? If in agent search loop: agent unreachable but WDT feed missing (should not happen in current code).
+
+---
+
+## Developer Environment Summary
+
+| Parameter | Value |
+|-----------|-------|
+| Host OS | macOS (arm64) |
 | Build | Docker (`w6100-zephyr-microros:latest`) |
-| Zephyr SDK | 0.17.4 (ARM toolchain, Cortex-M0+) |
-| Zephyr verzió | main (v4.3.99) |
-| micro-ROS | Jazzy libs, Humble agent kompatibilis |
+| Zephyr SDK | 0.17.4 (ARM Cortex-M0+ toolchain) |
+| Zephyr version | main (v4.3.99) |
+| micro-ROS | Jazzy libs, Humble agent compatible |
 | Serial port | `/dev/tty.usbmodem231401` |
-| Firmware méret | 277KB flash, 216KB RAM |
+| Firmware size | ~289 KB flash, ~220 KB RAM |
+| GitHub | [nowlabstudio/ROS2-Bridge](https://github.com/nowlabstudio/ROS2-Bridge) |
+| Author | Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu) |

@@ -37,7 +37,7 @@ build:
 .PHONY: flash-uf2
 flash-uf2:
 	@ls -la $(WORKSPACE)/build/zephyr/zephyr.uf2 2>/dev/null || \
-		echo "Előbb futtasd: make build"
+		echo "Run first: make build"
 
 .PHONY: flash
 flash:
@@ -66,11 +66,11 @@ clean:
 
 .PHONY: help
 help:
-	@echo "  make docker-build    - Docker image build (egyszer)"
-	@echo "  make workspace-init  - Zephyr letöltés (~2GB, egyszer)"
-	@echo "  make build           - Firmware build"
-	@echo "  make flash           - Flash (openocd)"
-	@echo "  make flash-uf2       - UF2 fájl helye"
-	@echo "  make monitor         - Serial monitor 115200"
-	@echo "  make shell           - Docker shell"
-	@echo "  make clean           - Build törlése"
+	@echo "  make docker-build    - Build Docker image (once)"
+	@echo "  make workspace-init  - Download Zephyr workspace (~2GB, once)"
+	@echo "  make build           - Build firmware"
+	@echo "  make flash           - Flash via OpenOCD"
+	@echo "  make flash-uf2       - Show UF2 file location"
+	@echo "  make monitor         - Serial monitor 115200 baud"
+	@echo "  make shell           - Open Docker shell"
+	@echo "  make clean           - Remove build artifacts"

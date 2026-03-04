@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /* ------------------------------------------------------------------ */
-/*  Konfigurációs struktúrák                                           */
+/*  Configuration structures                                           */
 /* ------------------------------------------------------------------ */
 
 #define CFG_STR_LEN   48
@@ -13,17 +13,17 @@
 #define CFG_MOUNT_PT  "/lfs"
 
 typedef struct {
-	bool dhcp;                     /* true = DHCP, false = statikus  */
-	char ip[CFG_STR_LEN];          /* Statikus IP (ha dhcp=false)    */
-	char netmask[CFG_STR_LEN];     /* Alhálózati maszk               */
-	char gateway[CFG_STR_LEN];     /* Alapértelmezett átjáró         */
-	char agent_ip[CFG_STR_LEN];    /* micro-ROS agent IP-je          */
-	char agent_port[8];            /* micro-ROS agent port (string)  */
+	bool dhcp;                     /* true = DHCP, false = static IP  */
+	char ip[CFG_STR_LEN];          /* Static IP address (if dhcp=false) */
+	char netmask[CFG_STR_LEN];     /* Subnet mask                     */
+	char gateway[CFG_STR_LEN];     /* Default gateway                 */
+	char agent_ip[CFG_STR_LEN];    /* micro-ROS agent IP address      */
+	char agent_port[8];            /* micro-ROS agent port (string)   */
 } cfg_network_t;
 
 typedef struct {
-	char node_name[CFG_STR_LEN];   /* ROS2 node neve                 */
-	char namespace_[CFG_STR_LEN];  /* ROS2 namespace                 */
+	char node_name[CFG_STR_LEN];   /* ROS2 node name                  */
+	char namespace_[CFG_STR_LEN];  /* ROS2 namespace                  */
 } cfg_ros_t;
 
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
 } bridge_config_t;
 
 /* ------------------------------------------------------------------ */
-/*  Globális konfiguráció — main.c és más modulok olvassák             */
+/*  Global configuration — read by main.c and other modules           */
 /* ------------------------------------------------------------------ */
 
 extern bridge_config_t g_config;
@@ -42,42 +42,42 @@ extern bridge_config_t g_config;
 /* ------------------------------------------------------------------ */
 
 /**
- * Inicializálja a LittleFS-t és betölti a config.json-t.
- * Ha a fájl nem létezik, alapértékeket ír be és elmenti.
- * Hívd a legelső dolognként main()-ben.
+ * Initialize LittleFS and load config.json.
+ * If the file does not exist, writes defaults and saves them.
+ * Call this first in main().
  */
 int config_init(void);
 
 /**
- * Betölti a config.json-t a flash-ből a g_config struktúrába.
- * Return: 0 ha OK, negatív hiba esetén.
+ * Load config.json from flash into the g_config struct.
+ * Returns: 0 on success, negative on error.
  */
 int config_load(void);
 
 /**
- * Elmenti a g_config struktúrát config.json-ként a flash-be.
- * Return: 0 ha OK, negatív hiba esetén.
+ * Save the g_config struct as config.json to flash.
+ * Returns: 0 on success, negative on error.
  */
 int config_save(void);
 
 /**
- * Visszaállítja a g_config-ot gyári alapértékekre (nem menti).
+ * Reset g_config to factory defaults (does not save).
  */
 void config_reset_defaults(void);
 
 /**
- * Beállít egy értéket pontozott kulcs alapján.
- * Példák:
+ * Set a value by dotted key name.
+ * Examples:
  *   config_set("network.agent_ip", "192.168.1.100")
  *   config_set("network.agent_port", "8888")
  *   config_set("ros.node_name", "my_robot")
  *
- * Return: 0 ha OK, -ENOENT ha ismeretlen kulcs.
+ * Returns: 0 on success, -ENOENT for unknown key.
  */
 int config_set(const char *key, const char *value);
 
 /**
- * Kiírja a teljes konfigurációt a logba / shellbe.
+ * Print the full configuration to the log / shell.
  */
 void config_print(void);
 

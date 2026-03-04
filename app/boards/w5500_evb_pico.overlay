@@ -23,12 +23,12 @@
 	};
 };
 
-/* W6100 chip van a boardon, nem W5500 */
+/* Board contains W6100 chip, not W5500 */
 &ethernet {
 	compatible = "wiznet,w6100";
 };
 
-/* LittleFS storage partíció — flash utolsó 1MB-ja (offset 15MB) */
+/* LittleFS storage partition — last 1MB of flash (offset 15MB) */
 &flash0 {
 	partitions {
 		storage_partition: partition@f00000 {

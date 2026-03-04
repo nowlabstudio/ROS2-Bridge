@@ -1,5 +1,8 @@
-# Zephyr workspace — ne kerüljön verziókövetés alá (2GB+)
+# Zephyr workspace — do not version control (2GB+)
 workspace/
+
+# Hungarian README — kept locally, English README.md is pushed to git
+README.hu.md
 
 # Build artifacts
 build/

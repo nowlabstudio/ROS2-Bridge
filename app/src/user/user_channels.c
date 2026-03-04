@@ -2,7 +2,7 @@
 #include "bridge/channel_manager.h"
 
 /* ------------------------------------------------------------------ */
-/*  Ide illeszd be a csatornáid fejléceit:                             */
+/*  Add your channel headers here:                                     */
 /*                                                                     */
 /*  #include "motor_left.h"                                            */
 /*  #include "distance_sensor.h"                                       */
@@ -12,11 +12,11 @@
 
 void user_register_channels(void)
 {
-	/* Ide regisztrálj minden aktív csatornát:                       */
+	/* Register all active channels here:                            */
 	/*                                                               */
 	/* channel_register(&motor_left_channel);                        */
 	/* channel_register(&distance_sensor_channel);                   */
 	/* channel_register(&imu_channel);                               */
 	/*                                                               */
-	/* Ha egy csatornát ki akarsz kapcsolni, kommenteld ki.          */
+	/* Comment out a channel to disable it.                          */
 }

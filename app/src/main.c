@@ -30,16 +30,16 @@ BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 	     "Console device is not CDC ACM UART");
 
 /* ------------------------------------------------------------------ */
-/*  Időzítő konstansok                                                 */
+/*  Timing constants                                                   */
 /* ------------------------------------------------------------------ */
 
-#define DTR_TIMEOUT_MS       3000   /* max várakozás USB monitor nélkül */
-#define WDT_TIMEOUT_MS       30000  /* hardware watchdog timeout         */
-#define AGENT_PING_TIMEOUT   200    /* agent ping ms                     */
-#define AGENT_PING_ATTEMPTS  1      /* ping kísérletek száma             */
-#define AGENT_WAIT_DELAY_MS  2000   /* várakozás agent nélkül            */
-#define NET_LINK_TIMEOUT_S   15     /* Ethernet link UP timeout          */
-#define DHCP_TIMEOUT_S       20     /* DHCP kiosztás timeout             */
+#define DTR_TIMEOUT_MS       3000   /* max wait for USB monitor (autonomous mode) */
+#define WDT_TIMEOUT_MS       30000  /* hardware watchdog timeout                  */
+#define AGENT_PING_TIMEOUT   200    /* agent ping timeout in ms                   */
+#define AGENT_PING_ATTEMPTS  1      /* number of ping attempts per cycle          */
+#define AGENT_WAIT_DELAY_MS  2000   /* delay between ping retries                 */
+#define NET_LINK_TIMEOUT_S   15     /* Ethernet link UP wait timeout              */
+#define DHCP_TIMEOUT_S       20     /* DHCP lease acquisition timeout             */
 
 /* ------------------------------------------------------------------ */
 /*  Hardware watchdog                                                  */
@@ -52,7 +52,7 @@ static void watchdog_init(void)
 {
 	wdt = DEVICE_DT_GET(DT_NODELABEL(wdt0));
 	if (!device_is_ready(wdt)) {
-		LOG_WRN("Watchdog nem elérhető");
+		LOG_WRN("Watchdog not available");
 		wdt = NULL;
 		return;
 	}
@@ -66,18 +66,18 @@ static void watchdog_init(void)
 
 	wdt_channel = wdt_install_timeout(wdt, &wdt_cfg);
 	if (wdt_channel < 0) {
-		LOG_WRN("Watchdog timeout install hiba: %d", wdt_channel);
+		LOG_WRN("Watchdog timeout install error: %d", wdt_channel);
 		wdt = NULL;
 		return;
 	}
 
 	if (wdt_setup(wdt, WDT_OPT_PAUSE_HALTED_BY_DBG) < 0) {
-		LOG_WRN("Watchdog setup hiba");
+		LOG_WRN("Watchdog setup error");
 		wdt = NULL;
 		return;
 	}
 
-	LOG_INF("Watchdog aktív (%d ms timeout)", WDT_TIMEOUT_MS);
+	LOG_INF("Watchdog active (%d ms timeout)", WDT_TIMEOUT_MS);
 }
 
 static inline void watchdog_feed(void)
@@ -88,7 +88,7 @@ static inline void watchdog_feed(void)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Státusz LED — GP25 (beépített LED)                                 */
+/*  Status LED — GP25 (built-in LED)                                  */
 /* ------------------------------------------------------------------ */
 
 static const struct gpio_dt_spec status_led =
@@ -100,7 +100,7 @@ static void led_set(bool on)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Hálózati konfig alkalmazása (DHCP vagy statikus)                  */
+/*  Apply network configuration (DHCP or static IP)                  */
 /* ------------------------------------------------------------------ */
 
 static K_SEM_DEFINE(net_event_sem, 0, 1);
@@ -121,30 +121,30 @@ static void apply_network_config(void)
 {
 	struct net_if *iface = net_if_get_default();
 
-	/* Ethernet link UP várás */
+	/* Wait for Ethernet link UP */
 	if (!net_if_is_up(iface)) {
-		LOG_INF("Ethernet link várás (max %ds)...", NET_LINK_TIMEOUT_S);
+		LOG_INF("Waiting for Ethernet link (max %ds)...", NET_LINK_TIMEOUT_S);
 		net_mgmt_init_event_callback(&net_mgmt_cb, net_event_handler,
 					     NET_EVENT_IF_UP);
 		net_mgmt_add_event_callback(&net_mgmt_cb);
 		if (k_sem_take(&net_event_sem, K_SECONDS(NET_LINK_TIMEOUT_S)) == 0) {
 			LOG_INF("Ethernet link UP");
 		} else {
-			LOG_WRN("Ethernet link timeout — folytatás kábel nélkül");
+			LOG_WRN("Ethernet link timeout — continuing without cable");
 		}
 		net_mgmt_del_event_callback(&net_mgmt_cb);
 	}
 
 	if (g_config.network.dhcp) {
-		LOG_INF("Hálózat: DHCP indítva...");
+		LOG_INF("Network: DHCP starting...");
 		net_mgmt_init_event_callback(&net_mgmt_cb, net_event_handler,
 					     NET_EVENT_IPV4_DHCP_BOUND);
 		net_mgmt_add_event_callback(&net_mgmt_cb);
 		net_dhcpv4_start(iface);
 		if (k_sem_take(&net_event_sem, K_SECONDS(DHCP_TIMEOUT_S)) == 0) {
-			LOG_INF("DHCP: IP kiosztva");
+			LOG_INF("DHCP: IP address assigned");
 		} else {
-			LOG_WRN("DHCP timeout — folytatás IP nélkül");
+			LOG_WRN("DHCP timeout — continuing without IP address");
 		}
 		net_mgmt_del_event_callback(&net_mgmt_cb);
 	} else {
@@ -153,7 +153,7 @@ static void apply_network_config(void)
 		if (net_addr_pton(AF_INET, g_config.network.ip,      &addr) < 0 ||
 		    net_addr_pton(AF_INET, g_config.network.netmask, &mask) < 0 ||
 		    net_addr_pton(AF_INET, g_config.network.gateway, &gw)   < 0) {
-			LOG_ERR("Hálózati cím formátum hiba — ellenőrizd a config.json-t");
+			LOG_ERR("Network address format error — check config.json");
 			return;
 		}
 
@@ -161,13 +161,13 @@ static void apply_network_config(void)
 		net_if_ipv4_set_netmask_by_addr(iface, &addr, &mask);
 		net_if_ipv4_router_add(iface, &gw, true, 0);
 
-		LOG_INF("Hálózat: statikus IP %s", g_config.network.ip);
+		LOG_INF("Network: static IP %s", g_config.network.ip);
 		k_sleep(K_MSEC(500));
 	}
 }
 
 /* ------------------------------------------------------------------ */
-/*  micro-ROS session init / fini                                     */
+/*  micro-ROS session init / cleanup                                  */
 /* ------------------------------------------------------------------ */
 
 static rcl_allocator_t allocator;
@@ -181,7 +181,7 @@ static bool ros_session_init(void)
 	allocator = rcl_get_default_allocator();
 
 	if (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {
-		LOG_ERR("rclc_support_init hiba");
+		LOG_ERR("rclc_support_init error");
 		return false;
 	}
 
@@ -189,13 +189,13 @@ static bool ros_session_init(void)
 				   g_config.ros.node_name,
 				   g_config.ros.namespace_,
 				   &support) != RCL_RET_OK) {
-		LOG_ERR("rclc_node_init hiba");
+		LOG_ERR("rclc_node_init error");
 		rclc_support_fini(&support);
 		return false;
 	}
 
 	if (channel_manager_create_entities(&node, &allocator) < 0) {
-		LOG_ERR("channel_manager_create_entities hiba");
+		LOG_ERR("channel_manager_create_entities error");
 		rcl_node_fini(&node);
 		rclc_support_fini(&support);
 		return false;
@@ -206,7 +206,7 @@ static bool ros_session_init(void)
 
 	if (rclc_executor_init(&executor, &support.context,
 			       handle_count, &allocator) != RCL_RET_OK) {
-		LOG_ERR("rclc_executor_init hiba");
+		LOG_ERR("rclc_executor_init error");
 		channel_manager_destroy_entities(&node, &allocator);
 		rcl_node_fini(&node);
 		rclc_support_fini(&support);
@@ -216,7 +216,7 @@ static bool ros_session_init(void)
 	channel_manager_add_subs_to_executor(&executor);
 
 	session_active = true;
-	LOG_INF("micro-ROS session aktív. %d csatorna, %d subscriber.",
+	LOG_INF("micro-ROS session active. %d channels, %d subscribers.",
 		channel_manager_count(), sub_count);
 	return true;
 }
@@ -231,7 +231,7 @@ static void ros_session_fini(void)
 	rcl_node_fini(&node);
 	rclc_support_fini(&support);
 	session_active = false;
-	LOG_INF("micro-ROS session lezárva");
+	LOG_INF("micro-ROS session closed");
 }
 
 /* ------------------------------------------------------------------ */
@@ -240,18 +240,18 @@ static void ros_session_fini(void)
 
 static void bridge_run(void)
 {
-	LOG_INF("Bridge főloop indítása");
+	LOG_INF("Starting bridge main loop");
 
 	while (true) {
 		watchdog_feed();
 
 		/* ---------------------------------------------------- */
-		/*  Fázis 1: Agent keresése (blokkoló, WDT etetéssel)   */
+		/*  Phase 1: Search for agent (blocking, with WDT feed) */
 		/* ---------------------------------------------------- */
 		if (rmw_uros_ping_agent(AGENT_PING_TIMEOUT, AGENT_PING_ATTEMPTS)
 		    != RMW_RET_OK) {
 			led_set(false);
-			LOG_INF("Agent keresése: %s:%s ...",
+			LOG_INF("Searching for agent: %s:%s ...",
 				g_config.network.agent_ip,
 				g_config.network.agent_port);
 
@@ -262,14 +262,14 @@ static void bridge_run(void)
 				k_sleep(K_MSEC(AGENT_WAIT_DELAY_MS));
 			}
 
-			LOG_INF("Agent elérhető — session felépítés");
+			LOG_INF("Agent found — initializing session");
 		}
 
 		/* ---------------------------------------------------- */
-		/*  Fázis 2: Session inicializálás                       */
+		/*  Phase 2: Session initialization                     */
 		/* ---------------------------------------------------- */
 		if (!ros_session_init()) {
-			LOG_WRN("Session init sikertelen, újrapróbálás...");
+			LOG_WRN("Session init failed, retrying...");
 			k_sleep(K_MSEC(AGENT_WAIT_DELAY_MS));
 			continue;
 		}
@@ -277,7 +277,7 @@ static void bridge_run(void)
 		led_set(true);
 
 		/* ---------------------------------------------------- */
-		/*  Fázis 3: Futás — amíg az agent elérhető             */
+		/*  Phase 3: Run — while agent is reachable            */
 		/* ---------------------------------------------------- */
 		int64_t last_ping_ms = k_uptime_get();
 
@@ -294,7 +294,7 @@ static void bridge_run(void)
 				if (rmw_uros_ping_agent(AGENT_PING_TIMEOUT,
 							AGENT_PING_ATTEMPTS)
 				    != RMW_RET_OK) {
-					LOG_WRN("Agent kapcsolat megszakadt");
+					LOG_WRN("Agent connection lost");
 					break;
 				}
 			}
@@ -303,11 +303,11 @@ static void bridge_run(void)
 		}
 
 		/* ---------------------------------------------------- */
-		/*  Fázis 4: Cleanup, vissza a keresésbe                */
+		/*  Phase 4: Cleanup, back to agent search             */
 		/* ---------------------------------------------------- */
 		led_set(false);
 		ros_session_fini();
-		LOG_INF("Újracsatlakozás folyamatban...");
+		LOG_INF("Reconnecting...");
 		k_sleep(K_MSEC(AGENT_WAIT_DELAY_MS));
 	}
 }
@@ -318,7 +318,7 @@ static void bridge_run(void)
 
 int main(void)
 {
-	/* LED init — legelőször, hogy jelezzen boot közben */
+	/* LED init — first, so it can signal during boot */
 	gpio_pin_configure_dt(&status_led, GPIO_OUTPUT_INACTIVE);
 	led_set(false);
 
@@ -328,7 +328,7 @@ int main(void)
 	/* USB CDC ACM init */
 	usb_enable(NULL);
 
-	/* DTR várás — max DTR_TIMEOUT_MS, utána folytatás monitor nélkül is */
+	/* Wait for DTR — max DTR_TIMEOUT_MS, then continue without monitor */
 	{
 		const struct device *console =
 			DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
@@ -342,14 +342,14 @@ int main(void)
 		}
 
 		if (dtr) {
-			LOG_INF("USB konzol csatlakozva");
+			LOG_INF("USB console connected");
 		} else {
-			LOG_INF("USB konzol nincs — autonóm üzemmód");
+			LOG_INF("No USB console — autonomous mode");
 		}
 	}
 
 	/* ------------------------------------------------------------ */
-	/*  Konfig betöltés                                              */
+	/*  Load configuration                                          */
 	/* ------------------------------------------------------------ */
 	config_init();
 	watchdog_feed();
@@ -360,20 +360,20 @@ int main(void)
 		g_config.network.agent_port);
 
 	/* ------------------------------------------------------------ */
-	/*  Csatornák regisztrálása és hardware init                    */
+	/*  Register channels and initialize hardware                  */
 	/* ------------------------------------------------------------ */
 	user_register_channels();
 	channel_manager_init_channels();
 	watchdog_feed();
 
 	/* ------------------------------------------------------------ */
-	/*  Hálózati konfig alkalmazása                                 */
+	/*  Apply network configuration                                */
 	/* ------------------------------------------------------------ */
 	apply_network_config();
 	watchdog_feed();
 
 	/* ------------------------------------------------------------ */
-	/*  micro-ROS UDP transport beállítása                          */
+	/*  Configure micro-ROS UDP transport                          */
 	/* ------------------------------------------------------------ */
 	memset(&default_params, 0, sizeof(default_params));
 	strncpy(default_params.ip,   g_config.network.agent_ip,
@@ -395,11 +395,11 @@ int main(void)
 	LOG_INF("Shell: 'bridge config show'");
 
 	/* ------------------------------------------------------------ */
-	/*  Reconnection loop — soha nem tér vissza                     */
+	/*  Reconnection loop — never returns                          */
 	/* ------------------------------------------------------------ */
 	bridge_run();
 
-	/* Ide normál esetben nem jutunk el */
+	/* Should never reach here */
 	sys_reboot(SYS_REBOOT_COLD);
 	return 0;
 }

@@ -2,10 +2,10 @@
 #define USER_CHANNELS_H
 
 /**
- * Regisztráld ide az összes aktív csatornát.
- * Ez az egyetlen fájl, amit rendszeresen szerkesztesz.
+ * Register all active channels here.
+ * This is the only file you regularly edit.
  *
- * Példa:
+ * Example:
  *   #include "motor_left.h"
  *   channel_register(&motor_left_channel);
  */

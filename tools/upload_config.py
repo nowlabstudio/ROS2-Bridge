@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-upload_config.py — Bridge konfig feltöltő
+upload_config.py — Bridge config uploader
 ==========================================
-Beolvassa a config.json-t és soros parancsokon keresztül
-feltölti a Picóra, majd elmenti a flash-be.
+Reads config.json and uploads it to the Pico via serial shell commands,
+then saves it to flash.
 
-Használat:
+Usage:
     python3 tools/upload_config.py
     python3 tools/upload_config.py --port /dev/tty.usbmodem231401
     python3 tools/upload_config.py --config app/config.json --port /dev/tty.usbmodem231401
@@ -19,18 +19,18 @@ import serial
 import serial.tools.list_ports
 
 # ------------------------------------------------------------------ #
-#  Argumentumok                                                        #
+#  Arguments                                                           #
 # ------------------------------------------------------------------ #
 
-parser = argparse.ArgumentParser(description="Bridge konfig feltöltő")
-parser.add_argument("--port",   default=None,              help="Soros port (pl. /dev/tty.usbmodem231401)")
-parser.add_argument("--baud",   default=115200, type=int,  help="Baudrate (alapértelmezett: 115200)")
-parser.add_argument("--config", default="app/config.json", help="config.json elérési útja")
+parser = argparse.ArgumentParser(description="Bridge config uploader")
+parser.add_argument("--port",   default=None,              help="Serial port (e.g. /dev/tty.usbmodem231401)")
+parser.add_argument("--baud",   default=115200, type=int,  help="Baud rate (default: 115200)")
+parser.add_argument("--config", default="app/config.json", help="Path to config.json")
 args = parser.parse_args()
 
 
 # ------------------------------------------------------------------ #
-#  Port automatikus keresés                                            #
+#  Auto-detect serial port                                             #
 # ------------------------------------------------------------------ #
 
 def find_pico_port():
@@ -45,27 +45,27 @@ port = args.port
 if not port:
     port = find_pico_port()
     if not port:
-        print("HIBA: Nem találtam Pico soros portot.")
-        print("Csatlakoztasd a Picót és add meg a --port argumentumot.")
+        print("ERROR: No Pico serial port found.")
+        print("Connect the Pico and specify --port.")
         sys.exit(1)
-    print(f"Port automatikusan megtalálva: {port}")
+    print(f"Port auto-detected: {port}")
 
 
 # ------------------------------------------------------------------ #
-#  JSON konfig betöltés                                                #
+#  Load JSON config                                                    #
 # ------------------------------------------------------------------ #
 
 try:
     with open(args.config, "r") as f:
         cfg = json.load(f)
 except FileNotFoundError:
-    print(f"HIBA: {args.config} nem található")
+    print(f"ERROR: {args.config} not found")
     sys.exit(1)
 except json.JSONDecodeError as e:
-    print(f"HIBA: JSON szintaxishiba: {e}")
+    print(f"ERROR: JSON syntax error: {e}")
     sys.exit(1)
 
-# Kulcs-érték párok kinyerése (csak a bridge shell által ismert kulcsok)
+# Extract key-value pairs (only keys known to the bridge shell)
 dhcp_val = cfg.get("network", {}).get("dhcp")
 
 KNOWN_KEYS = {
@@ -79,18 +79,18 @@ KNOWN_KEYS = {
     "ros.namespace":       cfg.get("ros", {}).get("namespace"),
 }
 
-print("\nFeltöltendő konfig:")
+print("\nConfig to upload:")
 for k, v in KNOWN_KEYS.items():
     if v:
         print(f"  {k} = {v}")
 
 
 # ------------------------------------------------------------------ #
-#  Soros kapcsolat és feltöltés                                        #
+#  Serial connection and upload                                        #
 # ------------------------------------------------------------------ #
 
 def send_cmd(ser, cmd, wait=0.3):
-    """Küld egy parancsot és visszaadja a választ."""
+    """Send a command and return the response."""
     ser.write((cmd + "\n").encode())
     time.sleep(wait)
     response = ""
@@ -100,20 +100,20 @@ def send_cmd(ser, cmd, wait=0.3):
     return response.strip()
 
 
-print(f"\nKapcsoódás: {port} @ {args.baud}...")
+print(f"\nConnecting: {port} @ {args.baud}...")
 try:
     ser = serial.Serial(port, args.baud, timeout=2)
     ser.dtr = True
     time.sleep(1.0)
 except serial.SerialException as e:
-    print(f"HIBA: Nem sikerült csatlakozni: {e}")
+    print(f"ERROR: Could not connect: {e}")
     sys.exit(1)
 
-# Flush
+# Flush input buffer
 ser.reset_input_buffer()
 time.sleep(0.5)
 
-print("Konfig beállítása...")
+print("Setting config values...")
 errors = 0
 
 for key, value in KNOWN_KEYS.items():
@@ -124,27 +124,27 @@ for key, value in KNOWN_KEYS.items():
     if "OK" in resp:
         print(f"  ✓ {key} = {value}")
     else:
-        print(f"  ✗ {key} = {value}  (válasz: {resp!r})")
+        print(f"  ✗ {key} = {value}  (response: {resp!r})")
         errors += 1
 
-# Mentés
-print("\nMentés flash-be...")
+# Save to flash
+print("\nSaving to flash...")
 resp = send_cmd(ser, "bridge config save", wait=1.0)
-if "elmentve" in resp or "save" in resp.lower():
-    print("  ✓ Elmentve")
+if "saved" in resp.lower() or "save" in resp.lower():
+    print("  ✓ Saved")
 else:
-    print(f"  ? Válasz: {resp!r}")
+    print(f"  ? Response: {resp!r}")
 
-# Megjelenítés
-print("\nEllenőrzés:")
+# Verify
+print("\nVerification:")
 resp = send_cmd(ser, "bridge config show", wait=0.5)
 print(resp)
 
 ser.close()
 
 if errors:
-    print(f"\n{errors} hiba történt. Ellenőrizd a kimenetet.")
+    print(f"\n{errors} error(s) occurred. Check the output above.")
     sys.exit(1)
 else:
-    print("\n✓ Konfig sikeresen feltöltve!")
-    print("Aktiváláshoz: bridge reboot  (vagy kézzel újraindítás)")
+    print("\n✓ Config uploaded successfully!")
+    print("To activate: bridge reboot  (or power cycle)")

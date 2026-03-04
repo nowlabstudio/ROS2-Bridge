@@ -5,43 +5,46 @@
 #include <stdint.h>
 
 /* ------------------------------------------------------------------ */
-/*  Üzenettípusok (ROS2 std_msgs)                                      */
+/*  Message types supported by the channel system                     */
 /* ------------------------------------------------------------------ */
 
 typedef enum {
-	MSG_BOOL    = 0,
-	MSG_INT32   = 1,
-	MSG_FLOAT32 = 2,
+	MSG_BOOL    = 0,   /* std_msgs/Bool    */
+	MSG_INT32   = 1,   /* std_msgs/Int32   */
+	MSG_FLOAT32 = 2,   /* std_msgs/Float32 */
 } msg_type_t;
 
 /* ------------------------------------------------------------------ */
-/*  Csatorna érték — amit a read() visszaad és a write() megkap        */
+/*  Generic value container returned by read() and passed to write()  */
 /* ------------------------------------------------------------------ */
 
 typedef union {
-	bool    b;
-	int32_t i32;
-	float   f32;
+	bool    b;     /* used for MSG_BOOL    */
+	int32_t i32;   /* used for MSG_INT32   */
+	float   f32;   /* used for MSG_FLOAT32 */
 } channel_value_t;
 
 /* ------------------------------------------------------------------ */
-/*  Csatorna leíró struktúra                                           */
+/*  Channel descriptor                                                 */
+/*                                                                     */
+/*  Connects a physical device to one or two ROS2 topics.             */
+/*  Set topic_pub or topic_sub to NULL to disable that direction.     */
 /* ------------------------------------------------------------------ */
 
 typedef struct {
-	const char  *name;        /* egyedi azonosító (loghoz, debug)    */
-	const char  *topic_pub;   /* publish topic, NULL = nem publikál  */
-	const char  *topic_sub;   /* subscribe topic, NULL = nem figyel  */
-	msg_type_t   msg_type;    /* üzenet típusa mindkét irányban      */
-	uint32_t     period_ms;   /* publish periódus milliszekundumban  */
+	const char  *name;        /* unique identifier (shown in logs)   */
+	const char  *topic_pub;   /* publish topic, NULL = no publish    */
+	const char  *topic_sub;   /* subscribe topic, NULL = no subscribe*/
+	msg_type_t   msg_type;    /* message type for both directions    */
+	uint32_t     period_ms;   /* publish period in milliseconds      */
 
-	/* Inicializálás — hardware setup, gpio/pwm/i2c/spi init stb.   */
+	/* Hardware init — gpio/pwm/i2c/spi/adc setup etc.              */
 	int  (*init)(void);
 
-	/* Szenzor olvasás / státusz lekérdezés → ROS2 publish           */
+	/* Read sensor value / device status → publish to ROS2          */
 	void (*read)(channel_value_t *out);
 
-	/* ROS2 subscribe üzenet fogadása → aktuátor / setpoint írás     */
+	/* Receive ROS2 subscribe message → write to actuator/setpoint  */
 	void (*write)(const channel_value_t *in);
 } channel_t;
 
