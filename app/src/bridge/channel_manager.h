@@ -53,6 +53,13 @@ int channel_manager_sub_count(void);
 int channel_manager_add_subs_to_executor(rclc_executor_t *executor);
 
 /**
+ * Megszünteti a ROS2 publisher és subscriber entitásokat.
+ * Hívd újracsatlakozás előtt (session cleanup).
+ */
+void channel_manager_destroy_entities(rcl_node_t *node,
+				      const rcl_allocator_t *allocator);
+
+/**
  * Periódikus publish — ellenőrzi a timer-eket és meghívja
  * az aktív csatornák read() függvényét.
  * Hívd a fő loop-ban, ~10ms-enként.

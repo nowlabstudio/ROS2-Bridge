@@ -230,6 +230,24 @@ int channel_manager_add_subs_to_executor(rclc_executor_t *executor)
 	return 0;
 }
 
+void channel_manager_destroy_entities(rcl_node_t *node,
+				      const rcl_allocator_t *allocator)
+{
+	ARG_UNUSED(allocator);
+
+	for (int i = 0; i < channel_count; i++) {
+		if (pub_active[i]) {
+			rcl_publisher_fini(&pub[i], node);
+			pub_active[i] = false;
+		}
+		if (sub_active[i]) {
+			rcl_subscription_fini(&sub[i], node);
+			sub_active[i] = false;
+		}
+	}
+	LOG_INF("Channel entitások törölve");
+}
+
 void channel_manager_publish(void)
 {
 	int64_t now = k_uptime_get();
