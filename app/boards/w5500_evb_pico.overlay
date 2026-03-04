@@ -1,0 +1,27 @@
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+/* W6100 chip van a boardon, nem W5500 */
+&ethernet {
+	compatible = "wiznet,w6100";
+};
+
+/* LittleFS storage partíció — flash utolsó 1MB-ja (offset 15MB) */
+&flash0 {
+	partitions {
+		storage_partition: partition@f00000 {
+			label = "storage";
+			reg = <0x00f00000 0x00100000>;
+		};
+	};
+};

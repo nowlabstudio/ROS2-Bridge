@@ -1,0 +1,22 @@
+manifest:
+  version: "0.13"
+
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+    - name: micro-ros
+      url-base: https://github.com/micro-ROS
+
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: main
+      import: true
+
+    - name: micro_ros_zephyr_module
+      remote: micro-ros
+      revision: humble
+      path: modules/lib/micro_ros_zephyr_module
+
+  self:
+    path: app

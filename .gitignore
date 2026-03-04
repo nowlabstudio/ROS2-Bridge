@@ -1,0 +1,22 @@
+# Zephyr workspace — ne kerüljön verziókövetés alá (2GB+)
+workspace/
+
+# Build artifacts
+build/
+*.uf2
+*.bin
+*.hex
+*.elf
+*.map
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+*.swp
