@@ -1,7 +1,7 @@
 # W6100 EVB Pico — Zephyr + micro-ROS Universal Bridge
 
 > **Developer Reference Documentation**
-> Last updated: 2026-03-04 | Version: v1.4 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
+> Last updated: 2026-03-04 | Version: v1.5 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
 
 ---
 
@@ -777,9 +777,11 @@ At the end of the test, `tools/stress_report.json` is generated with all results
 | JSON config read/write | ✅ Done | v1.1 |
 | Serial shell (bridge commands) | ✅ Done, tested | v1.1 |
 | Python config uploader | ✅ Done, tested | v1.1 |
-| Python stress test suite | ✅ Done | v1.4 |
+| Python stress test suite | ✅ Done, all 17 auto tests passing | v1.5 |
 | Channel Manager framework | ✅ Done | v1.3 |
 | User code space (user_channels.c) | ✅ Done | v1.3 |
+| Built-in test channels (counter / heartbeat / echo) | ✅ Done, tested | v1.5 |
+| Shell robustness (overflow protection, rapid-fire) | ✅ Done, tested | v1.5 |
 | Hardware watchdog (30s) | ✅ Done | v1.4 |
 | Reconnection state machine | ✅ Done | v1.4 |
 | Security audit (buffer overflow, null ptr) | ✅ Done | v1.3 |
