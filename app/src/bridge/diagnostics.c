@@ -40,8 +40,7 @@ static char kv_val2[8];    /* reconnects    */
 static char kv_val3[] = "v2.0-W6100";  /* firmware (fixed) */
 static char kv_val4[16];   /* ip            */
 
-static char hw_id_buf[]    = "w6100_evb_pico";
-static char node_name_buf[] = "pico_bridge";
+static char hw_id_buf[] = "w6100_evb_pico";
 
 static diagnostic_msgs__msg__KeyValue        kv_items[DIAG_KV_COUNT];
 static diagnostic_msgs__msg__DiagnosticStatus status_msg;
@@ -91,7 +90,7 @@ int diagnostics_init(rcl_node_t *node, const rcl_allocator_t *allocator)
 	BIND_STR_BUF(kv_items[4].value, kv_val4);
 
 	/* Status message */
-	BIND_STR_STATIC(status_msg.name,        node_name_buf);
+	BIND_STR_STATIC(status_msg.name,        g_config.ros.node_name);
 	BIND_STR_STATIC(status_msg.hardware_id, hw_id_buf);
 	status_msg.level           = diagnostic_msgs__msg__DiagnosticStatus__OK;
 	status_msg.values.data     = kv_items;
