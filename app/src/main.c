@@ -22,6 +22,9 @@
 #include <string.h>
 #include "config/config.h"
 #include "bridge/channel_manager.h"
+#include "bridge/diagnostics.h"
+#include "bridge/param_server.h"
+#include "bridge/service_manager.h"
 #include "user/user_channels.h"
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
@@ -201,12 +204,22 @@ static bool ros_session_init(void)
 		return false;
 	}
 
+	/* Diagnostics publisher — before executor (no executor handle needed) */
+	if (diagnostics_init(&node, &allocator) < 0) {
+		LOG_WRN("Diagnostics init failed — continuing without /diagnostics");
+	}
+
 	int sub_count    = channel_manager_sub_count();
-	int handle_count = (sub_count > 0) ? sub_count : 1;
+	int handle_count = sub_count + PARAM_SERVER_HANDLES + service_count();
+
+	if (handle_count < 1) {
+		handle_count = 1;
+	}
 
 	if (rclc_executor_init(&executor, &support.context,
 			       handle_count, &allocator) != RCL_RET_OK) {
 		LOG_ERR("rclc_executor_init error");
+		diagnostics_fini(&node);
 		channel_manager_destroy_entities(&node, &allocator);
 		rcl_node_fini(&node);
 		rclc_support_fini(&support);
@@ -214,6 +227,19 @@ static bool ros_session_init(void)
 	}
 
 	channel_manager_add_subs_to_executor(&executor);
+
+	/* Parameter server — after executor init, adds itself to executor */
+	if (param_server_init(&node, &executor) < 0) {
+		LOG_WRN("Param server init failed — continuing without params");
+	}
+
+	/* Services — after executor init, each adds itself to executor */
+	if (service_manager_init(&node, &executor) < 0) {
+		LOG_WRN("Service manager init failed");
+	}
+
+	/* Restore persisted channel params from flash */
+	param_server_load_from_config();
 
 	session_active = true;
 	LOG_INF("micro-ROS session active. %d channels, %d subscribers.",
@@ -226,6 +252,10 @@ static void ros_session_fini(void)
 	if (!session_active) {
 		return;
 	}
+	/* Destroy in reverse init order — children before parent node */
+	service_manager_fini(&node);
+	param_server_fini(&node);
+	diagnostics_fini(&node);
 	channel_manager_destroy_entities(&node, &allocator);
 	rclc_executor_fini(&executor);
 	rcl_node_fini(&node);
@@ -280,10 +310,18 @@ static void bridge_run(void)
 		/*  Phase 3: Run — while agent is reachable            */
 		/* ---------------------------------------------------- */
 		int64_t last_ping_ms = k_uptime_get();
+		int64_t last_diag_ms = k_uptime_get();
 
 		while (true) {
-			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+			/* IRQ pending check — first, before anything else   */
+			channel_manager_handle_irq_pending();
+
+			/* Executor: 1ms timeout */
+			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1));
+
+			/* Periodic publish */
 			channel_manager_publish();
+
 			watchdog_feed();
 
 			int64_t now = k_uptime_get();
@@ -299,7 +337,12 @@ static void bridge_run(void)
 				}
 			}
 
-			k_msleep(10);
+			if ((now - last_diag_ms) >= 5000) {
+				last_diag_ms = now;
+				diagnostics_publish();
+			}
+
+			k_msleep(1);
 		}
 
 		/* ---------------------------------------------------- */
@@ -307,7 +350,8 @@ static void bridge_run(void)
 		/* ---------------------------------------------------- */
 		led_set(false);
 		ros_session_fini();
-		LOG_INF("Reconnecting...");
+		g_reconnect_count++;
+		LOG_INF("Reconnecting... (attempt %d)", g_reconnect_count);
 		k_sleep(K_MSEC(AGENT_WAIT_DELAY_MS));
 	}
 }

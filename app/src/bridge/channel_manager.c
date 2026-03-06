@@ -2,6 +2,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/atomic.h>
 
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -19,8 +20,9 @@ LOG_MODULE_REGISTER(channel_manager, LOG_LEVEL_INF);
 /*  Internal state                                                     */
 /* ------------------------------------------------------------------ */
 
-static const channel_t *channels[CHANNEL_MAX];
-static int              channel_count;
+static const channel_t  *channels[CHANNEL_MAX];
+static channel_state_t   states[CHANNEL_MAX];
+static int               channel_count;
 
 /* ROS2 entities per channel */
 static rcl_publisher_t    pub[CHANNEL_MAX];
@@ -69,6 +71,41 @@ static void *get_sub_msg(int idx)
 }
 
 /* ------------------------------------------------------------------ */
+/*  Core publish helper — shared by periodic and IRQ paths            */
+/* ------------------------------------------------------------------ */
+
+static void perform_channel_publish(int i)
+{
+	const channel_t *ch = channels[i];
+
+	if (!ch || !ch->read) {
+		return;
+	}
+
+	channel_value_t val = {0};
+	ch->read(&val);
+
+	if (states[i].invert_logic && ch->msg_type == MSG_BOOL) {
+		val.b = !val.b;
+	}
+
+	switch (ch->msg_type) {
+	case MSG_BOOL:
+		msg_pub_bool[i].data = val.b;
+		(void)rcl_publish(&pub[i], &msg_pub_bool[i], NULL);
+		break;
+	case MSG_INT32:
+		msg_pub_int32[i].data = val.i32;
+		(void)rcl_publish(&pub[i], &msg_pub_int32[i], NULL);
+		break;
+	case MSG_FLOAT32:
+		msg_pub_float32[i].data = val.f32;
+		(void)rcl_publish(&pub[i], &msg_pub_float32[i], NULL);
+		break;
+	}
+}
+
+/* ------------------------------------------------------------------ */
 /*  Subscribe callback — generic, shared by all channels              */
 /* ------------------------------------------------------------------ */
 
@@ -91,6 +128,9 @@ static void sub_callback(const void *msg_in, void *context)
 	switch (ch->msg_type) {
 	case MSG_BOOL:
 		val.b = ((std_msgs__msg__Bool *)msg_in)->data;
+		if (states[idx].invert_logic) {
+			val.b = !val.b;
+		}
 		break;
 	case MSG_INT32:
 		val.i32 = ((std_msgs__msg__Int32 *)msg_in)->data;
@@ -104,7 +144,7 @@ static void sub_callback(const void *msg_in, void *context)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API                                                         */
+/*  Public API — registration & lifecycle                             */
 /* ------------------------------------------------------------------ */
 
 int channel_register(const channel_t *ch)
@@ -117,14 +157,18 @@ int channel_register(const channel_t *ch)
 		return -EINVAL;
 	}
 
-	channels[channel_count++] = ch;
+	int i = channel_count;
+	channels[i] = ch;
+
+	/* Initialize mutable state from descriptor defaults */
+	states[i].period_ms    = ch->period_ms;
+	states[i].enabled      = true;
+	states[i].invert_logic = false;
+	atomic_set(&states[i].irq_pending, 0);
+
+	channel_count++;
 	LOG_INF("Channel registered: %s", ch->name);
 	return 0;
-}
-
-int channel_manager_count(void)
-{
-	return channel_count;
 }
 
 void channel_manager_init_channels(void)
@@ -189,6 +233,28 @@ int channel_manager_create_entities(rcl_node_t *node,
 	return 0;
 }
 
+void channel_manager_destroy_entities(rcl_node_t *node,
+				      const rcl_allocator_t *allocator)
+{
+	ARG_UNUSED(allocator);
+
+	for (int i = 0; i < channel_count; i++) {
+		if (pub_active[i]) {
+			rcl_publisher_fini(&pub[i], node);
+			pub_active[i] = false;
+		}
+		if (sub_active[i]) {
+			rcl_subscription_fini(&sub[i], node);
+			sub_active[i] = false;
+		}
+	}
+	LOG_INF("Channel entities destroyed");
+}
+
+/* ------------------------------------------------------------------ */
+/*  Executor integration                                               */
+/* ------------------------------------------------------------------ */
+
 int channel_manager_sub_count(void)
 {
 	int count = 0;
@@ -230,61 +296,131 @@ int channel_manager_add_subs_to_executor(rclc_executor_t *executor)
 	return 0;
 }
 
-void channel_manager_destroy_entities(rcl_node_t *node,
-				      const rcl_allocator_t *allocator)
-{
-	ARG_UNUSED(allocator);
-
-	for (int i = 0; i < channel_count; i++) {
-		if (pub_active[i]) {
-			rcl_publisher_fini(&pub[i], node);
-			pub_active[i] = false;
-		}
-		if (sub_active[i]) {
-			rcl_subscription_fini(&sub[i], node);
-			sub_active[i] = false;
-		}
-	}
-	LOG_INF("Channel entities destroyed");
-}
+/* ------------------------------------------------------------------ */
+/*  Main loop publish                                                  */
+/* ------------------------------------------------------------------ */
 
 void channel_manager_publish(void)
 {
 	int64_t now = k_uptime_get();
 
 	for (int i = 0; i < channel_count; i++) {
-		if (!pub_active[i]) {
+		if (!pub_active[i] || !states[i].enabled) {
 			continue;
 		}
 
-		const channel_t *ch = channels[i];
-
-		if (!ch || !ch->read) {
-			continue;
-		}
-
-		if ((now - last_publish_ms[i]) < (int64_t)ch->period_ms) {
+		if ((now - last_publish_ms[i]) < (int64_t)states[i].period_ms) {
 			continue;
 		}
 
 		last_publish_ms[i] = now;
+		perform_channel_publish(i);
+	}
+}
 
-		channel_value_t val = {0};
-		ch->read(&val);
+void channel_manager_handle_irq_pending(void)
+{
+	int64_t now = k_uptime_get();
 
-		switch (ch->msg_type) {
-		case MSG_BOOL:
-			msg_pub_bool[i].data = val.b;
-			(void)rcl_publish(&pub[i], &msg_pub_bool[i], NULL);
-			break;
-		case MSG_INT32:
-			msg_pub_int32[i].data = val.i32;
-			(void)rcl_publish(&pub[i], &msg_pub_int32[i], NULL);
-			break;
-		case MSG_FLOAT32:
-			msg_pub_float32[i].data = val.f32;
-			(void)rcl_publish(&pub[i], &msg_pub_float32[i], NULL);
-			break;
+	for (int i = 0; i < channel_count; i++) {
+		if (!pub_active[i] || !channels[i]->irq_capable) {
+			continue;
+		}
+
+		if (atomic_test_and_clear_bit(&states[i].irq_pending, 0)) {
+			last_publish_ms[i] = now;  /* reset periodic timer */
+			perform_channel_publish(i);
+			LOG_DBG("IRQ publish: %s", channels[i]->name);
 		}
 	}
+}
+
+/* ------------------------------------------------------------------ */
+/*  ISR interface                                                      */
+/* ------------------------------------------------------------------ */
+
+void channel_manager_signal_irq(int channel_idx)
+{
+	if (channel_idx >= 0 && channel_idx < channel_count) {
+		atomic_set_bit(&states[channel_idx].irq_pending, 0);
+	}
+}
+
+/* ------------------------------------------------------------------ */
+/*  State API                                                          */
+/* ------------------------------------------------------------------ */
+
+void channel_state_set_period(int idx, uint32_t ms)
+{
+	if (idx >= 0 && idx < channel_count) {
+		states[idx].period_ms = ms;
+	}
+}
+
+void channel_state_set_enabled(int idx, bool en)
+{
+	if (idx >= 0 && idx < channel_count) {
+		states[idx].enabled = en;
+	}
+}
+
+void channel_state_set_invert(int idx, bool inv)
+{
+	if (idx >= 0 && idx < channel_count) {
+		states[idx].invert_logic = inv;
+	}
+}
+
+uint32_t channel_state_get_period(int idx)
+{
+	if (idx >= 0 && idx < channel_count) {
+		return states[idx].period_ms;
+	}
+	return 0;
+}
+
+bool channel_state_get_enabled(int idx)
+{
+	if (idx >= 0 && idx < channel_count) {
+		return states[idx].enabled;
+	}
+	return false;
+}
+
+bool channel_state_get_invert(int idx)
+{
+	if (idx >= 0 && idx < channel_count) {
+		return states[idx].invert_logic;
+	}
+	return false;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Lookup & info                                                      */
+/* ------------------------------------------------------------------ */
+
+int channel_manager_count(void)
+{
+	return channel_count;
+}
+
+int channel_manager_find_by_name(const char *name)
+{
+	if (!name) {
+		return -1;
+	}
+	for (int i = 0; i < channel_count; i++) {
+		if (channels[i] && strcmp(channels[i]->name, name) == 0) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+const char *channel_manager_name(int idx)
+{
+	if (idx >= 0 && idx < channel_count && channels[idx]) {
+		return channels[idx]->name;
+	}
+	return NULL;
 }

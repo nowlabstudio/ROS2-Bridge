@@ -11,6 +11,11 @@ target_sources(app PRIVATE
     src/config/config.c
     src/shell/shell_cmd.c
     src/bridge/channel_manager.c
+    src/bridge/diagnostics.c
+    src/bridge/param_server.c
+    src/bridge/service_manager.c
+    src/drivers/drv_gpio.c
+    src/drivers/drv_adc.c
     src/user/user_channels.c
     src/user/test_channels.c
 )
