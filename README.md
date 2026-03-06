@@ -1,7 +1,7 @@
 # W6100 EVB Pico — Zephyr + micro-ROS Universal Bridge
 
 > **Developer Reference Documentation**
-> Last updated: 2026-03-04 | Version: v1.5 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
+> Last updated: 2026-03-06 | Version: v2.0 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
 
 ---
 
@@ -100,6 +100,7 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 │
 ├── README.md                        ← this file (English)
 ├── README.hu.md                     ← Hungarian version
+├── TECHNICAL_OVERVIEW.md            ← Deep-dive for senior devs and robot integrators
 ├── Makefile                         ← build, flash, monitor commands
 │
 ├── docker/
@@ -107,8 +108,14 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 │
 ├── tools/
 │   ├── upload_config.py             ← Python config uploader (Mac/Linux)
-│   ├── stress_test.py               ← Comprehensive stress test (automated + manual)
-│   └── stress_report.json           ← Auto-generated test report
+│   ├── test_bridge.py               ← Lightweight ROS2 topic/service smoke test
+│   ├── stress_test.py               ← v1.5 shell-only tests (legacy)
+│   ├── stress_report.json           ← v1.5 test report
+│   ├── v2_stress_test.py            ← v2.0 full test suite (74 auto + 12 manual)
+│   ├── v2_stress_report.json        ← v2.0 auto-generated test report
+│   ├── docker-run-agent-udp.sh      ← Start micro-ROS Jazzy agent in Docker (UDP)
+│   ├── docker-run-ros2.sh           ← Start ROS2 Jazzy interactive shell in Docker
+│   └── start-eth.sh                 ← Launch full test environment (agent + shell, 2 terminals)
 │
 ├── workspace/                       ← Zephyr workspace (result of west init, do NOT edit)
 │   ├── zephyr/                      ← Zephyr RTOS source (main branch)
@@ -126,7 +133,7 @@ W6100_EVB_Pico_Zephyr_MicroROS/
     ├── config.json                  ← Reference config (Python uploader source)
     │
     ├── boards/
-    │   └── w5500_evb_pico.overlay   ← DTS overlay: USB CDC ACM, LED, LittleFS, W6100
+    │   └── w5500_evb_pico.overlay   ← DTS overlay: USB CDC ACM, LED, ADC, LittleFS, W6100
     │
     └── src/
         ├── main.c                   ← Entry point, reconnection loop, watchdog
@@ -139,8 +146,15 @@ W6100_EVB_Pico_Zephyr_MicroROS/
         │   └── shell_cmd.c          ← 'bridge' shell commands (show/set/save/load/reset/reboot)
         │
         ├── bridge/
-        │   ├── channel.h            ← channel_t struct, msg_type_t, channel_value_t
-        │   └── channel_manager.c/.h ← Pub/sub framework, entity lifecycle management
+        │   ├── channel.h            ← channel_t, channel_state_t, msg_type_t, channel_value_t
+        │   ├── channel_manager.c/.h ← Pub/sub framework, IRQ path, entity lifecycle
+        │   ├── diagnostics.c/.h     ← /diagnostics topic publisher (5s period)
+        │   ├── param_server.c/.h    ← rclc_parameter_server (period_ms, enabled per channel)
+        │   └── service_manager.c/.h ← std_srvs SetBool / Trigger service registration
+        │
+        ├── drivers/
+        │   ├── drv_gpio.c/.h        ← E-Stop input (GP15) + relay-brake output (GP14)
+        │   └── drv_adc.c/.h         ← Battery voltage ADC (GP26, channel 0)
         │
         └── user/
             ├── user_channels.h      ← Declaration: user_register_channels()
@@ -190,7 +204,7 @@ make build
 
 Output: `workspace/build/zephyr/zephyr.uf2`
 
-Build stats: ~289 KB flash (1.72% of 16 MB), ~220 KB RAM (81% of 264 KB).
+Build stats: ~418 KB flash (2.49% of 16 MB), ~262 KB RAM (97% of 264 KB). Heap: 96 KB (`CONFIG_HEAP_MEM_POOL_SIZE=98304`).
 
 ### 4. Flash the firmware
 
@@ -231,7 +245,7 @@ screen -X quit       # close all sessions
 
 ```
 *** Booting Zephyr OS build v4.3.99 ***
-[main] Watchdog active (30000 ms timeout)
+[main] Watchdog active (8000 ms timeout)
 [main] USB console connected          ← or: "autonomous mode" if no DTR
 [config] LittleFS mounted: /lfs
 [config] Config loaded: /lfs/config.json
@@ -249,7 +263,7 @@ screen -X quit       # close all sessions
 [main] Starting bridge main loop
 [main] Searching for agent: 192.168.68.125:8888 ...
 [main] Agent found — initializing session
-[main] micro-ROS session active. 0 channels, 0 subscribers.
+[main] micro-ROS session active. 3 channels, 1 subscribers.
 ```
 
 **LED behavior:**
@@ -433,16 +447,26 @@ typedef union {
     float   f32;   // for MSG_FLOAT32
 } channel_value_t;
 
+// Const descriptor — stored in flash, never modified at runtime
 typedef struct {
-    const char    *name;       // Channel name (shown in logs)
-    const char    *topic_pub;  // ROS2 publish topic (NULL = no publish)
-    const char    *topic_sub;  // ROS2 subscribe topic (NULL = no subscribe)
-    msg_type_t     msg_type;   // Message type (Bool/Int32/Float32)
-    uint32_t       period_ms;  // Publish period in milliseconds
+    const char    *name;         // Channel name (shown in logs)
+    const char    *topic_pub;    // ROS2 publish topic (NULL = no publish)
+    const char    *topic_sub;    // ROS2 subscribe topic (NULL = no subscribe)
+    msg_type_t     msg_type;     // Message type (Bool/Int32/Float32)
+    uint32_t       period_ms;    // Default publish period in milliseconds
+    bool           irq_capable;  // true = GPIO interrupt triggers immediate publish
     int  (*init)(void);                        // Hardware init (can be NULL)
     void (*read)(channel_value_t *val);        // Read from hardware (can be NULL)
     void (*write)(const channel_value_t *val); // Write to hardware (can be NULL)
 } channel_t;
+
+// Mutable state — in RAM, modified by param server and ISR
+typedef struct {
+    uint32_t  period_ms;    // Active period (overrides descriptor default)
+    bool      enabled;      // Enable/disable publish
+    bool      invert_logic; // Invert bool value on publish/receive
+    atomic_t  irq_pending;  // Set by ISR, cleared by main loop
+} channel_state_t;
 ```
 
 ### How to add a new sensor or actuator
@@ -586,7 +610,7 @@ const channel_t motor_channel = {
 ### Constraints
 
 - Maximum **16 channels** (`CHANNEL_MAX = 16` in `channel_manager.h`)
-- Executor handle count = number of subscriber channels
+- Executor handle count = subscriber channels + `PARAM_SERVER_HANDLES` (6) + service count
 
 ---
 
@@ -616,11 +640,136 @@ from `user_channels.c` (and optionally remove `test_channels.c/h` from the build
 
 ---
 
+## Agent Connection — Status LED Example
+
+The firmware lights up the built-in LED (GP25) when the micro-ROS agent connects, and turns it off when the connection is lost. This is the canonical pattern for reacting to agent connect/disconnect events.
+
+The relevant code lives in `app/src/main.c`:
+
+```c
+/* LED descriptor — resolved at compile time from DTS alias "led0" = GP25 */
+static const struct gpio_dt_spec status_led =
+    GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
+
+static void led_set(bool on)
+{
+    gpio_pin_set_dt(&status_led, on ? 1 : 0);
+}
+```
+
+Inside `bridge_run()`, the LED tracks the connection state:
+
+```c
+while (true) {
+
+    /* Phase 1 — searching for agent: LED off */
+    led_set(false);
+    while (rmw_uros_ping_agent(200, 1) != RMW_RET_OK) {
+        watchdog_feed();
+        k_sleep(K_MSEC(2000));
+    }
+
+    /* Phase 2 — session init succeeded: LED on */
+    if (ros_session_init()) {
+        led_set(true);          // <-- agent connected, LED on
+
+        /* Phase 3 — running loop */
+        while (ping_ok) { ... }
+
+        /* Phase 4 — connection lost: LED off */
+        led_set(false);         // <-- agent lost, LED off
+        ros_session_fini();
+    }
+}
+```
+
+**Expected behavior:**
+- LED `OFF` — booting, waiting for Ethernet, or searching for agent
+- LED `ON (steady)` — micro-ROS session active, agent reachable
+- LED `OFF` again — agent lost, automatic reconnect in progress
+
+To add your own logic on connect/disconnect, place it at the same points in `bridge_run()` — after `led_set(true)` for connect events, and before/after `ros_session_fini()` for disconnect.
+
+---
+
+## ROS 2 Services (v2.0)
+
+Two built-in services handle safety-critical hardware:
+
+| Service | Type | Description |
+|---------|------|-------------|
+| `/bridge/relay_brake` | `std_srvs/SetBool` | Engage (`true`) / release (`false`) brake relay on GP14 |
+| `/bridge/estop` | `std_srvs/Trigger` | Read current E-Stop state (GP15 NC switch) |
+
+```bash
+# Engage brake
+ros2 service call /bridge/relay_brake std_srvs/srv/SetBool "{data: true}"
+
+# Query E-Stop state
+ros2 service call /bridge/estop std_srvs/srv/Trigger "{}"
+```
+
+Both services use fully **static message memory** — no heap allocation at request time.
+Register additional services in `app/src/user/user_channels.c` via `service_register_set_bool()` / `service_register_trigger()`.
+
+---
+
+## Parameter Server (v2.0)
+
+The bridge exposes a `rclc_parameter_server` (Jazzy, `low_mem_mode=true`) that creates three parameters per registered channel:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `ch.<name>.period_ms` | INT | Publish period override (ms) |
+| `ch.<name>.enabled` | BOOL | Enable / disable channel |
+| `ch.<name>.invert_logic` | BOOL | Invert bool value on publish/receive |
+
+```bash
+# List all bridge parameters
+ros2 param list /pico_bridge
+
+# Set counter publish period to 200 ms
+ros2 param set /pico_bridge ch.test_counter.period_ms 200
+
+# Disable heartbeat
+ros2 param set /pico_bridge ch.test_heartbeat.enabled false
+
+# Dump all values
+ros2 param dump /pico_bridge
+```
+
+**Persistence:** changes are automatically saved to `/lfs/ch_params.json` and restored on next boot / reconnect.
+
+> **Note:** String-type parameters are unavailable in `low_mem_mode`. Only BOOL and INT are supported.
+
+---
+
+## Diagnostics (v2.0)
+
+The bridge publishes a `diagnostic_msgs/DiagnosticArray` on `/diagnostics` every **5 seconds**.
+
+```bash
+ros2 topic echo /diagnostics diagnostic_msgs/msg/DiagnosticArray
+```
+
+Key-value fields in the status message:
+
+| Key | Example value | Description |
+|-----|--------------|-------------|
+| `uptime_s` | `"3742"` | Seconds since boot |
+| `channels` | `"3"` | Number of registered channels |
+| `reconnects` | `"1"` | Agent reconnection counter |
+| `firmware` | `"v2.0-W6100"` | Firmware version string |
+
+Compatible with `rqt_robot_monitor` and any Nav2 diagnostics aggregator.
+
+---
+
 ## Robustness and Reliability
 
 ### Hardware Watchdog
 
-The RP2040 internal watchdog timer runs with a **30-second timeout**. If the firmware freezes (deadlock, infinite loop, stack overflow), the watchdog automatically reboots the board.
+The RP2040 internal watchdog timer runs with an **8-second timeout** (RP2040 hardware maximum is ~8388 ms). If the firmware freezes (deadlock, infinite loop, stack overflow), the watchdog automatically reboots the board.
 
 `wdt_feed()` is called in:
 - Agent search loop
@@ -663,20 +812,27 @@ After boot, the firmware waits up to **15 seconds** for the `NET_EVENT_IF_UP` ev
 
 ## micro-ROS Agent Setup (on the ROS2 host)
 
-### In Docker
+### Recommended: Docker script (included)
 
 ```bash
-# Enter the ROS2 Docker container
-docker exec -it <container_name> bash
+# Start agent + ROS2 shell in two terminal windows (Ubuntu + GNOME Terminal):
+./tools/start-eth.sh
 
-# Start the agent
-source /opt/ros/humble/setup.bash
-ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+# Or start just the agent:
+./tools/docker-run-agent-udp.sh           # default port 8888
+./tools/docker-run-agent-udp.sh 9999      # custom port
 ```
 
-If not installed:
+Uses `microros/micro-ros-agent:jazzy` Docker image with `--net=host`. No installation needed beyond Docker.
+
+### Manual (in any ROS2 Jazzy environment)
+
 ```bash
-apt install ros-humble-micro-ros-agent
+source /opt/ros/jazzy/setup.bash
+ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
+
+# If not installed:
+apt install ros-jazzy-micro-ros-agent
 ```
 
 ### Verify after Pico connects
@@ -728,36 +884,47 @@ python3 tools/upload_config.py --config app/config.json --port /dev/tty.usbmodem
 
 ## Stress Test
 
-`tools/stress_test.py` is a comprehensive test suite combining automated and manual tests.
+`tools/v2_stress_test.py` is the v2.0 full test suite (74 automated + 12 manual). The legacy `tools/stress_test.py` covers v1.5 shell tests only.
 
 ### Usage
 
 ```bash
-python3 tools/stress_test.py
-# or
-python3 tools/stress_test.py --port /dev/tty.usbmodem231401
-# skip manual tests (CI/CD mode):
-python3 tools/stress_test.py --skip-manual
+# Prerequisites
+pip install pyserial
+
+# Full test suite (shell + ROS2)
+python3 tools/v2_stress_test.py \
+  --port /dev/tty.usbmodem231401 \
+  --agent-ip 192.168.68.125
+
+# Shell tests only (no ROS2 agent required)
+python3 tools/v2_stress_test.py --port /dev/tty.usbmodem231401 --shell-only
+
+# Skip manual tests (CI-friendly)
+python3 tools/v2_stress_test.py \
+  --port /dev/tty.usbmodem231401 \
+  --agent-ip 192.168.68.125 \
+  --skip-manual
 ```
 
-### Test categories
+### Test categories (v2.0)
 
-**Automated (run by the script):**
-- T01–T05: Basic communication, config roundtrip, save/load
-- T06–T10: Edge cases (buffer overflow, empty values, special chars, rapid fire)
-- T11–T15: Flash integrity (20× save, DHCP toggle, port boundary values)
-- T16–T17: Performance (shell latency, 100 burst commands)
+| Section | IDs | Focus |
+|---------|-----|-------|
+| Shell / Config | T01–T17 | All `bridge config` subcommands, save/load/reset |
+| ROS2 Topics | T20–T27 | Topic existence, publish rate, echo sub→pub |
+| Services / E-Stop | T30–T38 | SetBool relay, Trigger estop, concurrent calls |
+| Parameter Server | T40–T44 | Set/get period, enable/disable, persistence |
+| Diagnostics | T50–T53 | `/diagnostics` rate, KV field presence |
+| Reconnect Stress | T60–T65 | 5× rapid agent kill/restart |
+| Safety / Latency | T70–T74 | E-Stop P99 < 100ms, topic flood under load |
+| Manual | M01–M12 | Physical GPIO, brake relay, power cycle |
 
-**Manual (you perform, script waits):**
-- M01–M05: Network stress (Ethernet cable pull, agent kill/restart, switch off)
-- M06–M10: Power stress (power cycle, pull during config save)
-- M11–M13: USB console stress (disconnect during operation, autonomous boot)
-- M14–M16: Config switching (DHCP↔static, agent IP change)
-- M17–M20: Long-run (15 minutes, vibration, temperature, cable wiggling)
+Key thresholds: E-Stop latency P99 < 100ms, service response < 500ms, topic rate > 80% of configured.
 
 ### Report
 
-At the end of the test, `tools/stress_report.json` is generated with all results.
+At the end of the test, `tools/v2_stress_report.json` is generated with all results.
 
 ---
 
@@ -777,17 +944,22 @@ At the end of the test, `tools/stress_report.json` is generated with all results
 | JSON config read/write | ✅ Done | v1.1 |
 | Serial shell (bridge commands) | ✅ Done, tested | v1.1 |
 | Python config uploader | ✅ Done, tested | v1.1 |
-| Python stress test suite | ✅ Done, all 17 auto tests passing | v1.5 |
+| Python stress test suite v1.5 | ✅ Done, all 17 auto tests passing | v1.5 |
 | Channel Manager framework | ✅ Done | v1.3 |
 | User code space (user_channels.c) | ✅ Done | v1.3 |
 | Built-in test channels (counter / heartbeat / echo) | ✅ Done, tested | v1.5 |
 | Shell robustness (overflow protection, rapid-fire) | ✅ Done, tested | v1.5 |
-| Hardware watchdog (30s) | ✅ Done | v1.4 |
+| Hardware watchdog (8s) | ✅ Done | v1.4 |
 | Reconnection state machine | ✅ Done | v1.4 |
 | Security audit (buffer overflow, null ptr) | ✅ Done | v1.3 |
 | Subscribe direction (ROS2 → Pico) | ✅ Done (framework) | v1.3 |
-| GPIO driver | 🔄 Planned | — |
-| ADC driver | 🔄 Planned | — |
+| IRQ-capable channels (atomic flag, 1ms main loop) | ✅ Done | v2.0 |
+| GPIO driver (E-Stop GP15, relay-brake GP14) | ✅ Done | v2.0 |
+| ADC driver (battery voltage, GP26) | ✅ Done | v2.0 |
+| std_srvs services (SetBool, Trigger) | ✅ Done | v2.0 |
+| Parameter server (period_ms, enabled, persistence) | ✅ Done | v2.0 |
+| Diagnostics (/diagnostics, 5s period) | ✅ Done | v2.0 |
+| v2.0 stress test suite (74 auto + 12 manual) | ✅ Done | v2.0 |
 | PWM / motor driver | 🔄 Planned | — |
 | Serial (UART) driver | 🔄 Planned | — |
 | Encoder (PIO) driver | 🔄 Planned | — |
@@ -800,20 +972,17 @@ At the end of the test, `tools/stress_report.json` is generated with all results
 
 ## Planned Next Steps
 
-### Step 3 — Built-in hardware drivers
+### Step 3 — Built-in hardware drivers ✅ (Done in v2.0)
 
-Will live in `app/src/drivers/`, each compatible with the `channel_t` interface:
+`app/src/drivers/` contains:
 
 ```
 drivers/
-├── drv_gpio.h / .c     ← digital I/O (MSG_BOOL)
-├── drv_adc.h  / .c     ← analog input (MSG_FLOAT32)
-├── drv_pwm.h  / .c     ← PWM output, motor control (MSG_INT32)
-├── drv_uart.h / .c     ← Serial communication
-└── drv_i2c.h  / .c     ← I2C master devices
+├── drv_gpio.c/.h  ← E-Stop input (GP15) + relay-brake output (GP14)
+└── drv_adc.c/.h   ← Battery voltage ADC (GP26, channel 0)
 ```
 
-Each driver exports a `const channel_t drv_xxx_channel` global.
+Remaining planned drivers (PWM, UART, I2C) follow the same `channel_t` pattern.
 
 ### Step 4 — PIO quadrature encoder driver
 
@@ -852,7 +1021,7 @@ Goal: define channels (topic names, period) in `config.json` at runtime, not onl
 |------------|-------------|------------|
 | Max 16 channels | `CHANNEL_MAX = 16` | Increase value, costs RAM |
 | Max 2 encoders | RP2040 has only 2 PIO blocks | — |
-| RAM: ~44KB free | 220KB / 264KB used | Avoid large stack allocations |
+| RAM: ~8KB static margin | 262KB / 264KB used (97%), 96KB heap | Avoid large stack allocations; monitor heap at runtime |
 | Soft real-time | Hard real-time not guaranteed | Improve with thread priorities |
 | IP requires reboot | IP config only activates after reboot | Runtime reload planned |
 | Zephyr board name | `w5500_evb_pico` (not w6100) | Filename kept as-is |
@@ -897,7 +1066,7 @@ bridge reboot
 
 ### Watchdog reboot loop
 
-**Cause:** `wdt_feed()` not called for 30 seconds in some phase.
+**Cause:** `wdt_feed()` not called for 8 seconds in some phase.
 **Debug:** Check logs — which phase is hanging? If in agent search loop: agent unreachable but WDT feed missing (should not happen in current code).
 
 ---
@@ -912,6 +1081,6 @@ bridge reboot
 | Zephyr version | main (v4.3.99) |
 | micro-ROS | Jazzy libs, Humble agent compatible |
 | Serial port | `/dev/tty.usbmodem231401` |
-| Firmware size | ~289 KB flash, ~220 KB RAM |
+| Firmware size | ~418 KB flash, ~262 KB RAM (97%), 96 KB heap |
 | GitHub | [nowlabstudio/ROS2-Bridge](https://github.com/nowlabstudio/ROS2-Bridge) |
 | Author | Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu) |
