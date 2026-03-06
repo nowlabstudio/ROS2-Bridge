@@ -113,6 +113,7 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 │   ├── stress_report.json           ← v1.5 test report
 │   ├── v2_stress_test.py            ← v2.0 full test suite (74 auto + 12 manual)
 │   ├── v2_stress_report.json        ← v2.0 auto-generated test report
+│   ├── flash.sh                     ← Flash firmware via 'bridge bootsel' (no button needed)
 │   ├── docker-run-agent-udp.sh      ← Start micro-ROS Jazzy agent in Docker (UDP)
 │   ├── docker-run-ros2.sh           ← Start ROS2 Jazzy interactive shell in Docker
 │   └── start-eth.sh                 ← Launch full test environment (agent + shell, 2 terminals)
@@ -143,7 +144,7 @@ W6100_EVB_Pico_Zephyr_MicroROS/
         │   └── config.c             ← LittleFS mount, JSON parser, config_set/save/load
         │
         ├── shell/
-        │   └── shell_cmd.c          ← 'bridge' shell commands (show/set/save/load/reset/reboot)
+        │   └── shell_cmd.c          ← 'bridge' shell commands (show/set/save/load/reset/reboot/bootsel)
         │
         ├── bridge/
         │   ├── channel.h            ← channel_t, channel_state_t, msg_type_t, channel_value_t
@@ -208,7 +209,18 @@ Build stats: ~418 KB flash (2.49% of 16 MB), ~262 KB RAM (97% of 264 KB). Heap: 
 
 ### 4. Flash the firmware
 
-Put the Pico in BOOTSEL mode:
+**Option A — Without touching hardware buttons (recommended after first flash):**
+
+```bash
+tools/flash.sh
+# or with explicit port:
+tools/flash.sh /dev/tty.usbmodem231401
+```
+
+The script sends `bridge bootsel` over the serial shell, waits for `/Volumes/RPI-RP2` to mount, then copies the UF2 file automatically.
+
+**Option B — Manual BOOTSEL (first flash, or if firmware is unresponsive):**
+
 1. Hold down the **BOOTSEL** button
 2. Connect USB to the computer
 3. Release the button
@@ -344,6 +356,23 @@ Reboot the device (to activate saved config):
 
 ```bash
 bridge reboot
+```
+
+### `bridge bootsel`
+
+Reboot into USB bootloader (BOOTSEL mode) — mounts as `/Volumes/RPI-RP2`.
+Use this to flash new firmware **without physically pressing the BOOTSEL button**:
+
+```bash
+bridge bootsel
+# → /Volumes/RPI-RP2 appears automatically
+cp workspace/build/zephyr/zephyr.uf2 /Volumes/RPI-RP2/
+```
+
+Or use the included script which does this in one step:
+
+```bash
+tools/flash.sh
 ```
 
 ---
@@ -760,6 +789,7 @@ Key-value fields in the status message:
 | `channels` | `"3"` | Number of registered channels |
 | `reconnects` | `"1"` | Agent reconnection counter |
 | `firmware` | `"v2.0-W6100"` | Firmware version string |
+| `ip` | `"192.168.68.114"` | Active IP address of the bridge |
 
 Compatible with `rqt_robot_monitor` and any Nav2 diagnostics aggregator.
 
