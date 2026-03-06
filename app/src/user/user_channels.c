@@ -1,6 +1,7 @@
 #include "user_channels.h"
 #include "bridge/channel_manager.h"
 #include "test_channels.h"
+#include "estop.h"
 
 /* ------------------------------------------------------------------ */
 /*  Add your channel headers here:                                     */
@@ -17,4 +18,7 @@ void user_register_channels(void)
 	channel_register(&test_counter_channel);
 	channel_register(&test_heartbeat_channel);
 	channel_register(&test_echo_channel);
+
+	/* E-Stop — NC gomb GP27/GND, IRQ-vezérelt, robot/estop topic    */
+	channel_register(&estop_channel);
 }

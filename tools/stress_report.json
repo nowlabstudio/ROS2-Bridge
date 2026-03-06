@@ -1,0 +1,272 @@
+{
+  "timestamp": "2026-03-04T22:54:15",
+  "summary": {
+    "total": 37,
+    "pass": 17,
+    "fail": 1,
+    "skip": 19,
+    "error": 0,
+    "rate_pct": 94.4
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "name": "Shell alive",
+      "category": "Communication",
+      "status": "PASS",
+      "note": "bridge config show\r --- Bridge configuration ---\r [network]\r   dhcp:       false"
+    },
+    {
+      "id": "T02",
+      "name": "Config roundtrip",
+      "category": "Communication",
+      "status": "PASS",
+      "note": "node_name roundtrip OK"
+    },
+    {
+      "id": "T03",
+      "name": "All keys set/show",
+      "category": "Communication",
+      "status": "PASS",
+      "note": "Mind a 8 kulcs OK"
+    },
+    {
+      "id": "T04",
+      "name": "Save → Load persistence",
+      "category": "Communication",
+      "status": "PASS",
+      "note": "save→load roundtrip OK"
+    },
+    {
+      "id": "T05",
+      "name": "Config reset to defaults",
+      "category": "Communication",
+      "status": "PASS",
+      "note": "reset → alapértékek OK"
+    },
+    {
+      "id": "T06",
+      "name": "Empty value set",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "üres set után shell él: igen"
+    },
+    {
+      "id": "T07",
+      "name": "Unknown key",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "ismeretlen kulcs után shell él: igen"
+    },
+    {
+      "id": "T08",
+      "name": "200-char value (overflow)",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "shell él: True, értéktörés: False"
+    },
+    {
+      "id": "T09",
+      "name": "Special characters",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "mind OK"
+    },
+    {
+      "id": "T10",
+      "name": "50 rapid-fire commands",
+      "category": "Robustness",
+      "status": "FAIL",
+      "note": "50 gyors parancs után shell él: False"
+    },
+    {
+      "id": "T11",
+      "name": "Saved JSON fields complete",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "összes mező jelen"
+    },
+    {
+      "id": "T12",
+      "name": "20× repeated save",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "20x save után adatok intaktak: True"
+    },
+    {
+      "id": "T13",
+      "name": "DHCP on/off toggle (5×)",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "dhcp toggle stabilitás: OK"
+    },
+    {
+      "id": "T14",
+      "name": "Port boundary values",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "port boundary tesztek után él: True"
+    },
+    {
+      "id": "T15",
+      "name": "Invalid IP formats",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "rossz IP-k után él: True"
+    },
+    {
+      "id": "T16",
+      "name": "Shell latency (10 samples)",
+      "category": "Performance",
+      "status": "PASS",
+      "note": "avg=2003ms  max=2005ms  (10/10 OK)"
+    },
+    {
+      "id": "T17",
+      "name": "100-command burst stability",
+      "category": "Performance",
+      "status": "PASS",
+      "note": "100 burst után él: True"
+    },
+    {
+      "id": "M01",
+      "name": "Ethernet cable pull — agent loss",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M02",
+      "name": "Agent stop and restart",
+      "category": "Network",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "id": "M03",
+      "name": "Rapid agent restart  (5× in a row)",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M04",
+      "name": "Hot-swap Ethernet cable",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M05",
+      "name": "Network switch power off",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M06",
+      "name": "Cold power cycle",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M07",
+      "name": "Power cut during config save",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M08",
+      "name": "10× rapid power cycle",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M09",
+      "name": "RESET button during operation",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M10",
+      "name": "Short BOOTSEL button press",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M11",
+      "name": "USB console unplug during operation",
+      "category": "USB Console",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M12",
+      "name": "Boot without USB console  (autonomous mode)",
+      "category": "USB Console",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M13",
+      "name": "Console unplug during config save",
+      "category": "USB Console",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M14",
+      "name": "Static IP → DHCP switch + reboot",
+      "category": "Config Switch",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M15",
+      "name": "DHCP → Static IP switch + reboot",
+      "category": "Config Switch",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M16",
+      "name": "Change agent IP + reboot",
+      "category": "Config Switch",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M17",
+      "name": "15-minute continuous stability",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M18",
+      "name": "Ethernet cable wiggling / intermittent contact",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M19",
+      "name": "Temperature stress simulation",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M20",
+      "name": "Vibration test",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    }
+  ]
+}

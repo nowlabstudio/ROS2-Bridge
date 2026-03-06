@@ -1,0 +1,223 @@
+{
+  "timestamp": "2026-03-06T21:52:05",
+  "version": "v2.0",
+  "thresholds": {
+    "estop_latency_max_ms": 100,
+    "service_latency_max_ms": 500,
+    "topic_rate_min_hz": 0.8,
+    "reconnect_max_s": 30
+  },
+  "summary": {
+    "total": 29,
+    "pass": 17,
+    "fail": 0,
+    "skip": 12,
+    "error": 0,
+    "rate_pct": 100.0
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "name": "Shell alive",
+      "category": "Shell/Config",
+      "status": "PASS",
+      "note": "bridge config show\r --- Bridge configuration ---\r [network]\r   dhcp:       false"
+    },
+    {
+      "id": "T02",
+      "name": "Config roundtrip",
+      "category": "Shell/Config",
+      "status": "PASS",
+      "note": "OK"
+    },
+    {
+      "id": "T03",
+      "name": "All keys set/show",
+      "category": "Shell/Config",
+      "status": "PASS",
+      "note": "all 8 keys OK"
+    },
+    {
+      "id": "T04",
+      "name": "Save->Load persistence",
+      "category": "Shell/Config",
+      "status": "PASS",
+      "note": "save->load OK"
+    },
+    {
+      "id": "T05",
+      "name": "Config reset to defaults",
+      "category": "Shell/Config",
+      "status": "PASS",
+      "note": "reset->defaults OK"
+    },
+    {
+      "id": "T06",
+      "name": "Empty value set",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "alive after empty set: True"
+    },
+    {
+      "id": "T07",
+      "name": "Unknown key",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "alive after unknown key: True"
+    },
+    {
+      "id": "T08",
+      "name": "200-char value overflow",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "alive after 200-char value: True"
+    },
+    {
+      "id": "T09",
+      "name": "Special characters",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "all OK"
+    },
+    {
+      "id": "T10",
+      "name": "50 rapid-fire commands",
+      "category": "Robustness",
+      "status": "PASS",
+      "note": "alive after 50 rapid: True"
+    },
+    {
+      "id": "T11",
+      "name": "JSON fields complete",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "all fields present"
+    },
+    {
+      "id": "T12",
+      "name": "20x repeated save",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "20x save, data intact: True"
+    },
+    {
+      "id": "T13",
+      "name": "DHCP toggle 5x",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "5x toggle stable"
+    },
+    {
+      "id": "T14",
+      "name": "Port boundary values",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "alive after port boundaries: True"
+    },
+    {
+      "id": "T15",
+      "name": "Invalid IP formats",
+      "category": "Flash/Config",
+      "status": "PASS",
+      "note": "alive after bad IPs: True"
+    },
+    {
+      "id": "T16",
+      "name": "Shell latency (10 samples)",
+      "category": "Performance",
+      "status": "PASS",
+      "note": "avg=2004ms  max=2006ms  (10/10)"
+    },
+    {
+      "id": "T17",
+      "name": "100-command burst stable",
+      "category": "Performance",
+      "status": "PASS",
+      "note": "alive after 100-burst: True"
+    },
+    {
+      "id": "M01",
+      "name": "Ethernet cable pull",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M02",
+      "name": "5x rapid agent restart",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M03",
+      "name": "Network switch power off",
+      "category": "Network",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M04",
+      "name": "Cold power cycle",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M05",
+      "name": "10x rapid power cycle",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M06",
+      "name": "Power cut during save",
+      "category": "Power",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M07",
+      "name": "E-Stop physical GPIO validation",
+      "category": "Safety",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M08",
+      "name": "E-Stop under physical robot load",
+      "category": "Safety",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M09",
+      "name": "USB console autonomous mode",
+      "category": "USB Console",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M10",
+      "name": "15-min continuous stability",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M11",
+      "name": "Vibration + cable flex",
+      "category": "Long-run",
+      "status": "SKIP",
+      "note": "skipped"
+    },
+    {
+      "id": "M12",
+      "name": "Static IP -> DHCP -> Static roundtrip",
+      "category": "Config Switch",
+      "status": "SKIP",
+      "note": "skipped"
+    }
+  ]
+}

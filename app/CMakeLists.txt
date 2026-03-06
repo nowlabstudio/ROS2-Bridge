@@ -18,6 +18,7 @@ target_sources(app PRIVATE
     src/drivers/drv_adc.c
     src/user/user_channels.c
     src/user/test_channels.c
+    src/user/estop.c
 )
 
 target_include_directories(app PRIVATE src)

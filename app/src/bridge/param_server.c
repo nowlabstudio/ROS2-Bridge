@@ -104,9 +104,11 @@ static bool on_param_changed(const Parameter *old_p,
 
 int param_server_init(rcl_node_t *node, rclc_executor_t *executor)
 {
+	int ch_count = channel_manager_count();
+
 	rclc_parameter_options_t opts = {
 		.notify_changed_over_dds     = false,
-		.max_params                  = 48,   /* 16 channels x 3 params */
+		.max_params                  = (size_t)(ch_count * 3),
 		.allow_undeclared_parameters = false,
 		.low_mem_mode                = true, /* required for RP2040    */
 	};

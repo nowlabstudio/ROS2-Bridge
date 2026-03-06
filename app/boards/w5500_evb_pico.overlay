@@ -25,14 +25,14 @@
 	 * GPIO csatornák — placeholder pinek, hardver véglegesítésekor
 	 * csak az alábbi GP számokat kell átírni, C kód nem változik.
 	 *
-	 * estop-btn:   GP15 — E-Stop limitkapcsoló (NC, pull-up)
+	 * estop-btn:   GP27 — E-Stop NC gomb (GND felé kötve, pull-up)
 	 * relay-brake: GP14 — Fékvezérlő relé kimenet
 	 */
 	gpio_channels {
 		compatible = "gpio-keys";
 
 		estop_btn: estop_btn {
-			gpios = <&gpio0 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			gpios = <&gpio0 27 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 			label = "E-Stop button (NC)";
 		};
 
