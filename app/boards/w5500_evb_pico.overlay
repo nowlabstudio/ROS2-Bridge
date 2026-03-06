@@ -4,6 +4,15 @@
 		zephyr,shell-uart = &cdc_acm_uart0;
 	};
 
+	/*
+	 * ADC csatorna — akkumulátor feszültség mérés
+	 * Placeholder: GP26 = ADC0. Hardver véglegesítésekor csak a channel
+	 * számot kell átírni (0=GP26, 1=GP27, 2=GP28, 3=GP29/VSYS).
+	 */
+	zephyr,user {
+		io-channels = <&adc 0>;
+	};
+
 	leds {
 		compatible = "gpio-leds";
 		user_led: led_0 {
@@ -49,6 +58,21 @@
 /* Board contains W6100 chip, not W5500 */
 &ethernet {
 	compatible = "wiznet,w6100";
+};
+
+/* ADC — akkumulátor feszültség (GP26 = channel 0, placeholder) */
+&adc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	channel@0 {
+		reg = <0>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_INTERNAL";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,resolution = <12>;
+	};
 };
 
 /* LittleFS storage partition — last 1MB of flash (offset 15MB) */
