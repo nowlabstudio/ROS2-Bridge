@@ -1,5 +1,6 @@
 #include "diagnostics.h"
 #include "channel_manager.h"
+#include "config/config.h"
 
 #include <diagnostic_msgs/msg/diagnostic_array.h>
 #include <diagnostic_msgs/msg/diagnostic_status.h>
@@ -23,19 +24,21 @@ int g_reconnect_count;
 /*  Static storage — zero heap usage                                  */
 /* ------------------------------------------------------------------ */
 
-#define DIAG_KV_COUNT 4
+#define DIAG_KV_COUNT 5
 
 /* Key buffers — fixed strings */
 static char kv_key0[] = "uptime_s";
 static char kv_key1[] = "channels";
 static char kv_key2[] = "reconnects";
 static char kv_key3[] = "firmware";
+static char kv_key4[] = "ip";
 
 /* Value buffers — written at publish time */
 static char kv_val0[16];   /* uptime_s      */
 static char kv_val1[4];    /* channels      */
 static char kv_val2[8];    /* reconnects    */
 static char kv_val3[] = "v2.0-W6100";  /* firmware (fixed) */
+static char kv_val4[16];   /* ip            */
 
 static char hw_id_buf[]    = "w6100_evb_pico";
 static char node_name_buf[] = "pico_bridge";
@@ -78,12 +81,14 @@ int diagnostics_init(rcl_node_t *node, const rcl_allocator_t *allocator)
 	BIND_STR_STATIC(kv_items[1].key, kv_key1);
 	BIND_STR_STATIC(kv_items[2].key, kv_key2);
 	BIND_STR_STATIC(kv_items[3].key, kv_key3);
+	BIND_STR_STATIC(kv_items[4].key, kv_key4);
 
 	/* Bind value buffers (filled at publish time) */
 	BIND_STR_BUF(kv_items[0].value, kv_val0);
 	BIND_STR_BUF(kv_items[1].value, kv_val1);
 	BIND_STR_BUF(kv_items[2].value, kv_val2);
 	BIND_STR_STATIC(kv_items[3].value, kv_val3);  /* firmware: fixed */
+	BIND_STR_BUF(kv_items[4].value, kv_val4);
 
 	/* Status message */
 	BIND_STR_STATIC(status_msg.name,        node_name_buf);
@@ -132,6 +137,11 @@ void diagnostics_publish(void)
 	kv_items[2].value.size = strlen(kv_val2);
 
 	/* firmware: fixed, size already set by BIND_STR_STATIC */
+
+	/* ip */
+	strncpy(kv_val4, g_config.network.ip, sizeof(kv_val4) - 1);
+	kv_val4[sizeof(kv_val4) - 1] = '\0';
+	kv_items[4].value.size = strlen(kv_val4);
 
 	status_msg.level = diagnostic_msgs__msg__DiagnosticStatus__OK;
 
