@@ -37,7 +37,7 @@ BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
 /* ------------------------------------------------------------------ */
 
 #define DTR_TIMEOUT_MS       3000   /* max wait for USB monitor (autonomous mode) */
-#define WDT_TIMEOUT_MS       30000  /* hardware watchdog timeout                  */
+#define WDT_TIMEOUT_MS       8000   /* hardware watchdog timeout (RP2040 max ~8388ms) */
 #define AGENT_PING_TIMEOUT   200    /* agent ping timeout in ms                   */
 #define AGENT_PING_ATTEMPTS  1      /* number of ping attempts per cycle          */
 #define AGENT_WAIT_DELAY_MS  2000   /* delay between ping retries                 */
@@ -162,7 +162,7 @@ static void apply_network_config(void)
 
 		net_if_ipv4_addr_add(iface, &addr, NET_ADDR_MANUAL, 0);
 		net_if_ipv4_set_netmask_by_addr(iface, &addr, &mask);
-		net_if_ipv4_router_add(iface, &gw, true, 0);
+		net_if_ipv4_set_gw(iface, (const struct net_in_addr *)&gw);
 
 		LOG_INF("Network: static IP %s", g_config.network.ip);
 		k_sleep(K_MSEC(500));

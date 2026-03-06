@@ -213,7 +213,15 @@ int channel_manager_create_entities(rcl_node_t *node,
 				last_publish_ms[i] = k_uptime_get();
 				LOG_INF("%s publisher: %s", ch->name, ch->topic_pub);
 			} else {
-				LOG_ERR("%s publisher error: %d", ch->name, (int)rc);
+				if (rcl_error_is_set()) {
+					LOG_ERR("%s publisher error: %d — %s",
+						ch->name, (int)rc,
+						rcl_get_error_string().str);
+					rcl_reset_error();
+				} else {
+					LOG_ERR("%s publisher error: %d",
+						ch->name, (int)rc);
+				}
 			}
 		}
 
