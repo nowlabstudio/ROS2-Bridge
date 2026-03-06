@@ -3,6 +3,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/reboot.h>
 
+#include <pico/bootrom.h>
+
 #include "config/config.h"
 
 LOG_MODULE_REGISTER(shell_cmd, LOG_LEVEL_INF);
@@ -136,6 +138,21 @@ static int cmd_reboot(const struct shell *sh, size_t argc, char **argv)
 }
 
 /* ------------------------------------------------------------------ */
+/*  bridge bootsel                                                     */
+/* ------------------------------------------------------------------ */
+
+static int cmd_bootsel(const struct shell *sh, size_t argc, char **argv)
+{
+	ARG_UNUSED(argc);
+	ARG_UNUSED(argv);
+
+	shell_print(sh, "Entering USB bootloader (BOOTSEL)...");
+	k_sleep(K_MSEC(200));
+	reset_usb_boot(0, 0);
+	return 0;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Shell command tree registration                                    */
 /* ------------------------------------------------------------------ */
 
@@ -149,8 +166,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_config,
 );
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_bridge,
-	SHELL_CMD(config, &sub_config, "Configuration management", NULL),
-	SHELL_CMD(reboot, NULL,        "Reboot device",            cmd_reboot),
+	SHELL_CMD(config,  &sub_config, "Configuration management",        NULL),
+	SHELL_CMD(reboot,  NULL,        "Reboot device",                   cmd_reboot),
+	SHELL_CMD(bootsel, NULL,        "Reboot into USB bootloader (UF2)", cmd_bootsel),
 	SHELL_SUBCMD_SET_END
 );
 
