@@ -13,6 +13,7 @@
 #include <zephyr/sys/reboot.h>
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/net/ethernet.h>
+#include <zephyr/net/ethernet_mgmt.h>
 #include <zephyr/net/hostname.h>
 
 #include <rcl/rcl.h>
@@ -141,18 +142,33 @@ static int parse_mac_str(const char *str, uint8_t *out)
 	return 0;
 }
 
+static int set_mac_on_chip(struct net_if *iface, uint8_t *mac)
+{
+	struct ethernet_req_params params;
+
+	memcpy(params.mac_address.addr, mac, 6);
+	return net_mgmt(NET_REQUEST_ETHERNET_SET_MAC_ADDRESS,
+			iface, &params, sizeof(params));
+}
+
 static void apply_mac_address(struct net_if *iface)
 {
 	uint8_t mac[6];
+	int rc;
 
 	if (g_config.network.mac[0] != '\0') {
 		if (parse_mac_str(g_config.network.mac, mac) == 0) {
-			net_if_set_link_addr(iface, mac, 6, NET_LINK_ETHERNET);
-			LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (config)",
-				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-			return;
+			rc = set_mac_on_chip(iface, mac);
+			if (rc == 0) {
+				LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (config)",
+					mac[0], mac[1], mac[2],
+					mac[3], mac[4], mac[5]);
+				return;
+			}
+			LOG_WRN("set MAC from config failed: %d", rc);
+		} else {
+			LOG_WRN("Invalid MAC in config.json, falling back to auto");
 		}
-		LOG_WRN("Invalid MAC in config.json, falling back to auto");
 	}
 
 	uint8_t dev_id[8];
@@ -165,11 +181,17 @@ static void apply_mac_address(struct net_if *iface)
 		mac[3] = dev_id[2];
 		mac[4] = dev_id[3];
 		mac[5] = dev_id[4];
-		net_if_set_link_addr(iface, mac, 6, NET_LINK_ETHERNET);
-		LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (auto/hwinfo)",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		rc = set_mac_on_chip(iface, mac);
+		if (rc == 0) {
+			LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (auto/hwinfo)",
+				mac[0], mac[1], mac[2],
+				mac[3], mac[4], mac[5]);
+		} else {
+			LOG_WRN("set MAC from hwinfo failed: %d", rc);
+		}
 	} else {
-		LOG_WRN("hwinfo_get_device_id failed (%d), using DTS MAC", (int)id_len);
+		LOG_WRN("hwinfo_get_device_id failed (%d), using DTS MAC",
+			(int)id_len);
 	}
 }
 
