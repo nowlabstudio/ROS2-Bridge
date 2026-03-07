@@ -23,7 +23,7 @@ import serial.tools.list_ports
 # ------------------------------------------------------------------ #
 
 parser = argparse.ArgumentParser(description="Bridge config uploader")
-parser.add_argument("--port",   default=None,              help="Serial port (e.g. /dev/tty.usbmodem231401)")
+parser.add_argument("--port",   default=None,              help="Serial port (e.g. /dev/tty.usbmodem23301)")
 parser.add_argument("--baud",   default=115200, type=int,  help="Baud rate (default: 115200)")
 parser.add_argument("--config", default="app/config.json", help="Path to config.json")
 args = parser.parse_args()

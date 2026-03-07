@@ -1,16 +1,16 @@
 {
   "network": {
-    "ip": "192.168.68.114",
+    "ip": "192.168.68.115",
     "netmask": "255.255.255.0",
     "gateway": "192.168.68.1",
-    "dhcp": false,
+    "dhcp": true,
     "agent_ip": "192.168.68.125",
     "agent_port": 8888
   },
 
   "ros": {
-    "node_name": "ROS2_bridge",
-    "namespace": "/robot1"
+    "node_name": "E_STOP",
+    "namespace": "/robot"
   },
 
   "channels": [
