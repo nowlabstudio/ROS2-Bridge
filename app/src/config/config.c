@@ -169,7 +169,9 @@ static int json_get_int(const char *json, const char *key, int32_t *out)
 
 static void config_to_json(char *buf, size_t buf_len)
 {
-	snprintf(buf, buf_len,
+	int pos = 0;
+
+	pos += snprintf(buf + pos, buf_len - pos,
 		"{\n"
 		"  \"network\": {\n"
 		"    \"mac\": \"%s\",\n"
@@ -183,8 +185,7 @@ static void config_to_json(char *buf, size_t buf_len)
 		"  \"ros\": {\n"
 		"    \"node_name\": \"%s\",\n"
 		"    \"namespace\": \"%s\"\n"
-		"  }\n"
-		"}\n",
+		"  }",
 		g_config.network.mac,
 		g_config.network.dhcp ? "true" : "false",
 		g_config.network.ip,
@@ -194,6 +195,87 @@ static void config_to_json(char *buf, size_t buf_len)
 		g_config.network.agent_port,
 		g_config.ros.node_name,
 		g_config.ros.namespace_);
+
+	if (g_config.channel_count > 0) {
+		pos += snprintf(buf + pos, buf_len - pos, ",\n  \"channels\": {");
+		for (int i = 0; i < g_config.channel_count; i++) {
+			pos += snprintf(buf + pos, buf_len - pos,
+				"%s\n    \"%s\": %s",
+				i > 0 ? "," : "",
+				g_config.channels[i].name,
+				g_config.channels[i].enabled ? "true" : "false");
+		}
+		pos += snprintf(buf + pos, buf_len - pos, "\n  }");
+	}
+
+	snprintf(buf + pos, buf_len - pos, "\n}\n");
+}
+
+/* ------------------------------------------------------------------ */
+/*  Parse "channels": { "name": true/false, ... } block               */
+/* ------------------------------------------------------------------ */
+
+static void parse_channels(const char *json)
+{
+	g_config.channel_count = 0;
+
+	const char *sec = strstr(json, "\"channels\"");
+	if (!sec) {
+		return;
+	}
+
+	const char *brace = strchr(sec, '{');
+	if (!brace) {
+		return;
+	}
+	brace++;
+
+	const char *end = strchr(brace, '}');
+	if (!end) {
+		return;
+	}
+
+	const char *pos = brace;
+
+	while (pos < end && g_config.channel_count < CFG_MAX_CHANNELS) {
+		const char *q1 = memchr(pos, '"', end - pos);
+		if (!q1) {
+			break;
+		}
+		q1++;
+
+		const char *q2 = memchr(q1, '"', end - q1);
+		if (!q2) {
+			break;
+		}
+
+		size_t len = q2 - q1;
+		if (len == 0 || len >= CFG_CH_NAME_LEN) {
+			pos = q2 + 1;
+			continue;
+		}
+
+		cfg_channel_entry_t *e =
+			&g_config.channels[g_config.channel_count];
+		memcpy(e->name, q1, len);
+		e->name[len] = '\0';
+
+		pos = q2 + 1;
+		while (pos < end && (*pos == ' ' || *pos == ':' ||
+		       *pos == '\t' || *pos == '\n' || *pos == '\r')) {
+			pos++;
+		}
+
+		if (pos + 4 <= end && strncmp(pos, "true", 4) == 0) {
+			e->enabled = true;
+			g_config.channel_count++;
+			pos += 4;
+		} else if (pos + 5 <= end && strncmp(pos, "false", 5) == 0) {
+			e->enabled = false;
+			g_config.channel_count++;
+			pos += 5;
+		}
+	}
 }
 
 /* ------------------------------------------------------------------ */
@@ -237,6 +319,8 @@ int config_load(void)
 	json_get_str(buf,  "node_name", g_config.ros.node_name,      CFG_STR_LEN);
 	json_get_str(buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
 
+	parse_channels(buf);
+
 	LOG_INF("Config loaded: %s", CFG_FILE_PATH);
 	return 0;
 }
@@ -249,7 +333,7 @@ int config_save(void)
 {
 	struct fs_file_t f;
 	/* static: allocated in BSS, not on stack */
-	static char buf[512];
+	static char buf[1024];
 
 	config_to_json(buf, sizeof(buf));
 
@@ -305,6 +389,23 @@ int config_set(const char *key, const char *value)
 		SAFE_STRCPY(g_config.ros.node_name, value);
 	} else if (strcmp(key, "ros.namespace") == 0) {
 		SAFE_STRCPY(g_config.ros.namespace_, value);
+	} else if (strncmp(key, "channels.", 9) == 0) {
+		const char *ch_name = key + 9;
+		bool en = (strcmp(value, "true") == 0 || strcmp(value, "1") == 0);
+
+		for (int i = 0; i < g_config.channel_count; i++) {
+			if (strcmp(g_config.channels[i].name, ch_name) == 0) {
+				g_config.channels[i].enabled = en;
+				return 0;
+			}
+		}
+		if (g_config.channel_count >= CFG_MAX_CHANNELS) {
+			return -ENOMEM;
+		}
+		cfg_channel_entry_t *e =
+			&g_config.channels[g_config.channel_count++];
+		SAFE_STRCPY(e->name, ch_name);
+		e->enabled = en;
 	} else {
 		return -ENOENT;
 	}
@@ -329,6 +430,30 @@ void config_print(void)
 	LOG_INF("[ros]");
 	LOG_INF("  node_name:  %s", g_config.ros.node_name);
 	LOG_INF("  namespace:  %s", g_config.ros.namespace_);
+	if (g_config.channel_count > 0) {
+		LOG_INF("[channels]");
+		for (int i = 0; i < g_config.channel_count; i++) {
+			LOG_INF("  %s: %s", g_config.channels[i].name,
+				g_config.channels[i].enabled ? "true" : "false");
+		}
+	}
+}
+
+/* ------------------------------------------------------------------ */
+/*  Channel enabled lookup                                             */
+/* ------------------------------------------------------------------ */
+
+bool config_channel_enabled(const char *name)
+{
+	if (!name) {
+		return false;
+	}
+	for (int i = 0; i < g_config.channel_count; i++) {
+		if (strcmp(g_config.channels[i].name, name) == 0) {
+			return g_config.channels[i].enabled;
+		}
+	}
+	return true;
 }
 
 /* ------------------------------------------------------------------ */

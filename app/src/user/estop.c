@@ -46,7 +46,7 @@ static void estop_read(channel_value_t *val)
 
 const channel_t estop_channel = {
 	.name        = "estop",
-	.topic_pub   = "robot/estop",
+	.topic_pub   = "estop",
 	.topic_sub   = NULL,
 	.msg_type    = MSG_BOOL,
 	.period_ms   = 500,       /* periodic fallback, even without edge */

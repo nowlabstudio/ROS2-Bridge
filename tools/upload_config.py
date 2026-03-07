@@ -80,6 +80,12 @@ KNOWN_KEYS = {
     "ros.namespace":       cfg.get("ros", {}).get("namespace"),
 }
 
+# Channel enable/disable entries: "channels.estop" = "true"/"false"
+channels = cfg.get("channels", {})
+if isinstance(channels, dict):
+    for ch_name, enabled in channels.items():
+        KNOWN_KEYS[f"channels.{ch_name}"] = "true" if enabled else "false"
+
 print("\nConfig to upload:")
 for k, v in KNOWN_KEYS.items():
     if v:
@@ -141,11 +147,13 @@ print("\nVerification:")
 resp = send_cmd(ser, "bridge config show", wait=0.5)
 print(resp)
 
-ser.close()
-
 if errors:
     print(f"\n{errors} error(s) occurred. Check the output above.")
+    ser.close()
     sys.exit(1)
-else:
-    print("\n✓ Config uploaded successfully!")
-    print("To activate: bridge reboot  (or power cycle)")
+
+# Reboot
+print("\nRebooting bridge...")
+send_cmd(ser, "bridge reboot", wait=0.5)
+ser.close()
+print("✓ Config uploaded and bridge rebooted!")

@@ -8,9 +8,11 @@
 /*  Configuration structures                                           */
 /* ------------------------------------------------------------------ */
 
-#define CFG_STR_LEN   48
-#define CFG_FILE_PATH "/lfs/config.json"
-#define CFG_MOUNT_PT  "/lfs"
+#define CFG_STR_LEN      48
+#define CFG_CH_NAME_LEN  32
+#define CFG_MAX_CHANNELS 16
+#define CFG_FILE_PATH    "/lfs/config.json"
+#define CFG_MOUNT_PT     "/lfs"
 
 typedef struct {
 	bool dhcp;                     /* true = DHCP, false = static IP  */
@@ -28,8 +30,15 @@ typedef struct {
 } cfg_ros_t;
 
 typedef struct {
-	cfg_network_t network;
-	cfg_ros_t     ros;
+	char name[CFG_CH_NAME_LEN];
+	bool enabled;
+} cfg_channel_entry_t;
+
+typedef struct {
+	cfg_network_t        network;
+	cfg_ros_t            ros;
+	cfg_channel_entry_t  channels[CFG_MAX_CHANNELS];
+	int                  channel_count;
 } bridge_config_t;
 
 /* ------------------------------------------------------------------ */
@@ -81,6 +90,13 @@ int config_set(const char *key, const char *value);
  * Print the full configuration to the log / shell.
  */
 void config_print(void);
+
+/**
+ * Check whether a channel is enabled in the config.
+ * Returns true if the channel is explicitly enabled or not listed
+ * (default-enabled for backward compatibility).
+ */
+bool config_channel_enabled(const char *name);
 
 /* ------------------------------------------------------------------ */
 /*  Channel parameter persistence — /lfs/ch_params.json               */

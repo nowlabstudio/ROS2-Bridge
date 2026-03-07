@@ -35,6 +35,15 @@ echo " Press Ctrl+C to stop."
 echo "============================================="
 echo ""
 
+docker run -it --rm --init \
+    --name "$CONTAINER_NAME" \
+    --net=host \
+    -v "$SCRIPT_DIR":/tools:ro \
+    -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
+    -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
+    "$IMAGE" \
+    bash -c "source /opt/ros/jazzy/setup.bash && exec bash"
+: <<'KOMMENT'
 docker run -it --rm \
     --name "$CONTAINER_NAME" \
     --net=host \
