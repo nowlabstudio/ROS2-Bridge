@@ -58,6 +58,13 @@ void config_reset_defaults(void)
 	SAFE_STRCPY(g_config.network.agent_port, "8888");
 	SAFE_STRCPY(g_config.ros.node_name,      "pico_bridge");
 	SAFE_STRCPY(g_config.ros.namespace_,     "/");
+
+	for (int i = 0; i < RC_CH_COUNT; i++) {
+		g_config.rc_trim.ch[i].min    = 1000;
+		g_config.rc_trim.ch[i].center = 1500;
+		g_config.rc_trim.ch[i].max    = 2000;
+	}
+	g_config.rc_trim.deadzone = 20;
 }
 
 /* ------------------------------------------------------------------ */
@@ -199,21 +206,69 @@ static void config_to_json(char *buf, size_t buf_len)
 	if (g_config.channel_count > 0) {
 		pos += snprintf(buf + pos, buf_len - pos, ",\n  \"channels\": {");
 		for (int i = 0; i < g_config.channel_count; i++) {
-			pos += snprintf(buf + pos, buf_len - pos,
-				"%s\n    \"%s\": %s",
-				i > 0 ? "," : "",
-				g_config.channels[i].name,
-				g_config.channels[i].enabled ? "true" : "false");
+			const cfg_channel_entry_t *ce = &g_config.channels[i];
+
+			if (ce->topic[0]) {
+				pos += snprintf(buf + pos, buf_len - pos,
+					"%s\n    \"%s\": { \"enabled\": %s, \"topic\": \"%s\" }",
+					i > 0 ? "," : "",
+					ce->name,
+					ce->enabled ? "true" : "false",
+					ce->topic);
+			} else {
+				pos += snprintf(buf + pos, buf_len - pos,
+					"%s\n    \"%s\": %s",
+					i > 0 ? "," : "",
+					ce->name,
+					ce->enabled ? "true" : "false");
+			}
 		}
 		pos += snprintf(buf + pos, buf_len - pos, "\n  }");
 	}
+
+	pos += snprintf(buf + pos, buf_len - pos,
+		",\n  \"rc_trim\": {");
+	for (int i = 0; i < RC_CH_COUNT; i++) {
+		const cfg_rc_trim_ch_t *t = &g_config.rc_trim.ch[i];
+
+		pos += snprintf(buf + pos, buf_len - pos,
+			"%s\n    \"ch%d_min\": %u, \"ch%d_center\": %u, \"ch%d_max\": %u",
+			i > 0 ? "," : "",
+			i + 1, t->min, i + 1, t->center, i + 1, t->max);
+	}
+	pos += snprintf(buf + pos, buf_len - pos,
+		",\n    \"deadzone\": %u\n  }",
+		g_config.rc_trim.deadzone);
 
 	snprintf(buf + pos, buf_len - pos, "\n}\n");
 }
 
 /* ------------------------------------------------------------------ */
-/*  Parse "channels": { "name": true/false, ... } block               */
+/*  Parse "channels": { ... } block                                    */
+/*                                                                     */
+/*  Supports two value formats per entry:                              */
+/*    "name": true/false            — simple bool                      */
+/*    "name": { "enabled": ..., "topic": "..." }  — extended           */
 /* ------------------------------------------------------------------ */
+
+static void parse_channel_object(const char *start, const char *obj_end,
+				 cfg_channel_entry_t *e)
+{
+	e->enabled = true;
+	e->topic[0] = '\0';
+
+	bool val;
+
+	if (json_get_bool(start, "enabled", &val) == 0) {
+		e->enabled = val;
+	}
+
+	char topic_buf[CFG_CH_NAME_LEN];
+
+	if (json_get_str(start, "topic", topic_buf, sizeof(topic_buf)) == 0) {
+		SAFE_STRCPY(e->topic, topic_buf);
+	}
+}
 
 static void parse_channels(const char *json)
 {
@@ -230,8 +285,21 @@ static void parse_channels(const char *json)
 	}
 	brace++;
 
-	const char *end = strchr(brace, '}');
-	if (!end) {
+	/* Find matching closing brace (skip nested {}) */
+	int depth = 1;
+	const char *end = brace;
+
+	while (*end && depth > 0) {
+		if (*end == '{') {
+			depth++;
+		} else if (*end == '}') {
+			depth--;
+		}
+		if (depth > 0) {
+			end++;
+		}
+	}
+	if (depth != 0) {
 		return;
 	}
 
@@ -259,6 +327,7 @@ static void parse_channels(const char *json)
 			&g_config.channels[g_config.channel_count];
 		memcpy(e->name, q1, len);
 		e->name[len] = '\0';
+		e->topic[0] = '\0';
 
 		pos = q2 + 1;
 		while (pos < end && (*pos == ' ' || *pos == ':' ||
@@ -266,7 +335,18 @@ static void parse_channels(const char *json)
 			pos++;
 		}
 
-		if (pos + 4 <= end && strncmp(pos, "true", 4) == 0) {
+		if (*pos == '{') {
+			/* Extended format: { "enabled": ..., "topic": "..." } */
+			const char *obj_start = pos;
+			const char *obj_end = strchr(pos + 1, '}');
+
+			if (!obj_end || obj_end > end) {
+				break;
+			}
+			parse_channel_object(obj_start, obj_end, e);
+			g_config.channel_count++;
+			pos = obj_end + 1;
+		} else if (pos + 4 <= end && strncmp(pos, "true", 4) == 0) {
 			e->enabled = true;
 			g_config.channel_count++;
 			pos += 4;
@@ -279,6 +359,61 @@ static void parse_channels(const char *json)
 }
 
 /* ------------------------------------------------------------------ */
+/*  Parse "rc_trim": { ... } block                                     */
+/* ------------------------------------------------------------------ */
+
+static void parse_rc_trim(const char *json)
+{
+	const char *sec = strstr(json, "\"rc_trim\"");
+	if (!sec) {
+		return;
+	}
+
+	const char *brace = strchr(sec, '{');
+	if (!brace) {
+		return;
+	}
+
+	const char *obj_end = strchr(brace + 1, '}');
+	if (!obj_end) {
+		return;
+	}
+
+	/* Temporarily null-terminate the section for scoped parsing */
+	size_t slen = obj_end - brace + 1;
+	char scope_buf[512];
+
+	if (slen >= sizeof(scope_buf)) {
+		return;
+	}
+	memcpy(scope_buf, brace, slen);
+	scope_buf[slen] = '\0';
+
+	int32_t ival;
+
+	for (int i = 0; i < RC_CH_COUNT; i++) {
+		char key[16];
+
+		snprintf(key, sizeof(key), "ch%d_min", i + 1);
+		if (json_get_int(scope_buf, key, &ival) == 0) {
+			g_config.rc_trim.ch[i].min = (uint16_t)ival;
+		}
+		snprintf(key, sizeof(key), "ch%d_center", i + 1);
+		if (json_get_int(scope_buf, key, &ival) == 0) {
+			g_config.rc_trim.ch[i].center = (uint16_t)ival;
+		}
+		snprintf(key, sizeof(key), "ch%d_max", i + 1);
+		if (json_get_int(scope_buf, key, &ival) == 0) {
+			g_config.rc_trim.ch[i].max = (uint16_t)ival;
+		}
+	}
+
+	if (json_get_int(scope_buf, "deadzone", &ival) == 0) {
+		g_config.rc_trim.deadzone = (uint16_t)ival;
+	}
+}
+
+/* ------------------------------------------------------------------ */
 /*  Load from flash                                                    */
 /* ------------------------------------------------------------------ */
 
@@ -286,7 +421,7 @@ int config_load(void)
 {
 	struct fs_file_t f;
 	/* static: allocated in BSS, not on stack */
-	static char buf[1024];
+	static char buf[2048];
 	ssize_t bytes_read;
 
 	fs_file_t_init(&f);
@@ -320,6 +455,7 @@ int config_load(void)
 	json_get_str(buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
 
 	parse_channels(buf);
+	parse_rc_trim(buf);
 
 	LOG_INF("Config loaded: %s", CFG_FILE_PATH);
 	return 0;
@@ -333,7 +469,7 @@ int config_save(void)
 {
 	struct fs_file_t f;
 	/* static: allocated in BSS, not on stack */
-	static char buf[1024];
+	static char buf[2048];
 
 	config_to_json(buf, sizeof(buf));
 
@@ -390,22 +526,80 @@ int config_set(const char *key, const char *value)
 	} else if (strcmp(key, "ros.namespace") == 0) {
 		SAFE_STRCPY(g_config.ros.namespace_, value);
 	} else if (strncmp(key, "channels.", 9) == 0) {
-		const char *ch_name = key + 9;
-		bool en = (strcmp(value, "true") == 0 || strcmp(value, "1") == 0);
+		const char *rest = key + 9;
+		const char *dot = strchr(rest, '.');
 
-		for (int i = 0; i < g_config.channel_count; i++) {
-			if (strcmp(g_config.channels[i].name, ch_name) == 0) {
-				g_config.channels[i].enabled = en;
-				return 0;
+		if (dot) {
+			/* channels.<name>.topic */
+			size_t nlen = dot - rest;
+			char ch_name[CFG_CH_NAME_LEN];
+
+			if (nlen >= sizeof(ch_name)) {
+				return -EINVAL;
 			}
+			memcpy(ch_name, rest, nlen);
+			ch_name[nlen] = '\0';
+
+			if (strcmp(dot + 1, "topic") == 0) {
+				for (int i = 0; i < g_config.channel_count; i++) {
+					if (strcmp(g_config.channels[i].name, ch_name) == 0) {
+						SAFE_STRCPY(g_config.channels[i].topic, value);
+						return 0;
+					}
+				}
+				if (g_config.channel_count >= CFG_MAX_CHANNELS) {
+					return -ENOMEM;
+				}
+				cfg_channel_entry_t *e =
+					&g_config.channels[g_config.channel_count++];
+				SAFE_STRCPY(e->name, ch_name);
+				e->enabled = true;
+				SAFE_STRCPY(e->topic, value);
+			} else {
+				return -ENOENT;
+			}
+		} else {
+			/* channels.<name> = true/false */
+			bool en = (strcmp(value, "true") == 0 || strcmp(value, "1") == 0);
+
+			for (int i = 0; i < g_config.channel_count; i++) {
+				if (strcmp(g_config.channels[i].name, rest) == 0) {
+					g_config.channels[i].enabled = en;
+					return 0;
+				}
+			}
+			if (g_config.channel_count >= CFG_MAX_CHANNELS) {
+				return -ENOMEM;
+			}
+			cfg_channel_entry_t *e =
+				&g_config.channels[g_config.channel_count++];
+			SAFE_STRCPY(e->name, rest);
+			e->enabled = en;
+			e->topic[0] = '\0';
 		}
-		if (g_config.channel_count >= CFG_MAX_CHANNELS) {
-			return -ENOMEM;
+	} else if (strncmp(key, "rc_trim.", 8) == 0) {
+		const char *field = key + 8;
+		int32_t ival = (int32_t)strtol(value, NULL, 10);
+
+		if (strcmp(field, "deadzone") == 0) {
+			g_config.rc_trim.deadzone = (uint16_t)ival;
+		} else if (strlen(field) >= 6 && field[0] == 'c' && field[1] == 'h' &&
+			   field[2] >= '1' && field[2] <= '6' && field[3] == '_') {
+			int ch_idx = field[2] - '1';
+			const char *sub = field + 4;
+
+			if (strcmp(sub, "min") == 0) {
+				g_config.rc_trim.ch[ch_idx].min = (uint16_t)ival;
+			} else if (strcmp(sub, "center") == 0) {
+				g_config.rc_trim.ch[ch_idx].center = (uint16_t)ival;
+			} else if (strcmp(sub, "max") == 0) {
+				g_config.rc_trim.ch[ch_idx].max = (uint16_t)ival;
+			} else {
+				return -ENOENT;
+			}
+		} else {
+			return -ENOENT;
 		}
-		cfg_channel_entry_t *e =
-			&g_config.channels[g_config.channel_count++];
-		SAFE_STRCPY(e->name, ch_name);
-		e->enabled = en;
 	} else {
 		return -ENOENT;
 	}
@@ -433,10 +627,25 @@ void config_print(void)
 	if (g_config.channel_count > 0) {
 		LOG_INF("[channels]");
 		for (int i = 0; i < g_config.channel_count; i++) {
-			LOG_INF("  %s: %s", g_config.channels[i].name,
-				g_config.channels[i].enabled ? "true" : "false");
+			const cfg_channel_entry_t *ce = &g_config.channels[i];
+
+			if (ce->topic[0]) {
+				LOG_INF("  %s: %s (topic: %s)", ce->name,
+					ce->enabled ? "true" : "false",
+					ce->topic);
+			} else {
+				LOG_INF("  %s: %s", ce->name,
+					ce->enabled ? "true" : "false");
+			}
 		}
 	}
+	LOG_INF("[rc_trim]");
+	for (int i = 0; i < RC_CH_COUNT; i++) {
+		const cfg_rc_trim_ch_t *t = &g_config.rc_trim.ch[i];
+
+		LOG_INF("  ch%d: %u/%u/%u", i + 1, t->min, t->center, t->max);
+	}
+	LOG_INF("  deadzone: %u", g_config.rc_trim.deadzone);
 }
 
 /* ------------------------------------------------------------------ */
@@ -454,6 +663,20 @@ bool config_channel_enabled(const char *name)
 		}
 	}
 	return true;
+}
+
+const char *config_channel_topic(const char *name)
+{
+	if (!name) {
+		return NULL;
+	}
+	for (int i = 0; i < g_config.channel_count; i++) {
+		if (strcmp(g_config.channels[i].name, name) == 0 &&
+		    g_config.channels[i].topic[0]) {
+			return g_config.channels[i].topic;
+		}
+	}
+	return NULL;
 }
 
 /* ------------------------------------------------------------------ */

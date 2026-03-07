@@ -80,11 +80,24 @@ KNOWN_KEYS = {
     "ros.namespace":       cfg.get("ros", {}).get("namespace"),
 }
 
-# Channel enable/disable entries: "channels.estop" = "true"/"false"
+# Channel entries — supports both simple and extended format
 channels = cfg.get("channels", {})
 if isinstance(channels, dict):
-    for ch_name, enabled in channels.items():
-        KNOWN_KEYS[f"channels.{ch_name}"] = "true" if enabled else "false"
+    for ch_name, val in channels.items():
+        if isinstance(val, dict):
+            enabled = val.get("enabled", True)
+            KNOWN_KEYS[f"channels.{ch_name}"] = "true" if enabled else "false"
+            topic = val.get("topic", "")
+            if topic:
+                KNOWN_KEYS[f"channels.{ch_name}.topic"] = topic
+        else:
+            KNOWN_KEYS[f"channels.{ch_name}"] = "true" if val else "false"
+
+# RC trim entries: "rc_trim.ch1_min" = "1000" etc.
+rc_trim = cfg.get("rc_trim", {})
+if isinstance(rc_trim, dict):
+    for field, val in rc_trim.items():
+        KNOWN_KEYS[f"rc_trim.{field}"] = str(val)
 
 print("\nConfig to upload:")
 for k, v in KNOWN_KEYS.items():

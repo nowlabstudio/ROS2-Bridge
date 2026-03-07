@@ -18,6 +18,12 @@
     "estop": false,
     "test_counter": false,
     "test_heartbeat": false,
-    "test_echo": false
+    "test_echo": false,
+    "rc_ch1": false,
+    "rc_ch2": false,
+    "rc_ch3": false,
+    "rc_ch4": false,
+    "rc_ch5": false,
+    "rc_ch6": false
   }
 }

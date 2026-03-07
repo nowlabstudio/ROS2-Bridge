@@ -11,6 +11,7 @@
 #define CFG_STR_LEN      48
 #define CFG_CH_NAME_LEN  32
 #define CFG_MAX_CHANNELS 16
+#define RC_CH_COUNT       6
 #define CFG_FILE_PATH    "/lfs/config.json"
 #define CFG_MOUNT_PT     "/lfs"
 
@@ -32,13 +33,26 @@ typedef struct {
 typedef struct {
 	char name[CFG_CH_NAME_LEN];
 	bool enabled;
+	char topic[CFG_CH_NAME_LEN];   /* topic override, empty = use C default */
 } cfg_channel_entry_t;
+
+typedef struct {
+	uint16_t min;
+	uint16_t center;
+	uint16_t max;
+} cfg_rc_trim_ch_t;
+
+typedef struct {
+	cfg_rc_trim_ch_t ch[RC_CH_COUNT];
+	uint16_t         deadzone;
+} cfg_rc_trim_t;
 
 typedef struct {
 	cfg_network_t        network;
 	cfg_ros_t            ros;
 	cfg_channel_entry_t  channels[CFG_MAX_CHANNELS];
 	int                  channel_count;
+	cfg_rc_trim_t        rc_trim;
 } bridge_config_t;
 
 /* ------------------------------------------------------------------ */
@@ -97,6 +111,12 @@ void config_print(void);
  * (default-enabled for backward compatibility).
  */
 bool config_channel_enabled(const char *name);
+
+/**
+ * Get topic override for a channel.
+ * Returns the override string, or NULL if no override (use C default).
+ */
+const char *config_channel_topic(const char *name);
 
 /* ------------------------------------------------------------------ */
 /*  Channel parameter persistence — /lfs/ch_params.json               */

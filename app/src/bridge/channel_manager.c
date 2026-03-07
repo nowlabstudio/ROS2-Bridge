@@ -14,6 +14,8 @@
 
 #include <string.h>
 
+#include "config/config.h"
+
 LOG_MODULE_REGISTER(channel_manager, LOG_LEVEL_INF);
 
 /* ------------------------------------------------------------------ */
@@ -203,15 +205,18 @@ int channel_manager_create_entities(rcl_node_t *node,
 		}
 
 		const rosidl_message_type_support_t *ts = get_type_support(ch->msg_type);
+		const char *topic_override = config_channel_topic(ch->name);
 
 		/* Publisher */
 		if (ch->topic_pub && ch->read) {
+			const char *topic = topic_override ? topic_override : ch->topic_pub;
+
 			rcl_ret_t rc = rclc_publisher_init_default(
-				&pub[i], node, ts, ch->topic_pub);
+				&pub[i], node, ts, topic);
 			if (rc == RCL_RET_OK) {
 				pub_active[i] = true;
 				last_publish_ms[i] = k_uptime_get();
-				LOG_INF("%s publisher: %s", ch->name, ch->topic_pub);
+				LOG_INF("%s publisher: %s", ch->name, topic);
 			} else {
 				if (rcl_error_is_set()) {
 					LOG_ERR("%s publisher error: %d — %s",
@@ -227,11 +232,13 @@ int channel_manager_create_entities(rcl_node_t *node,
 
 		/* Subscriber */
 		if (ch->topic_sub && ch->write) {
+			const char *topic = topic_override ? topic_override : ch->topic_sub;
+
 			rcl_ret_t rc = rclc_subscription_init_default(
-				&sub[i], node, ts, ch->topic_sub);
+				&sub[i], node, ts, topic);
 			if (rc == RCL_RET_OK) {
 				sub_active[i] = true;
-				LOG_INF("%s subscriber: %s", ch->name, ch->topic_sub);
+				LOG_INF("%s subscriber: %s", ch->name, topic);
 			} else {
 				LOG_ERR("%s subscriber error: %d", ch->name, (int)rc);
 			}

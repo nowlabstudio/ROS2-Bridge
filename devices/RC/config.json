@@ -15,9 +15,25 @@
   },
 
   "channels": {
+    "rc_ch1": { "enabled": true, "topic": "motor_left" },
+    "rc_ch2": { "enabled": true, "topic": "motor_right" },
+    "rc_ch3": { "enabled": true, "topic": "rc_ch3" },
+    "rc_ch4": { "enabled": true, "topic": "rc_ch4" },
+    "rc_ch5": { "enabled": true, "topic": "rc_mode" },
+    "rc_ch6": { "enabled": true, "topic": "winch" },
     "estop": false,
     "test_counter": false,
     "test_heartbeat": false,
     "test_echo": false
+  },
+
+  "rc_trim": {
+    "ch1_min": 1000, "ch1_center": 1500, "ch1_max": 2000,
+    "ch2_min": 1000, "ch2_center": 1500, "ch2_max": 2000,
+    "ch3_min": 1000, "ch3_center": 1500, "ch3_max": 2000,
+    "ch4_min": 1000, "ch4_center": 1500, "ch4_max": 2000,
+    "ch5_min": 1000, "ch5_center": 1500, "ch5_max": 2000,
+    "ch6_min": 1000, "ch6_center": 1500, "ch6_max": 2000,
+    "deadzone": 20
   }
 }

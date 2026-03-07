@@ -16,9 +16,11 @@ target_sources(app PRIVATE
     src/bridge/service_manager.c
     src/drivers/drv_gpio.c
     src/drivers/drv_adc.c
+    src/drivers/drv_pwm_in.c
     src/user/user_channels.c
     src/user/test_channels.c
     src/user/estop.c
+    src/user/rc.c
 )
 
 target_include_directories(app PRIVATE src)
