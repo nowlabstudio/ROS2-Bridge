@@ -202,9 +202,16 @@ static void apply_network_config(void)
 	/* Set unique MAC before any network operations */
 	apply_mac_address(iface);
 
-	/* Set hostname from node_name for DHCP identification */
-	net_hostname_set_postfix((uint8_t *)g_config.ros.node_name,
-				 strlen(g_config.ros.node_name));
+	/* Set hostname for DHCP identification: ROS_Bridge_<node_name> */
+	{
+		char hostname[64];
+		int n = snprintf(hostname, sizeof(hostname), "ROS_Bridge_%s",
+				 g_config.ros.node_name);
+		if (n > 0 && (size_t)n < sizeof(hostname)) {
+			net_hostname_set(hostname, n);
+		}
+		LOG_INF("Hostname: %s", net_hostname_get());
+	}
 
 	/* Wait for Ethernet link UP */
 	if (!net_if_is_up(iface)) {
