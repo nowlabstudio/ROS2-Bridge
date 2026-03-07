@@ -18,7 +18,7 @@ static void counter_read(channel_value_t *val)
 
 const channel_t test_counter_channel = {
 	.name      = "test_counter",
-	.topic_pub = "pico/counter",
+	.topic_pub = "counter",
 	.topic_sub = NULL,
 	.msg_type  = MSG_INT32,
 	.period_ms = 500,
@@ -41,7 +41,7 @@ static void heartbeat_read(channel_value_t *val)
 
 const channel_t test_heartbeat_channel = {
 	.name      = "test_heartbeat",
-	.topic_pub = "pico/heartbeat",
+	.topic_pub = "heartbeat",
 	.topic_sub = NULL,
 	.msg_type  = MSG_BOOL,
 	.period_ms = 1000,
@@ -71,8 +71,8 @@ static void echo_write(const channel_value_t *val)
 
 const channel_t test_echo_channel = {
 	.name      = "test_echo",
-	.topic_pub = "pico/echo_out",
-	.topic_sub = "pico/echo_in",
+	.topic_pub = "echo_out",
+	.topic_sub = "echo_in",
 	.msg_type  = MSG_INT32,
 	.period_ms = 1000,
 	.init      = NULL,

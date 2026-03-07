@@ -10,6 +10,8 @@ LOG_MODULE_REGISTER(drv_gpio, LOG_LEVEL_INF);
 /*  ISR handler — only sets atomic flag, nothing else                 */
 /* ------------------------------------------------------------------ */
 
+#define DEBOUNCE_MS 50
+
 static void gpio_isr_handler(const struct device *dev,
 			      struct gpio_callback *cb,
 			      uint32_t pins)
@@ -19,7 +21,13 @@ static void gpio_isr_handler(const struct device *dev,
 
 	gpio_channel_cfg_t *cfg = CONTAINER_OF(cb, gpio_channel_cfg_t, cb_data);
 
-	/* Atomic set — ISR-safe, no allocation, no logging */
+	int64_t now = k_uptime_get();
+
+	if ((now - cfg->last_irq_ms) < DEBOUNCE_MS) {
+		return;
+	}
+	cfg->last_irq_ms = now;
+
 	channel_manager_signal_irq(cfg->channel_idx);
 }
 

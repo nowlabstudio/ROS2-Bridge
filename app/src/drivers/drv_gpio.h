@@ -16,6 +16,7 @@ typedef struct {
 	gpio_flags_t         irq_flags;    /* GPIO_INT_EDGE_BOTH etc.        */
 	int                  channel_idx;  /* filled in by drv_gpio_setup_irq */
 	struct gpio_callback cb_data;      /* Zephyr internal callback struct */
+	int64_t              last_irq_ms;  /* debounce: last IRQ timestamp    */
 } gpio_channel_cfg_t;
 
 /**
