@@ -70,6 +70,7 @@ dhcp_val = cfg.get("network", {}).get("dhcp")
 
 KNOWN_KEYS = {
     "network.dhcp":        "true" if dhcp_val is True else ("false" if dhcp_val is False else None),
+    "network.mac":         cfg.get("network", {}).get("mac", ""),
     "network.ip":          cfg.get("network", {}).get("ip"),
     "network.netmask":     cfg.get("network", {}).get("netmask"),
     "network.gateway":     cfg.get("network", {}).get("gateway"),

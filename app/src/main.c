@@ -452,19 +452,22 @@ int main(void)
 	watchdog_init();
 
 	/* USB CDC ACM init */
-	usb_enable(NULL);
-
-	/* Wait for DTR — max DTR_TIMEOUT_MS, then continue without monitor */
-	{
+	if (usb_enable(NULL) == 0) {
 		const struct device *console =
 			DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
-		uint32_t dtr      = 0;
-		int64_t  deadline = k_uptime_get() + DTR_TIMEOUT_MS;
+		uint32_t dtr = 0;
 
-		while (!dtr && k_uptime_get() < deadline) {
+		/*
+		 * Brief DTR poll: if a USB host is connected and a serial
+		 * monitor is open, DTR goes high almost immediately.  We
+		 * poll a few times so early boot logs are not lost, but
+		 * never block long enough to delay autonomous operation.
+		 */
+		for (int i = 0; i < 10 && !dtr; i++) {
 			uart_line_ctrl_get(console, UART_LINE_CTRL_DTR, &dtr);
-			watchdog_feed();
-			k_sleep(K_MSEC(100));
+			if (!dtr) {
+				k_sleep(K_MSEC(50));
+			}
 		}
 
 		if (dtr) {
