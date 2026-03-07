@@ -1,0 +1,17 @@
+---
+description: Auto-update ERRATA.md and CHANGELOG_DEV.md on every code change or bug encounter
+alwaysApply: true
+---
+
+# Errata és Changelog kötelező frissítés
+
+Minden kódmódosítás vagy hibafelmerülés esetén **azonnal, kérés nélkül**:
+
+1. **CHANGELOG_DEV.md** — Új bejegyzés a session végén: mit csináltunk, mi változott, mi működött, mi nem. Checklist a nyitott pontokkal.
+
+2. **ERRATA.md** — Ha hibát találunk vagy javítunk:
+   - Új hiba → új ERR-XXX szekció + táblázat sor
+   - Javított hiba → állapot frissítés a táblázatban ("Nyitott" → "Javítva")
+   - Kutatási eredmény → az adott ERR szekció bővítése
+
+Ne kérdezz, csak csináld. Ezek a fájlok mindig naprakészek legyenek.
