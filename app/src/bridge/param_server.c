@@ -4,6 +4,7 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/sys_heap.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -113,8 +114,27 @@ int param_server_init(rcl_node_t *node, rclc_executor_t *executor)
 		.low_mem_mode                = true, /* required for RP2040    */
 	};
 
+#if defined(CONFIG_SYS_HEAP_RUNTIME_STATS)
+	extern struct k_heap _system_heap;
+	struct sys_memory_stats heap_before;
+
+	sys_heap_runtime_stats_get(&_system_heap.heap, &heap_before);
+	LOG_INF("Heap before param_server: free=%zu alloc=%zu max=%zu",
+		heap_before.free_bytes, heap_before.allocated_bytes,
+		heap_before.max_allocated_bytes);
+#endif
+
 	rcl_ret_t rc = rclc_parameter_server_init_with_option(
 		&param_server, node, &opts);
+
+#if defined(CONFIG_SYS_HEAP_RUNTIME_STATS)
+	struct sys_memory_stats heap_after;
+
+	sys_heap_runtime_stats_get(&_system_heap.heap, &heap_after);
+	LOG_INF("Heap after param_server:  free=%zu alloc=%zu max=%zu",
+		heap_after.free_bytes, heap_after.allocated_bytes,
+		heap_after.max_allocated_bytes);
+#endif
 
 	if (rc != RCL_RET_OK) {
 		LOG_ERR("param_server_init error: %d", (int)rc);

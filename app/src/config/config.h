@@ -14,6 +14,7 @@
 
 typedef struct {
 	bool dhcp;                     /* true = DHCP, false = static IP  */
+	char mac[20];                  /* "02:XX:XX:XX:XX:XX" or "" = auto */
 	char ip[CFG_STR_LEN];          /* Static IP address (if dhcp=false) */
 	char netmask[CFG_STR_LEN];     /* Subnet mask                     */
 	char gateway[CFG_STR_LEN];     /* Default gateway                 */

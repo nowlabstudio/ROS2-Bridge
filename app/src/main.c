@@ -11,6 +11,9 @@
 #include <zephyr/net/net_mgmt.h>
 #include <zephyr/net/net_event.h>
 #include <zephyr/sys/reboot.h>
+#include <zephyr/drivers/hwinfo.h>
+#include <zephyr/net/ethernet.h>
+#include <zephyr/net/hostname.h>
 
 #include <rcl/rcl.h>
 #include <rcl/error_handling.h>
@@ -120,9 +123,66 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
 	}
 }
 
+static int parse_mac_str(const char *str, uint8_t *out)
+{
+	if (strlen(str) != 17) {
+		return -EINVAL;
+	}
+	for (int i = 0; i < 6; i++) {
+		char byte_str[3] = { str[i * 3], str[i * 3 + 1], '\0' };
+		char *end;
+		unsigned long val = strtoul(byte_str, &end, 16);
+
+		if (*end != '\0' || val > 0xFF) {
+			return -EINVAL;
+		}
+		out[i] = (uint8_t)val;
+	}
+	return 0;
+}
+
+static void apply_mac_address(struct net_if *iface)
+{
+	uint8_t mac[6];
+
+	if (g_config.network.mac[0] != '\0') {
+		if (parse_mac_str(g_config.network.mac, mac) == 0) {
+			net_if_set_link_addr(iface, mac, 6, NET_LINK_ETHERNET);
+			LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (config)",
+				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+			return;
+		}
+		LOG_WRN("Invalid MAC in config.json, falling back to auto");
+	}
+
+	uint8_t dev_id[8];
+	ssize_t id_len = hwinfo_get_device_id(dev_id, sizeof(dev_id));
+
+	if (id_len >= 5) {
+		mac[0] = 0x02; /* locally administered */
+		mac[1] = dev_id[0];
+		mac[2] = dev_id[1];
+		mac[3] = dev_id[2];
+		mac[4] = dev_id[3];
+		mac[5] = dev_id[4];
+		net_if_set_link_addr(iface, mac, 6, NET_LINK_ETHERNET);
+		LOG_INF("MAC: %02x:%02x:%02x:%02x:%02x:%02x (auto/hwinfo)",
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	} else {
+		LOG_WRN("hwinfo_get_device_id failed (%d), using DTS MAC", (int)id_len);
+	}
+}
+
 static void apply_network_config(void)
 {
 	struct net_if *iface = net_if_get_default();
+
+	/* Set unique MAC before any network operations */
+	apply_mac_address(iface);
+
+	/* Set hostname from node_name for DHCP identification */
+	net_hostname_set_postfix((uint8_t *)g_config.ros.node_name,
+				 strlen(g_config.ros.node_name));
 
 	/* Wait for Ethernet link UP */
 	if (!net_if_is_up(iface)) {

@@ -10,11 +10,11 @@ Ez a dokumentum az összes ismert hibát tartalmazza.
 
 | ID | Rövid leírás | Súlyosság | Állapot |
 |----|-------------|-----------|---------|
-| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott |
-| [ERR-002](#err-002) | `/diagnostics` IP mező DHCP módban statikus IP-t mutat | Alacsony | Nyitott |
-| [ERR-003](#err-003) | Router-en az eszköz neve "zephyr", nem a konfigurált node_name | Alacsony | Nyitott |
-| [ERR-004](#err-004) | Több bridge ugyanazon a hálózaton: kapcsolatvesztés (+ 50 eszköz skálázás) | Kritikus | Nyitott |
-| [ERR-005](#err-005) | Hardcoded MAC cím — minden board azonos `00:00:00:01:02:03` | Kritikus | Nyitott |
+| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott — heap stats logolás hozzáadva |
+| [ERR-002](#err-002) | `/diagnostics` IP mező DHCP módban statikus IP-t mutat | Alacsony | **Javítva** — net stack-ből olvassa + MAC mező |
+| [ERR-003](#err-003) | Router-en az eszköz neve "zephyr", nem a konfigurált node_name | Alacsony | **Javítva** — hostname = ROS\_Bridge + node\_name |
+| [ERR-004](#err-004) | Több bridge ugyanazon a hálózaton: kapcsolatvesztés (+ 50 eszköz skálázás) | Kritikus | **Javítva** — ERR-005 root cause megoldva |
+| [ERR-005](#err-005) | Hardcoded MAC cím — minden board azonos `00:00:00:01:02:03` | Kritikus | **Javítva** — hwinfo auto-gen + config.json override |
 
 ---
 

@@ -50,6 +50,7 @@ void config_reset_defaults(void)
 {
 	memset(&g_config, 0, sizeof(g_config));
 	g_config.network.dhcp = false;
+	g_config.network.mac[0] = '\0';
 	SAFE_STRCPY(g_config.network.ip,         "192.168.68.114");
 	SAFE_STRCPY(g_config.network.netmask,    "255.255.255.0");
 	SAFE_STRCPY(g_config.network.gateway,    "192.168.68.1");
@@ -171,6 +172,7 @@ static void config_to_json(char *buf, size_t buf_len)
 	snprintf(buf, buf_len,
 		"{\n"
 		"  \"network\": {\n"
+		"    \"mac\": \"%s\",\n"
 		"    \"dhcp\": %s,\n"
 		"    \"ip\": \"%s\",\n"
 		"    \"netmask\": \"%s\",\n"
@@ -183,6 +185,7 @@ static void config_to_json(char *buf, size_t buf_len)
 		"    \"namespace\": \"%s\"\n"
 		"  }\n"
 		"}\n",
+		g_config.network.mac,
 		g_config.network.dhcp ? "true" : "false",
 		g_config.network.ip,
 		g_config.network.netmask,
@@ -224,6 +227,7 @@ int config_load(void)
 	buf[bytes_read] = '\0';
 
 	/* Extract JSON fields — errors logged, defaults preserved */
+	json_get_str(buf,  "mac",       g_config.network.mac,        sizeof(g_config.network.mac));
 	json_get_bool(buf, "dhcp",      &g_config.network.dhcp);
 	json_get_str(buf,  "ip",        g_config.network.ip,         CFG_STR_LEN);
 	json_get_str(buf,  "netmask",   g_config.network.netmask,    CFG_STR_LEN);
@@ -282,7 +286,9 @@ int config_set(const char *key, const char *value)
 		return -ENAMETOOLONG;
 	}
 
-	if (strcmp(key, "network.dhcp") == 0) {
+	if (strcmp(key, "network.mac") == 0) {
+		SAFE_STRCPY(g_config.network.mac, value);
+	} else if (strcmp(key, "network.dhcp") == 0) {
 		g_config.network.dhcp = (strcmp(value, "true") == 0 ||
 					 strcmp(value, "1") == 0);
 	} else if (strcmp(key, "network.ip") == 0) {
@@ -313,6 +319,7 @@ void config_print(void)
 {
 	LOG_INF("--- Bridge configuration ---");
 	LOG_INF("[network]");
+	LOG_INF("  mac:        %s", g_config.network.mac[0] ? g_config.network.mac : "(auto)");
 	LOG_INF("  dhcp:       %s", g_config.network.dhcp ? "true" : "false");
 	LOG_INF("  ip:         %s", g_config.network.ip);
 	LOG_INF("  netmask:    %s", g_config.network.netmask);

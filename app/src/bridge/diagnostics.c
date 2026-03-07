@@ -8,6 +8,8 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/net/net_if.h>
+#include <zephyr/net/net_ip.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +26,7 @@ int g_reconnect_count;
 /*  Static storage — zero heap usage                                  */
 /* ------------------------------------------------------------------ */
 
-#define DIAG_KV_COUNT 5
+#define DIAG_KV_COUNT 6
 
 /* Key buffers — fixed strings */
 static char kv_key0[] = "uptime_s";
@@ -32,6 +34,7 @@ static char kv_key1[] = "channels";
 static char kv_key2[] = "reconnects";
 static char kv_key3[] = "firmware";
 static char kv_key4[] = "ip";
+static char kv_key5[] = "mac";
 
 /* Value buffers — written at publish time */
 static char kv_val0[16];   /* uptime_s      */
@@ -39,6 +42,7 @@ static char kv_val1[4];    /* channels      */
 static char kv_val2[8];    /* reconnects    */
 static char kv_val3[] = "v2.0-W6100";  /* firmware (fixed) */
 static char kv_val4[16];   /* ip            */
+static char kv_val5[18];   /* mac           */
 
 static char hw_id_buf[] = "w6100_evb_pico";
 
@@ -81,6 +85,7 @@ int diagnostics_init(rcl_node_t *node, const rcl_allocator_t *allocator)
 	BIND_STR_STATIC(kv_items[2].key, kv_key2);
 	BIND_STR_STATIC(kv_items[3].key, kv_key3);
 	BIND_STR_STATIC(kv_items[4].key, kv_key4);
+	BIND_STR_STATIC(kv_items[5].key, kv_key5);
 
 	/* Bind value buffers (filled at publish time) */
 	BIND_STR_BUF(kv_items[0].value, kv_val0);
@@ -88,6 +93,7 @@ int diagnostics_init(rcl_node_t *node, const rcl_allocator_t *allocator)
 	BIND_STR_BUF(kv_items[2].value, kv_val2);
 	BIND_STR_STATIC(kv_items[3].value, kv_val3);  /* firmware: fixed */
 	BIND_STR_BUF(kv_items[4].value, kv_val4);
+	BIND_STR_BUF(kv_items[5].value, kv_val5);
 
 	/* Status message */
 	BIND_STR_STATIC(status_msg.name,        g_config.ros.node_name);
@@ -137,10 +143,35 @@ void diagnostics_publish(void)
 
 	/* firmware: fixed, size already set by BIND_STR_STATIC */
 
-	/* ip */
-	strncpy(kv_val4, g_config.network.ip, sizeof(kv_val4) - 1);
-	kv_val4[sizeof(kv_val4) - 1] = '\0';
-	kv_items[4].value.size = strlen(kv_val4);
+	/* ip — read actual address from net stack (works for both DHCP and static) */
+	{
+		struct net_if *iface = net_if_get_default();
+		struct net_if_ipv4 *ipv4 = iface->config.ip.ipv4;
+
+		if (ipv4 && ipv4->unicast[0].ipv4.is_used) {
+			net_addr_ntop(AF_INET,
+				      &ipv4->unicast[0].ipv4.address.in_addr,
+				      kv_val4, sizeof(kv_val4));
+		} else {
+			strncpy(kv_val4, "0.0.0.0", sizeof(kv_val4) - 1);
+			kv_val4[sizeof(kv_val4) - 1] = '\0';
+		}
+		kv_items[4].value.size = strlen(kv_val4);
+
+		/* mac */
+		struct net_linkaddr *la = net_if_get_link_addr(iface);
+
+		if (la && la->len >= 6) {
+			snprintf(kv_val5, sizeof(kv_val5),
+				 "%02x:%02x:%02x:%02x:%02x:%02x",
+				 la->addr[0], la->addr[1], la->addr[2],
+				 la->addr[3], la->addr[4], la->addr[5]);
+		} else {
+			strncpy(kv_val5, "unknown", sizeof(kv_val5) - 1);
+			kv_val5[sizeof(kv_val5) - 1] = '\0';
+		}
+		kv_items[5].value.size = strlen(kv_val5);
+	}
 
 	status_msg.level = diagnostic_msgs__msg__DiagnosticStatus__OK;
 
