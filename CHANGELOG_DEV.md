@@ -55,9 +55,14 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 | `app/src/bridge/param_server.c` | Heap stats logolás |
 | `ERRATA.md` | Állapot táblázat frissítve |
 
+### Build és flash
+
+- `CONFIG_NET_HOSTNAME_MAX_LEN=64` → **build hiba**: Kconfig range [1, 63] — javítva 63-ra
+- Build sikeres: `843264 bytes` UF2, RAM 97.09%
+- Flash: mind 3 eszköz BOOTSEL módból flashelve
+
 ### Még nem tesztelt / nyitott
 
-- [ ] Build teszt (cross-compile RP2040-re)
 - [ ] Hardveres teszt: 1 board — MAC log, hostname a routeren, /diagnostics
-- [ ] Hardveres teszt: 2 board — eltérő MAC, eltérő IP, stabil kapcsolat
+- [ ] Hardveres teszt: 2+ board — eltérő MAC, eltérő IP, stabil kapcsolat
 - [ ] ERR-001: heap stats logok kiértékelése boot után
