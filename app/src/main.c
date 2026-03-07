@@ -13,7 +13,6 @@
 #include <zephyr/sys/reboot.h>
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/net/ethernet.h>
-#include <zephyr/net/ethernet_mgmt.h>
 #include <zephyr/net/hostname.h>
 
 #include <rcl/rcl.h>
@@ -144,11 +143,12 @@ static int parse_mac_str(const char *str, uint8_t *out)
 
 static int set_mac_on_chip(struct net_if *iface, uint8_t *mac)
 {
-	struct ethernet_req_params params;
+	const struct device *dev = net_if_get_device(iface);
+	const struct ethernet_api *api = dev->api;
+	struct ethernet_config config = { 0 };
 
-	memcpy(params.mac_address.addr, mac, 6);
-	return net_mgmt(NET_REQUEST_ETHERNET_SET_MAC_ADDRESS,
-			iface, &params, sizeof(params));
+	memcpy(config.mac_address.addr, mac, 6);
+	return api->set_config(dev, ETHERNET_CONFIG_TYPE_MAC_ADDRESS, &config);
 }
 
 static void apply_mac_address(struct net_if *iface)
