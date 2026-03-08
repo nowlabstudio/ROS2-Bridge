@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 gen_dot.py — Generate rosgraph.dot from the live ROS2 graph.
+Uses 'ros2 node list' + 'ros2 node info' for reliable parsing.
 
-Runs inside the ROS2 Docker container (ros:jazzy with --net=host).
-Output: rosgraph.dot in the same directory as this script.
+Run inside the ROS2 Docker container (ros:jazzy --net=host).
 
 Usage:
     python3 gen_dot.py [output_path]
@@ -11,121 +11,110 @@ Usage:
 
 import sys
 import subprocess
-import re
+import time
 import os
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "rosgraph.dot")
 
+IGNORE_TOPICS = {"/rosout", "/parameter_events", "/tf", "/tf_static", "/clock"}
+IGNORE_NODE_PREFIXES = ("/_ros2cli", "/rqt")
+
 
 def run(cmd):
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    return result.stdout.strip()
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    return r.stdout.strip()
 
 
 def get_nodes():
     out = run(["ros2", "node", "list"])
-    return [n for n in out.splitlines() if n.strip()]
+    nodes = [n for n in out.splitlines() if n.strip()]
+    return [n for n in nodes if not any(n.startswith(p) for p in IGNORE_NODE_PREFIXES)]
 
 
-def get_topics():
-    out = run(["ros2", "topic", "list"])
-    return [t for t in out.splitlines() if t.strip()]
-
-
-def get_topic_info(topic):
-    """Return (publishers, subscribers) as lists of full node paths."""
-    out = run(["ros2", "topic", "info", "-v", topic])
+def get_node_info(node):
+    """Return (publishers, subscribers) — list of topic names."""
+    out = run(["ros2", "node", "info", node])
     publishers = []
     subscribers = []
-
     mode = None
-    node_name = ""
-    node_ns = ""
-
     for line in out.splitlines():
-        line = line.strip()
-        if line.startswith("Publisher count:") or "Publishers:" in line:
+        stripped = line.strip()
+        if stripped == "Publishers:":
             mode = "pub"
-        elif line.startswith("Subscription count:") or "Subscribers:" in line:
+        elif stripped == "Subscribers:":
             mode = "sub"
-        elif line.startswith("Node name:"):
-            node_name = line.split(":", 1)[1].strip()
-        elif line.startswith("Node namespace:"):
-            node_ns = line.split(":", 1)[1].strip()
-            if node_ns == "/":
-                full = "/" + node_name
-            else:
-                full = node_ns + "/" + node_name
-            if mode == "pub" and full not in publishers:
-                publishers.append(full)
-            elif mode == "sub" and full not in subscribers:
-                subscribers.append(full)
-
+        elif stripped in ("Service Servers:", "Service Clients:",
+                          "Action Servers:", "Action Clients:"):
+            mode = None
+        elif mode and stripped and ":" in stripped:
+            topic = stripped.split(":")[0].strip()
+            if topic and topic not in IGNORE_TOPICS:
+                if mode == "pub":
+                    publishers.append(topic)
+                elif mode == "sub":
+                    subscribers.append(topic)
     return publishers, subscribers
 
 
-def sanitize(name):
-    """Make a dot-safe identifier from a ROS name."""
-    return '"' + name.replace('"', '\\"') + '"'
+def q(s):
+    return '"' + s.replace('"', '\\"') + '"'
 
 
-def wait_for_nodes(retries=10, delay=2):
-    """Retry until at least one node appears (DDS discovery takes a few seconds)."""
-    for attempt in range(1, retries + 1):
+def wait_for_nodes(retries=20, delay=2):
+    for i in range(1, retries + 1):
         nodes = get_nodes()
         if nodes:
             return nodes
-        print(f"[gen_dot] Waiting for nodes... ({attempt}/{retries})")
-        import time
+        print(f"[gen_dot] Waiting for nodes... {i}/{retries}", flush=True)
         time.sleep(delay)
     return []
 
 
 def main():
-    print("[gen_dot] Querying ROS2 graph (waiting for DDS discovery)...")
-    nodes = wait_for_nodes(retries=15, delay=2)
+    print("[gen_dot] Waiting for DDS discovery...", flush=True)
+    nodes = wait_for_nodes()
 
     if not nodes:
-        print("[gen_dot] ERROR: No nodes found after waiting.")
-        print("          Is the agent running? Are boards connected (green LED on)?")
+        print("[gen_dot] ERROR: no nodes found after waiting.")
+        print("          Check: agent running? boards connected (LED on)?")
         sys.exit(1)
 
-    topics = get_topics()
-    print(f"[gen_dot] Found {len(nodes)} node(s), {len(topics)} topic(s)")
+    print(f"[gen_dot] Found {len(nodes)} node(s): {nodes}", flush=True)
 
-    edges = []   # (publisher_node, topic, subscriber_node)
-    topic_nodes = set()
-    graph_nodes = set(nodes)
+    # Collect all edges: node → topic, topic → subscriber_node
+    pub_edges = []   # (node, topic)
+    sub_edges = []   # (topic, node)
+    all_topics = set()
 
-    for topic in topics:
-        pubs, subs = get_topic_info(topic)
-        for pub in pubs:
-            for sub in subs:
-                edges.append((pub, topic, sub))
-                topic_nodes.add(topic)
+    for node in nodes:
+        pubs, subs = get_node_info(node)
+        for t in pubs:
+            pub_edges.append((node, t))
+            all_topics.add(t)
+        for t in subs:
+            sub_edges.append((t, node))
+            all_topics.add(t)
 
-    # Write dot file (rqt_graph compatible format)
+    print(f"[gen_dot] {len(all_topics)} active topic(s)", flush=True)
+
     with open(OUT, "w") as f:
         f.write("digraph  {\n")
 
-        # Node definitions
-        for node in graph_nodes:
-            label = node.split("/")[-1] if "/" in node else node
-            f.write(f"  {sanitize(node)} [label={sanitize(node)}, shape=ellipse];\n")
+        for node in nodes:
+            f.write(f"  {q(node)} [label={q(node)}, shape=ellipse];\n")
 
-        # Topic nodes
-        for topic in topic_nodes:
-            f.write(f"  {sanitize(topic)} [label={sanitize(topic)}, shape=box];\n")
+        for topic in all_topics:
+            f.write(f"  {q(topic)} [label={q(topic)}, shape=box];\n")
 
-        # Edges: publisher → topic → subscriber
-        for pub, topic, sub in edges:
-            f.write(f"  {sanitize(pub)} -> {sanitize(topic)};\n")
-            f.write(f"  {sanitize(topic)} -> {sanitize(sub)};\n")
+        for node, topic in pub_edges:
+            f.write(f"  {q(node)} -> {q(topic)};\n")
+
+        for topic, node in sub_edges:
+            f.write(f"  {q(topic)} -> {q(node)};\n")
 
         f.write("}\n")
 
-    print(f"[gen_dot] Written: {OUT}")
-    print(f"[gen_dot] {len(graph_nodes)} nodes, {len(topic_nodes)} active topics, {len(edges)} connections")
+    print(f"[gen_dot] Written: {OUT}", flush=True)
 
 
 if __name__ == "__main__":
