@@ -4,6 +4,35 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-08 — Foxglove Studio integráció, start-all.sh
+
+### Elvégzett munka
+
+**1. `tools/start-all.sh` — Teljes környezet egylépéses indítása**
+
+Új script, ami sorrendben, egymásra várva indítja az összes szolgáltatást:
+
+1. micro-ROS Agent (UDP :8888) — gnome-terminal ablakban
+2. Foxglove Bridge (WS :8765) — háttér konténer, megvárja a port megnyílását
+3. ROS2 Jazzy shell — gnome-terminal ablakban
+4. Foxglove Studio — natív snap app (ha telepítve van)
+
+Leállítás: `./tools/start-all.sh --stop`
+
+**2. Foxglove Studio ajánlás dokumentálva**
+
+- Bridge: Docker konténerben marad (Dockerfile.foxglove, start-foxglove.sh — már meglévő)
+- Studio (kliens): natív snap telepítés (`sudo snap install foxglove-studio`)
+- Architektúra: Pico → UDP → Agent → DDS → Foxglove Bridge → WS :8765 → Studio
+
+### Érintett fájlok
+
+| Fájl | Változás |
+|------|---------|
+| `tools/start-all.sh` | **Új** — teljes környezet indító script |
+
+---
+
 ## 2026-03-08 — v2.1: Firmware javítások, RC input, config-driven channels
 
 ### Kiindulási állapot

@@ -98,14 +98,17 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 ├── Makefile                         ← build, flash, monitor commands
 │
 ├── docker/
-│   └── Dockerfile                   ← Docker image: Zephyr SDK + micro-ROS tools
+│   ├── Dockerfile                   ← Docker image: Zephyr SDK + micro-ROS tools
+│   └── Dockerfile.foxglove          ← Foxglove Bridge image (ROS Jazzy + foxglove-bridge)
 │
 ├── tools/
 │   ├── upload_config.py             ← Python config uploader (serial port)
 │   ├── flash.sh                     ← Flash firmware via 'bridge bootsel' (no button needed)
 │   ├── docker-run-agent-udp.sh      ← Start micro-ROS Jazzy agent in Docker (UDP)
 │   ├── docker-run-ros2.sh           ← Start ROS2 Jazzy interactive shell in Docker
-│   ├── start-eth.sh                 ← Launch full environment (agent + ROS2 shell)
+│   ├── start-eth.sh                 ← Launch agent + ROS2 shell
+│   ├── start-foxglove.sh            ← Launch Foxglove Bridge (WebSocket on port 8765)
+│   ├── start-all.sh                 ← Launch everything: agent + bridge + ROS2 + Studio
 │   └── cyclonedds.xml               ← CycloneDDS config (auto interface, DDS tuning)
 │
 ├── devices/                         ← Per-device config.json files
@@ -680,18 +683,34 @@ Located in `app/src/user/rc.c`. Uses `app/src/drivers/drv_pwm_in.c` (pulse-width
 
 ## micro-ROS Agent Setup (ROS2 host)
 
-### Recommended: Docker scripts (included)
+### Recommended: Full stack with one command
 
 ```bash
-# Start agent + ROS2 shell (Ubuntu, 2 terminal windows):
+# Start everything: agent + Foxglove bridge + ROS2 shell + Foxglove Studio:
+./tools/start-all.sh
+
+# Stop everything:
+./tools/start-all.sh --stop
+```
+
+Idempotent — re-running skips services that are already up.
+
+### Individual scripts
+
+```bash
+# Agent + ROS2 shell only (no Foxglove):
 ./tools/start-eth.sh
 
-# Start just the agent:
+# Just the agent:
 ./tools/docker-run-agent-udp.sh           # default port 8888
 ./tools/docker-run-agent-udp.sh 9999      # custom port
 
-# Start interactive ROS2 shell:
+# Just the ROS2 shell:
 ./tools/docker-run-ros2.sh
+
+# Just the Foxglove bridge:
+./tools/start-foxglove.sh
+./tools/start-foxglove.sh --stop
 ```
 
 Uses `microros/micro-ros-agent:jazzy` with `--net=host`. No installation needed beyond Docker.
@@ -761,6 +780,59 @@ ros2 topic echo /diagnostics
 | `firmware` | `"v2.0-W6100"` | Firmware version |
 | `ip` | `"192.168.68.130"` | Active IP (DHCP-assigned or static) |
 | `mac` | `"0c:2f:94:30:58:03"` | Active MAC address |
+
+---
+
+## Visualization with Foxglove Studio
+
+[Foxglove Studio](https://foxglove.dev/) provides real-time visualization of all ROS2 topics over a WebSocket connection.
+
+### Architecture
+
+```
+[W6100 Pico boards] → UDP :8888 → [micro-ROS Agent (Docker)]
+                                          │ DDS
+                                   [Foxglove Bridge (Docker)]
+                                          │ WebSocket :8765
+                                   [Foxglove Studio (native app)]
+```
+
+### Setup
+
+**1. Install Foxglove Studio (once):**
+
+```bash
+sudo snap install foxglove-studio
+```
+
+**2. Start everything:**
+
+```bash
+./tools/start-all.sh
+```
+
+This launches the agent, Foxglove Bridge, ROS2 shell, and Studio in the correct order.
+
+**3. Connect in Studio:**
+
+Open Connection → **Foxglove WebSocket** → `ws://localhost:8765`
+
+> Use **Foxglove WebSocket**, not Rosbridge — they are different protocols.
+
+### Available topics in Studio
+
+| Topic | Type | Source |
+|-------|------|--------|
+| `/robot/estop` | `std_msgs/Bool` | E-Stop board |
+| `/robot/motor_left` | `std_msgs/Float32` | RC CH1 |
+| `/robot/motor_right` | `std_msgs/Float32` | RC CH2 |
+| `/robot/rc_mode` | `std_msgs/Float32` | RC CH5 |
+| `/robot/winch` | `std_msgs/Float32` | RC CH6 |
+| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | All boards |
+
+### Foxglove Bridge details
+
+The bridge runs in Docker (`docker/Dockerfile.foxglove`) using `ros-jazzy-foxglove-bridge`. Managed by `tools/start-foxglove.sh`.
 
 ---
 
@@ -841,6 +913,7 @@ What it does:
 | RC PWM input driver (GP2–GP7, 6ch) | ✅ Done | v2.1 |
 | RC trim calibration from config.json | ✅ Done | v2.1 |
 | Multi-board tested (3 boards) | ✅ Done | v2.1 |
+| Foxglove Studio visualization | ✅ Done | v2.1 |
 | Serial (UART) driver | 🔄 Planned | — |
 | Encoder (PIO) driver | 🔄 Planned | — |
 | PID controller | 🔄 Planned | — |

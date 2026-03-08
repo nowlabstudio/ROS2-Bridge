@@ -15,11 +15,15 @@ PORT="${1:-8888}"
 CONTAINER_NAME="w6100_bridge_agent_udp"
 IMAGE="microros/micro-ros-agent:jazzy"
 
-# Stop previous instance if still running
-if docker ps -q --filter "name=$CONTAINER_NAME" | grep -q .; then
-    echo "Stopping previous agent container..."
-    docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
+# Skip if already running
+if docker ps -q --filter "name=^${CONTAINER_NAME}$" | grep -q .; then
+    echo "Agent already running in container '$CONTAINER_NAME'."
+    echo "To restart: docker stop $CONTAINER_NAME && $0"
+    exit 0
 fi
+
+# Clean up stopped container with same name
+docker rm "$CONTAINER_NAME" 2>/dev/null || true
 
 echo "============================================="
 echo " micro-ROS Agent (Jazzy, UDP Mode)"

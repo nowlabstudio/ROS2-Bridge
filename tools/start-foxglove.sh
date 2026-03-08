@@ -40,13 +40,18 @@ if ! docker image inspect "$IMAGE" &>/dev/null; then
     fi
 fi
 
-# ── Stop previous instance ────────────────────────────────────────────────────
+# ── Skip if already running ───────────────────────────────────────────────────
 
-if docker ps -q --filter "name=$CONTAINER_NAME" | grep -q .; then
-    echo "[foxglove] Restarting bridge..."
-    docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
-    sleep 1
+if docker ps -q --filter "name=^${CONTAINER_NAME}$" | grep -q .; then
+    echo "[foxglove] Bridge already running — nothing to do."
+    echo "  URL: ws://localhost:${WS_PORT}"
+    echo "  To restart: $0 --stop && $0"
+    exit 0
 fi
+
+# ── Clean up stopped container with same name ────────────────────────────────
+
+docker rm "$CONTAINER_NAME" 2>/dev/null || true
 
 # ── Start bridge ──────────────────────────────────────────────────────────────
 

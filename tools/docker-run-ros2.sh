@@ -40,11 +40,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONTAINER_NAME="w6100_bridge_ros2"
 IMAGE="ros:jazzy"
 
-# Stop previous instance if still running
-if docker ps -q --filter "name=$CONTAINER_NAME" | grep -q .; then
-    echo "Stopping previous ros2 container..."
-    docker stop "$CONTAINER_NAME" >/dev/null 2>&1 || true
+# Skip if already running
+if docker ps -q --filter "name=^${CONTAINER_NAME}$" | grep -q .; then
+    echo "ROS2 shell already running in container '$CONTAINER_NAME'."
+    echo "To restart: docker stop $CONTAINER_NAME && $0"
+    exit 0
 fi
+
+# Clean up stopped container with same name
+docker rm "$CONTAINER_NAME" 2>/dev/null || true
 
 echo "============================================="
 echo " ROS2 Jazzy - W6100 Bridge Test Shell"
