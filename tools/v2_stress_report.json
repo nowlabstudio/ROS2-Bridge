@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-06T21:52:05",
+  "timestamp": "2026-03-08T10:41:08",
   "version": "v2.0",
   "thresholds": {
     "estop_latency_max_ms": 100,
@@ -21,7 +21,7 @@
       "name": "Shell alive",
       "category": "Shell/Config",
       "status": "PASS",
-      "note": "bridge config show\r --- Bridge configuration ---\r [network]\r   dhcp:       false"
+      "note": "bridge config show\r --- Bridge configuration ---\r [network]\r   dhcp:       true\r"
     },
     {
       "id": "T02",
@@ -126,7 +126,7 @@
       "name": "Shell latency (10 samples)",
       "category": "Performance",
       "status": "PASS",
-      "note": "avg=2004ms  max=2006ms  (10/10)"
+      "note": "avg=2005ms  max=2006ms  (10/10)"
     },
     {
       "id": "T17",
