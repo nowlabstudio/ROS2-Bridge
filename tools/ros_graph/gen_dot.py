@@ -60,6 +60,11 @@ def q(s):
     return '"' + s.replace('"', '\\"') + '"'
 
 
+def topic_id(topic):
+    """Unique dot ID for a topic node — avoids collision when topic name == ROS node name."""
+    return '"__topic__' + topic.replace('"', '\\"') + '"'
+
+
 def wait_for_nodes(retries=20, delay=2):
     for i in range(1, retries + 1):
         nodes = get_nodes()
@@ -100,17 +105,20 @@ def main():
     with open(OUT, "w") as f:
         f.write("digraph  {\n")
 
+        # ROS nodes — ellipse
         for node in nodes:
             f.write(f"  {q(node)} [label={q(node)}, shape=ellipse];\n")
 
+        # Topics — box, with unique dot ID to avoid collision with node names
         for topic in all_topics:
-            f.write(f"  {q(topic)} [label={q(topic)}, shape=box];\n")
+            f.write(f"  {topic_id(topic)} [label={q(topic)}, shape=box];\n")
 
+        # Edges use topic_id() consistently
         for node, topic in pub_edges:
-            f.write(f"  {q(node)} -> {q(topic)};\n")
+            f.write(f"  {q(node)} -> {topic_id(topic)};\n")
 
         for topic, node in sub_edges:
-            f.write(f"  {q(topic)} -> {q(node)};\n")
+            f.write(f"  {topic_id(topic)} -> {q(node)};\n")
 
         f.write("}\n")
 
