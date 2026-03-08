@@ -1,4 +1,6 @@
 {
+    "_comment": "python3 tools/upload_config.py --config devices/E_STOP/config.json --port /dev/tty.usbmodem23301
+",
   "network": {
     "mac": "0C:2F:94:30:58:33",
     "ip": "192.168.68.203",
@@ -15,7 +17,7 @@
   },
 
   "channels": {
-    "estop": false,
+    "estop": true,
     "test_counter": false,
     "test_heartbeat": false,
     "test_echo": false,

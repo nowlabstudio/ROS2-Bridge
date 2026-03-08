@@ -1,4 +1,5 @@
 {
+  "_comment": "python3 tools/upload_config.py --config devices/RC/config.json --port /dev/tty.usbmodem23401",
   "network": {
     "mac": "0C:2F:94:30:58:22",
     "ip": "192.168.68.202",

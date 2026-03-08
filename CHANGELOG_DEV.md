@@ -4,6 +4,112 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-08 — v2.1: Firmware javítások, RC input, config-driven channels
+
+### Kiindulási állapot
+
+- Commit: `50d7f9b` (közelítőleg) — v2.0 firmware, 3 board flashelve, de egyik sem csatlakozik az agentre
+
+### Elvégzett munka
+
+**1. ERR-007 javítás — rclc_support_init dirty struct** (`8a30801`)
+
+A reconnect loop hosszú ideje meglévő bugja: ha az első `rclc_support_init` sikertelen volt, a `support`/`node`/`executor` structs részlegesen inicializált állapotban maradtak. Minden következő retry ugyanezt a dirty struct-ot kapta, ami végtelen hibás inicializációhoz vezetett.
+
+Javítás: `memset(&support, 0, ...)` + `memset(&node, 0, ...)` + `memset(&executor, 0, ...)` hozzáadva a `ros_session_init()` elejére.
+
+**2. ERR-008 javítás — docker-run-agent-udp.sh** (`8a30801`)
+
+A script bash-t indított a micro-ROS agent helyett, `$SCRIPT_DIR` nem volt definiálva.
+Javítás: script teljes újraírása, helyes `udp4 -p "$PORT" -v6` paranccsal.
+
+**3. cyclonedds.xml javítás** (`8a30801`)
+
+- `NetworkInterfaceAddress`: `eth0` → `auto` (nem kellett hardcoded interface)
+- Stale `<Peer address="192.168.68.201"/>` eltávolítva
+
+**4. start-eth.sh javítás** (`8a30801`)
+
+Robusztus `docker ps` várakozási ciklus hozzáadva (30× 1s), hogy a script csak akkor folytasson, ha az agent container ténylegesen fut. Frissített echo üzenetek a jelenlegi topicokkal.
+
+**5. docker-run-ros2.sh frissítés** (`8a30801`)
+
+Help szöveg és quick-reference parancsok frissítve a jelenlegi `/robot` namespace és topicok szerint.
+
+**6. Memória optimalizáció** (`8a30801`)
+
+- `config.c`: két külön `static char buf[2048]` helyett egy közös `static char cfg_io_buf[1536]` — ~500 byte BSS megtakarítás
+- `config.h`: `CFG_MAX_CHANNELS` 16 → 12 — ~80 byte BSS megtakarítás
+
+**7. ERR-009 javítás — DTR wait** (korábbi munkamenet)
+
+500ms non-blocking poll váltotta fel a végtelen blokkoló DTR ciklust. A board USB serial nélkül is elindul.
+
+**8. ERR-006 javítás — dupla namespace** (korábbi munkamenet)
+
+`estop.c` topic_pub javítva: `"robot/estop"` → `"estop"`. A namespace-t a config adja, nem a topic stringbe kell beírni.
+
+**9. ERR-010 javítás — topic collision, config-driven channels** (korábbi munkamenet)
+
+- `user_channels.c`: `register_if_enabled()` wrapper — minden channel regisztrálás előtt ellenőrzi a config.json-t
+- `config.h/.c`: `cfg_channel_entry_t` (name, enabled, topic override), `config_channel_enabled()`, `config_channel_topic()` API
+- `channel_manager.c`: `config_channel_topic()` alapján felülírja a `topic_pub`/`topic_sub` értéket
+
+**10. GPIO debounce — ERR-010 kiegészítés** (korábbi munkamenet)
+
+- `drv_gpio.h`: `last_irq_ms` mező a `gpio_channel_cfg_t` structban
+- `drv_gpio.c`: `gpio_isr_handler` 50ms DEBOUNCE_MS szűrővel (`k_uptime_get()`)
+
+**11. RC PWM input driver** (korábbi munkamenet)
+
+- `app/src/drivers/drv_pwm_in.h/.c`: pulse-width mérés `k_cycle_get_32()`-vel, GPIO IRQ rising/falling edge-en
+- `app/src/user/rc.h/.c`: 6 csatorna (rc_ch1–rc_ch6), normalizáció `g_config.rc_trim` alapján
+- `app/boards/w5500_evb_pico.overlay`: `rc_inputs` node, GP2–GP7 aliasok
+- `app/CMakeLists.txt`: `drv_pwm_in.c` és `rc.c` hozzáadva
+
+**12. RC trim konfiguráció** (korábbi munkamenet)
+
+- `config.h`: `cfg_rc_trim_ch_t` (min/center/max) és `cfg_rc_trim_t` (6 channel + deadzone) structs
+- `config.c`: `parse_rc_trim()`, `config_to_json()` frissítve, `config_reset_defaults()` alapértékekkel
+- `tools/upload_config.py`: rc_trim szekció feltöltése dotted key-value párokkal
+
+**13. Per-board config.json fájlok** (korábbi munkamenet)
+
+- `devices/E_STOP/config.json`: csak `estop: true`, minden más false
+- `devices/PEDAL/config.json`: saját konfig
+- `devices/RC/config.json`: rc_ch1–6 enabled topic override-okkal, rc_trim section
+
+### Érintett fájlok
+
+| Fájl | Változás |
+|------|---------|
+| `app/src/main.c` | memset fix, DTR 500ms |
+| `app/src/config/config.h` | channel entries, rc_trim structs, CFG_MAX_CHANNELS=12 |
+| `app/src/config/config.c` | channel/rc_trim parse+save, shared cfg_io_buf[1536] |
+| `app/src/bridge/channel_manager.c` | topic override config-ból |
+| `app/src/user/user_channels.c` | register_if_enabled wrapper |
+| `app/src/user/estop.c` | topic_pub "robot/estop" → "estop" |
+| `app/src/user/rc.h/.c` | Új — RC csatornák, normalizáció |
+| `app/src/drivers/drv_gpio.c/.h` | 50ms debounce |
+| `app/src/drivers/drv_pwm_in.h/.c` | Új — PWM pulse-width driver |
+| `app/boards/w5500_evb_pico.overlay` | rc_inputs node, GP2-7 aliasok |
+| `app/CMakeLists.txt` | rc.c, drv_pwm_in.c hozzáadva |
+| `tools/docker-run-agent-udp.sh` | Teljes újraírás |
+| `tools/cyclonedds.xml` | auto interface, stale peer eltávolítva |
+| `tools/start-eth.sh` | Robusztus agent wait loop |
+| `tools/docker-run-ros2.sh` | Frissített help szöveg |
+| `devices/E_STOP/config.json` | Per-board channel config |
+| `devices/RC/config.json` | RC csatornák + rc_trim |
+
+### Build és flash
+
+- Build sikeres: `853504 bytes` UF2, RAM **97.49%**
+- Commit: `8a30801` — 8 fájl, 67 sor hozzáadva, 86 törölve
+- Flash: mindhárom board BOOTSEL módból egyszerre flashelve
+- Teszt: mindhárom board csatlakozik az agentre ✅
+
+---
+
 ## 2026-03-07 — Errata javítások (ERR-001 → ERR-005)
 
 ### Kiindulási állapot

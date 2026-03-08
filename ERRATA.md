@@ -1,8 +1,8 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-03-07
+**Utolsó frissítés:** 2026-03-08
 
-Ez a dokumentum az összes ismert hibát tartalmazza.
+Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
 ---
 
@@ -10,11 +10,16 @@ Ez a dokumentum az összes ismert hibát tartalmazza.
 
 | ID | Rövid leírás | Súlyosság | Állapot |
 |----|-------------|-----------|---------|
-| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott — heap stats logolás hozzáadva |
-| [ERR-002](#err-002) | `/diagnostics` IP mező DHCP módban statikus IP-t mutat | Alacsony | **Javítva** — net stack-ből olvassa + MAC mező |
-| [ERR-003](#err-003) | Router-en az eszköz neve "zephyr", nem a konfigurált node_name | Alacsony | **Javítva** — hostname = ROS\_Bridge + node\_name |
-| [ERR-004](#err-004) | Több bridge ugyanazon a hálózaton: kapcsolatvesztés (+ 50 eszköz skálázás) | Kritikus | **Javítva** — ERR-005 root cause megoldva |
-| [ERR-005](#err-005) | Hardcoded MAC cím — minden board azonos `00:00:00:01:02:03` | Kritikus | **Javítva** — hwinfo auto-gen + config.json override |
+| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott |
+| [ERR-002](#err-002) | `/diagnostics` IP DHCP módban statikus IP-t mutatott | Alacsony | **Javítva** v2.0 |
+| [ERR-003](#err-003) | Router-en az eszköz neve "zephyr" volt | Alacsony | **Javítva** v2.0 |
+| [ERR-004](#err-004) | Több bridge ugyanazon a hálózaton: kapcsolatvesztés | Kritikus | **Javítva** v2.0 |
+| [ERR-005](#err-005) | Hardcoded MAC — minden board azonos `00:00:00:01:02:03` | Kritikus | **Javítva** v2.0 |
+| [ERR-006](#err-006) | Dupla namespace: `/robot/robot/estop` | Közepes | **Javítva** v2.1 |
+| [ERR-007](#err-007) | `rclc_support_init` "dirty struct" — végtelen reconnect loop | Kritikus | **Javítva** v2.1 |
+| [ERR-008](#err-008) | `docker-run-agent-udp.sh` bash-t indított az agent helyett | Kritikus | **Javítva** v2.1 |
+| [ERR-009](#err-009) | DTR wait blokkolta az autonome bootot | Magas | **Javítva** v2.0 |
+| [ERR-010](#err-010) | Több board publishol ugyanarra az estop topicra | Magas | **Javítva** v2.1 |
 
 ---
 
@@ -34,15 +39,6 @@ Boot-kor a következő log jelenik meg:
 <wrn> main: Param server init failed — continuing without params
 ```
 
-A hiba forrása a `param_server.c`-ben:
-```c
-rcl_ret_t rc = rclc_parameter_server_init_with_option(&param_server, node, &opts);
-if (rc != RCL_RET_OK) {
-    LOG_ERR("param_server_init error: %d", (int)rc);
-    return -EIO;
-}
-```
-
 A rendszer a hiba ellenére fut tovább. A param server nélkül:
 - A JSON-ból betöltött paraméterek (`/lfs/ch_params.json`) érvényesülnek boot-kor
 - A csatornák az elmentett / alapértelmezett értékekkel indulnak
@@ -53,33 +49,29 @@ A rendszer a hiba ellenére fut tovább. A param server nélkül:
 `error: 11` = `RCL_RET_INVALID_ARGUMENT = 11` (közvetlen), VAGY
 `RCL_RET_BAD_ALLOC (10) | RCL_RET_ERROR (1) = 11` (bitwise OR)
 
-A `rclc_parameter_server_init_with_option` `ret |= ...` mintával OR-olja össze
-a 6 service init visszatérési értékét + `init_parameter_server_memory_low` eredményét.
+A `rclc_parameter_server_init_with_option` `ret |= ...` mintával OR-olja össze a 6 service init visszatérési értékét.
 
 #### Kizárt okok
 
 | # | Hipotézis | Eredmény |
 |---|-----------|----------|
-| 1 | `prj.conf` Kconfig idézőjel-csapda | **KIZÁRVA** — értékek helyesen idézőjelben vannak |
+| 1 | `prj.conf` Kconfig idézőjel-csapda | **KIZÁRVA** |
 | 2 | `libmicroros.a` rossz limitekkel fordult | **KIZÁRVA** — `MAX_SERVICES=8` a binárisban |
 | 3 | Executor handle count hiány | **KIZÁRVA** — `PARAM_SERVER_HANDLES = 6` benne van |
-| 4 | `rcl_interfaces` service típusok hiányoznak | **KIZÁRVA** — mind a 6 service jelen van |
-| 5 | Service névhossz overflow (50 byte buffer) | **KIZÁRVA** — leghosszabb = 37 char < 50 |
-| 6 | Topic/service névhossz overflow az rmw rétegben (60 byte) | **KIZÁRVA** — leghosszabb = 47 char < 60 |
-| 7 | Heap kimerülés | **VALÓSZÍNŰTLEN** — 96KB heap, becsülve ~15KB kellene; futásidejű mérés nélkül nem 100%-ig kizárható |
+| 4 | `rcl_interfaces` service típusok hiányoznak | **KIZÁRVA** — mind jelen van |
+| 5 | Service névhossz overflow | **KIZÁRVA** — leghosszabb < 50 char |
+| 6 | Heap kimerülés | **VALÓSZÍNŰTLEN** — 96KB heap, mért free > 95KB |
 
 #### Legvalószínűbb területek
 
 1. **XRCE session timeout** a service-ek DDS entitás-létrehozásakor
-   (`run_xrce_session` → agent nem válaszol időben valamelyik service-re)
-2. **Heap allokációs hiba** `rcl_resolve_name` → `rcutils_string_map_init` hívásánál
-3. **`init_parameter_server_memory_low`** valamelyik allokációja meghiúsul
+2. **`init_parameter_server_memory_low`** valamelyik allokációja meghiúsul
 
-#### Következő lépések
+#### Mellékhatás (nem fatális)
 
-- **A.) Futásidejű heap diagnostika:** `CONFIG_SYS_HEAP_RUNTIME_STATS=y` hozzáadása, heap állapot logolása a `rclc_parameter_server_init_with_option` hívás előtt/után
-- **B.) Granulálisabb hibalog:** a 6 service init egyenkénti hívása és logolása
-- **C.) XRCE timeout növelés:** `RMW_UXRCE_ENTITY_CREATION_TIMEOUT` megduplázása (1000ms → 2000ms) — könyvtárújrafordítás szükséges
+- Csatornák normálisan publisholnak
+- `/lfs/ch_params.json` betöltése rendben zajlik
+- `ros2 param set/get/list` nem elérhető amíg a hiba fennáll
 
 #### Érintett fájlok
 
@@ -87,450 +79,328 @@ a 6 service init visszatérési értékét + `init_parameter_server_memory_low` 
 |------|-----------|
 | `app/src/bridge/param_server.c` | A hiba itt jelentkezik |
 | `app/src/main.c` | Executor handle count — rendben |
-| `app/prj.conf` | Kconfig értékek — rendben |
-| `workspace/modules/lib/micro_ros_zephyr_module/modules/libmicroros/configured_colcon.meta` | Beégett limitek — rendben |
-
-#### Mellékhatás
-
-A param server hiba **nem fatális**. A rendszer fut:
-- Csatornák normálisan publisholnak
-- `/lfs/ch_params.json` betöltése boot-kor rendben zajlik
-- `ros2 param set/get/list` nem elérhető amíg a hiba fennáll
 
 ---
 
 ## ERR-002
 
-### `/diagnostics` IP mező DHCP módban a statikus IP-t mutat
+### `/diagnostics` IP DHCP módban statikus IP-t mutatott
 
 **Dátum:** 2026-03-07
-**Állapot:** Nyitott
+**Állapot:** ✅ **Javítva** — v2.0, commit `c816b9e`
 
 #### A hiba
 
-Ha a `config.json`-ban `"dhcp": true`, a bridge DHCP-vel kap IP címet a routertől.
-A `/diagnostics` topicban viszont az `ip` mező továbbra is a `config.json`-ban
-szereplő statikus IP címet adja vissza, nem a DHCP által ténylegesen kapottat.
-
-Példa: a config-ban `"ip": "192.168.68.115"`, a DHCP kioszt mondjuk `192.168.68.42`-t,
-de a `/diagnostics` az `ip` mezőben `192.168.68.115`-öt mutat.
+Ha `"dhcp": true`, a bridge DHCP-vel kapott IP-t, de a `/diagnostics` topicban az `ip` mező a `config.json`-ban szereplő statikus IP-t mutatta.
 
 #### Root cause
 
-A `diagnostics_publish()` (`app/src/bridge/diagnostics.c`, 141. sor) a `g_config.network.ip`
-értékét másolja be:
+`diagnostics_publish()` a `g_config.network.ip` értékét másolta, ami DHCP módban nem frissült a ténylegesen kiosztott címre.
 
-```c
-strncpy(kv_val4, g_config.network.ip, sizeof(kv_val4) - 1);
-```
+#### Javítás
 
-Ez a config.json-ból betöltött érték, ami DHCP módban nem frissül a tényleges
-DHCP-assigned címre.
-
-#### Javítási irány
-
-A `diagnostics_publish()`-ban a `g_config.network.ip` helyett a Zephyr net stack-ből
-kellene lekérdezni az aktuális IP címet:
+`diagnostics_publish()` a Zephyr net stack-ből kérdezi le az aktuális IP-t:
 
 ```c
 struct net_if *iface = net_if_get_default();
-struct net_if_config *cfg = net_if_get_config(iface);
-if (cfg->ip.ipv4 && cfg->ip.ipv4->unicast[0].ipv4.is_used) {
-    char addr_str[NET_IPV4_ADDR_LEN];
-    net_addr_ntop(AF_INET,
-                  &cfg->ip.ipv4->unicast[0].ipv4.address.in_addr,
-                  addr_str, sizeof(addr_str));
-    strncpy(kv_val4, addr_str, sizeof(kv_val4) - 1);
-}
+// net_if_ipv4_get_global_addr() → valódi IP
 ```
 
-Alternatíva: az `apply_network_config()` DHCP callback-jében a `g_config.network.ip`
-mezőt frissíteni a kapott címre — de ez összekeverheti a "konfigurált" és "aktuális"
-értékeket.
-
-#### Érintett fájl
-
-| Fájl | Megjegyzés |
-|------|-----------|
-| `app/src/bridge/diagnostics.c` | `diagnostics_publish()` — IP forrás javítandó |
+Plusz hozzáadva egy 6. KeyValue: `mac` — az aktuális MAC cím.
 
 ---
 
 ## ERR-003
 
-### Router-en az eszköz neve "zephyr", nem a konfigurált node_name
+### Router-en az eszköz neve "zephyr" volt, nem a konfigurált node_name
 
 **Dátum:** 2026-03-07
-**Állapot:** Nyitott
+**Állapot:** ✅ **Javítva** — v2.0, commit `c816b9e`
 
 #### A hiba
 
-A hálózati routeren az eszköz "zephyr" (vagy "zephir") néven jelenik meg.
-Ez a Zephyr RTOS alapértelmezett hostname-je. Nincs lehetőség megkülönböztetni
-több bridge-et a router admin felületén.
+A hálózati routeren minden board "zephyr" (vagy "zephir") névvel jelent meg. Több bridge esetén nem lehetett megkülönböztetni őket.
 
 #### Root cause
 
-A projektben jelenleg nincs `CONFIG_NET_HOSTNAME_ENABLE` beállítva a `prj.conf`-ban,
-így a Zephyr alapértelmezett hostname-jét használja, ami `"zephyr"`.
+A projektben nem volt `CONFIG_NET_HOSTNAME_ENABLE` beállítva, így a Zephyr alapértelmezett `"zephyr"` hostname-je érvényesült.
 
-#### Javítási irány
+#### Javítás
 
-**Preferált megoldás — config.json `node_name` alapján dinamikus hostname:**
-
-A Zephyr `net_hostname_set_postfix()` API lehetővé teszi a hostname utólagos
-módosítását futásidőben. A lépések:
-
-1. `prj.conf`-ba:
-   ```
-   CONFIG_NET_HOSTNAME_ENABLE=y
-   CONFIG_NET_HOSTNAME="ROS_Bridge"
-   CONFIG_NET_HOSTNAME_UNIQUE=n
-   CONFIG_NET_HOSTNAME_MAX_LEN=32
-   ```
-
-2. Az `apply_network_config()` elején (a DHCP indítás előtt) meghívni:
-   ```c
-   net_hostname_set_postfix((uint8_t *)g_config.ros.node_name,
-                            strlen(g_config.ros.node_name));
-   ```
-   Így a hostname pl. `ROS_Bridge_E_STOP` lesz.
-
-**Megjegyzés:** A `net_hostname_set_postfix` a `CONFIG_NET_HOSTNAME` értékéhez
-fűzi hozzá az utótagot. Ha a `node_name` önmagában elég egyedi, egyszerűbb
-megoldás a `CONFIG_NET_HOSTNAME` használata fallback névként, és futásidőben
-csak a postfix beállítása.
-
-**Egyszerű fallback megoldás — statikus hostname:**
-
-Ha a dinamikus megoldás túl komplex, legalább a `prj.conf`-ban a hostname
-lecserélhető:
-```
-CONFIG_NET_HOSTNAME_ENABLE=y
-CONFIG_NET_HOSTNAME="ROS_Bridge"
-```
-Ez nem egyedi bridge-enként, de legalább azonosítja az eszköztípust.
-
-#### Érintett fájlok
-
-| Fájl | Megjegyzés |
-|------|-----------|
-| `app/prj.conf` | `CONFIG_NET_HOSTNAME_ENABLE` hozzáadandó |
-| `app/src/main.c` | `apply_network_config()` — dinamikus hostname beállítás |
+- `CONFIG_NET_HOSTNAME_DYNAMIC=y` és `CONFIG_NET_HOSTNAME="ROS_Bridge"` hozzáadva a `prj.conf`-ba
+- `main.c`-ben `net_hostname_set()` a `node_name`-ből: `ROS_Bridge_<node_name>`
+- Eredmény: pl. `ROS_Bridge_estop`, `ROS_Bridge_rc` a routeren
 
 ---
 
 ## ERR-004
 
-### Több bridge ugyanazon a hálózaton: kapcsolatvesztés (+ 50 eszköz skálázás)
+### Több bridge ugyanazon a hálózaton: kapcsolatvesztés
 
 **Dátum:** 2026-03-07
-**Állapot:** Nyitott — root cause valószínűleg **ERR-005 (azonos MAC cím)**
+**Állapot:** ✅ **Javítva** — v2.0 (ERR-005 root cause megoldva)
 
 #### A hiba
 
-Ha több W6100 bridge van ugyanazon a hálózaton és ugyanahhoz a micro-ROS
-agent-hez csatlakozik, egy idő után az eszközök elvesztik a kapcsolatot.
-A tünet:
-- A **user LED kialszik** (= a bridge kilépett a "Phase 3: Run" ciklusból)
-- A micro-ROS **agent továbbra is fut** a host oldalon
-- A bridge a "Phase 1: Search for agent" állapotba kerül vissza
-  (a `rmw_uros_ping_agent` sikertelen lett)
-- A hiba nem azonnali: az eszközök egy ideig normálisan működnek, majd
-  "egyszerre" esnek le
+Ha több W6100 bridge volt ugyanazon a hálózaton, egy idő után elvesztették a kapcsolatot:
+- A user LED kialudt
+- A micro-ROS agent továbbra is futott
+- A bridge "Phase 1: Search for agent" állapotba kerül vissza
 
-#### Root cause elemzés
+#### Root cause
 
-A többeszközös működésnek **5 független egyediségi rétege** van. Jelenleg
-mindegyik hibás vagy hiányzik:
+Az azonos hardcoded MAC cím (ERR-005) okozta az ARP ütközést → azonos DHCP IP → azonos XRCE client key → session ütközés az agent oldalon.
 
-| # | Réteg | Jelenlegi állapot | Hatás | Kapcsolódó errata |
-|---|-------|-------------------|-------|-------------------|
-| 1 | **MAC cím** | `00:00:00:01:02:03` — hardcoded a DTS-ben, **minden board azonos** | A switch/router nem tudja megkülönböztetni az eszközöket. ARP ütközés, csomagok rossz eszközhöz érkeznek. **Ez az elsődleges root cause.** | **ERR-005** |
-| 2 | **Hostname** | `"zephyr"` — Zephyr default, minden board azonos | A router admin felületén nem különböztethetők meg. DHCP lease ütközés lehetséges. | **ERR-003** |
-| 3 | **Node name** | config.json-ból jön, de a felhasználó felelőssége egyedivé tenni | DDS participant ID ütközés ha két bridge azonos `node_name` + `namespace` kombinációval regisztrál | — |
-| 4 | **XRCE client key** | A micro-XRCE-DDS transport hash-ből generálja — azonos MAC + azonos IP esetén azonos lesz | Az agent összekeveri a session-öket, az egyik klienst eldobja | — |
-| 5 | **UDP source port** | Zephyr automatikusan osztja ki — de azonos MAC → azonos IP → potenciális ütközés | NAT/agent nem tudja megkülönböztetni a forgalmat | — |
+**Láncolat:** ERR-005 → azonos IP → azonos XRCE key → agent eldobja az egyiket → LED kialszik → reconnect.
 
-**Láncolat:** ERR-005 (azonos MAC) → azonos DHCP IP → azonos XRCE client key
-→ session ütközés → agent eldobja az egyiket → LED kialszik → reconnect loop
-→ a másik eszközt is eldobja → mindkét LED kialszik.
+#### Javítás
 
-#### 50 eszközös forgatókönyv — teljes skálázási elemzés
-
-A cél: **akár 50 W6100 bridge** működjön egyidejűleg ugyanazon a LAN-on,
-ugyanahhoz a micro-ROS agent-hez csatlakozva.
-
-##### L1 — Hálózati réteg (Ethernet / IP)
-
-| Szempont | Limit | 50 eszközre | Teendő |
-|----------|-------|-------------|--------|
-| **MAC cím egyediség** | Kötelező, különben ARP káosz | **BLOKKOLÓ** — jelenleg mind azonos | ERR-005 javítása: config.json-ból vagy auto-generálás |
-| **IP cím** | DHCP pool vagy statikus kiosztás | DHCP pool ≥ 50 szabad cím kell | Routeren pool méret ellenőrzés |
-| **Hostname** | DHCP hostname ütközés | 50× "zephyr" → lease zavar | ERR-003 javítása: egyedi hostname |
-| **Sávszélesség** | 100 Mbit/s half-duplex per eszköz | 50 eszköz × ~10 topic × 100 byte × 10 Hz ≈ **4 Mbit/s** — bőven elfér | Nem probléma |
-| **ARP tábla méret** | Router/switch limit | Legtöbb SOHO router ≥ 128 entry | Ellenőrizni a konkrét router-en |
-
-##### L2 — micro-XRCE-DDS réteg (agent oldal)
-
-| Szempont | Limit | 50 eszközre | Teendő |
-|----------|-------|-------------|--------|
-| **Client key egyediség** | Kötelező, agent per-key session-t tart | Azonos MAC → azonos hash → **BLOKKOLÓ** | MAC javítás (ERR-005) automatikusan megoldja, VAGY explicit `rmw_uros_set_client_key()` |
-| **Max kliens szám** | Agent alapértelmezetten nem korlátoz | 50 kliens → ~50 session, elfér | Agent `--discovery-timeout` és memória figyelés |
-| **Entity limit per agent** | Nincs hard limit, de memóriafüggő | 50 × (20 pub + 16 sub + 8 srv) = **2200 entity** — az agent heap-jét figyelni | Agent-et dedikált gépen futtatni, ne RPi Zero-n |
-| **Session timeout** | Alapértelmezett `SESSION_STATUS_TIMEOUT` | Sok kliensnél a heartbeat válasz lassulhat | Agent `-v6` logból monitorozni |
-
-##### L3 — ROS 2 / DDS réteg
-
-| Szempont | Limit | 50 eszközre | Teendő |
-|----------|-------|-------------|--------|
-| **Node name egyediség** | Kötelező a ROS graph-ban | 50 bridge → 50 egyedi `node_name` szükséges | Provisioning tool: `upload_config.py` egyedi config per eszköz |
-| **Topic névtér** | Ütközés ha azonos topic nevek | 50× azonos topic → összeolvadnak | Namespace-t használni: `/robot_01/`, `/robot_02/`, stb. |
-| **Discovery overhead** | DDS participant announcement | 50 participant → ~50 × 3 topic/sec broadcast | Kezelhető, de FastDDS discovery szerver ajánlott >20 eszköz felett |
-
-##### L4 — Firmware / eszköz réteg
-
-| Szempont | Limit | 50 eszközre | Teendő |
-|----------|-------|-------------|--------|
-| **Flash config** | Egyedi config.json per eszköz | Mind egyedileg flashelendő | `upload_config.py` batch script vagy provisioning séma |
-| **RAM** | 264KB per eszköz, ~97% foglalt | Nem skálázási kérdés (per-eszköz) | — |
-| **Watchdog** | 30s, per eszköz | Nem releváns | — |
-
-##### Összefoglaló: blokkoló problémák 50 eszközhöz
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  BLOKKOLÓ (nem működik amíg nem javított):                       │
-│                                                                  │
-│  1. ERR-005: Azonos MAC cím — ARP ütközés, DHCP ütközés,        │
-│     XRCE client key ütközés. MINDEN MÁS ERRE ÉPÜL.              │
-│                                                                  │
-│  2. Node name + namespace egyediség — provisioning kérdés,       │
-│     de a felhasználó felelőssége.                                │
-├──────────────────────────────────────────────────────────────────┤
-│  AJÁNLOTT (működhet nélküle, de instabil/nehéz kezelni):         │
-│                                                                  │
-│  3. ERR-003: Hostname egyediség — DHCP lease problémák            │
-│  4. /diagnostics aktuális IP (ERR-002) — debug nehézség          │
-│  5. Explicit XRCE client key beállítás — defense in depth        │
-│  6. Provisioning script a 50 config.json generálásához            │
-├──────────────────────────────────────────────────────────────────┤
-│  OPCIONÁLIS (>20 eszköz felett ajánlott):                        │
-│                                                                  │
-│  7. FastDDS Discovery Server az agent oldalon                     │
-│  8. Agent memória/CPU monitorozás                                │
-│  9. MAC cím + IP megjelenítése a /diagnostics-ban                │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-#### Diagnosztikai lépések (azonnali, javítás előtt)
-
-- **A.) MAC cím ellenőrzés:** Routeren vagy Wireshark-kal megnézni, hogy a
-  bridge-ek azonos MAC címmel rendelkeznek-e. **Valószínűleg igen** — lásd
-  ERR-005.
-
-- **B.) Agent verbose log:** `ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888 -v6`
-  — megnézni, hogy a client_key-ek eltérőek-e.
-
-- **C.) Node name audit:** Minden eszköz config.json-jában a `node_name` és
-  `namespace` egyedinek kell lennie.
-
-#### Érintett fájlok
-
-| Fájl | Megjegyzés |
-|------|-----------|
-| `app/src/main.c` | `bridge_run()` — LED kialszik, reconnect ciklusba kerül |
-| `app/config.json` | `node_name` / `namespace` egyediség szükséges |
-| `workspace/zephyr/boards/wiznet/w5500_evb_pico/w5500_evb_pico.dts` | Hardcoded MAC — **ERR-005 root cause** |
+Az ERR-005 javítása (egyedi MAC) automatikusan megoldotta ezt is.
 
 ---
 
 ## ERR-005
 
-### Hardcoded MAC cím — minden board azonos `00:00:00:01:02:03`
+### Hardcoded MAC — minden board azonos `00:00:00:01:02:03`
 
 **Dátum:** 2026-03-07
-**Állapot:** Nyitott — **megerősített root cause az ERR-004-hez**
+**Állapot:** ✅ **Javítva** — v2.0, commit `c816b9e`
 
 #### A hiba
 
-A board device tree (`w5500_evb_pico.dts`, 157. sor) tartalmaz egy
-hardcoded MAC címet:
-
+A board device tree-ben hardcoded MAC cím volt:
 ```dts
-ethernet: w5500@0 {
-    compatible = "wiznet,w5500";
-    ...
-    local-mac-address = [00 00 00 01 02 03];
-};
+local-mac-address = [00 00 00 01 02 03];
+```
+Minden egyes W6100 EVB Pico board ugyanezt kapta.
+
+#### Root cause
+
+Az `app/boards/w5500_evb_pico.overlay` nem írta felül a DTS MAC-et.
+
+#### Javítás
+
+`apply_mac_address()` függvény a `main.c`-ben:
+
+1. Ha `config.json`-ban van `"mac"` mező → azt parse-olja és beállítja
+2. Ha nincs → `hwinfo_get_device_id()` → RP2040 flash unique ID → `02:xx:xx:xx:xx:xx`
+3. Fallback: DTS MAC marad (log warning)
+
+A MAC közvetlen a W6100 hardware regiszterébe kerül (`ethernet_api.set_config()`).
+
+**Megjegyzés:** A `net_mgmt(NET_REQUEST_ETHERNET_SET_MAC_ADDRESS, ...)` nem működött — `EACCES` hibát adott vissza mert az interface már admin-up állapotban volt. A driver API közvetlen hívása megkerüli ezt az ellenőrzést.
+
+---
+
+## ERR-006
+
+### Dupla namespace: `/robot/robot/estop`
+
+**Dátum:** 2026-03-07
+**Állapot:** ✅ **Javítva** — v2.1
+
+#### A hiba
+
+`ros2 topic list` kimenetében `/robot/robot/estop` jelent meg `/robot/estop` helyett.
+
+#### Root cause
+
+Az `estop.c`-ben a channel `topic_pub` hardcoden `"robot/estop"` volt beállítva. Mivel a node namespace-e `/robot`, a micro-ROS a teljes topic nevet úgy képezte: `/<namespace>/<topic_pub>` = `/robot/robot/estop`.
+
+#### Javítás
+
+`estop.c`-ben `topic_pub` javítva `"robot/estop"` → `"estop"`. A namespace-t a `config.json` `ros.namespace` mezője adja, nem a topic stringbe kell beleírni.
+
+**Általános szabály:** A `channel_t.topic_pub` mindig namespace-relatív legyen — a framework a `/<namespace>/` előtagot automatikusan hozzáadja.
+
+---
+
+## ERR-007
+
+### `rclc_support_init` "dirty struct" — végtelen reconnect loop
+
+**Dátum:** 2026-03-08
+**Állapot:** ✅ **Javítva** — v2.1, commit `8a30801`
+
+#### A hiba
+
+Ha az első `rclc_support_init` hívás sikertelen volt (az agent még nem futott bootkor), a board soha nem tudott csatlakozni — még akkor sem, ha az agent utána elindult. A log:
+
+```
+<err> main: rclc_support_init error
+<wrn> main: Session init failed, retrying...
+[2s later]
+<err> main: rclc_support_init error
+...  (végtelen)
 ```
 
-Az alkalmazás overlay (`app/boards/w5500_evb_pico.overlay`) ezt **nem írja felül**
-— csak a `compatible` property-t változtatja `"wiznet,w6100"`-ra.
+#### Root cause
 
-Következmény: **minden egyes W6100 EVB Pico board ugyanazt a
-`00:00:00:01:02:03` MAC címet kapja.** Ráadásul ez a cím:
-- Nem érvényes OUI (a `00:00:00` prefix nem regisztrált gyártói cím)
-- Nem locally administered (a LAA bit nincs beállítva)
-- Egyértelműen placeholder / development érték
+Az `rclc_support_t support` struct, a `rcl_node_t node` és az `rclc_executor_t executor` structs static változók. Ha az első `rclc_support_init` hívás sikertelen, a struct **részlegesen inicializált (dirty)** állapotban marad a memóriában. A reconnect loop `ros_session_fini()`-t nem hívta meg (mert `session_active == false` volt), ezért a következő `rclc_support_init` hívás ugyanezt a dirty struct-ot kapta — ami újból hibát okozott.
 
-#### Hatás
+Ez a hiba csak akkor reprodukálódott, ha a board korábban bootolt fel, mint az agent — ami autonomus üzemben (USB serial nélküli indítás) mindig előfordul.
 
-| Szcenárió | Eredmény |
-|-----------|----------|
-| 1 bridge a hálózaton | Működik — nincs ütközés |
-| 2+ bridge a hálózaton | ARP tábla ütközés: a switch/router ugyanazt a MAC-et látja több portról → csomagok random eszközhöz érkeznek → DHCP lease zavar → XRCE session ütközés → **ERR-004 tünetei** |
-| 50 bridge a hálózaton | Teljes hálózati káosz — egyik bridge sem tud stabilan kommunikálni |
+#### Javítás
 
-#### Javítási irány
+`memset` hozzáadva a `ros_session_init()` elejére, minden egyes hívás előtt:
 
-##### Opció A: MAC cím a `config.json`-ból (preferált)
+```c
+static bool ros_session_init(void)
+{
+    allocator = rcl_get_default_allocator();
 
-A `config.json` `network` szekciójába új mező:
+    /* Ensure clean state even if a previous attempt partially initialized */
+    memset(&support,  0, sizeof(support));
+    memset(&node,     0, sizeof(node));
+    memset(&executor, 0, sizeof(executor));
+
+    if (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {
+        LOG_ERR("rclc_support_init error");
+        return false;
+    }
+    ...
+```
+
+#### Érintett fájl
+
+| Fájl | Sor | Megjegyzés |
+|------|-----|-----------|
+| `app/src/main.c` | ~276 | `ros_session_init()` eleje |
+
+---
+
+## ERR-008
+
+### `docker-run-agent-udp.sh` bash-t indított az agent helyett
+
+**Dátum:** 2026-03-08
+**Állapot:** ✅ **Javítva** — v2.1, commit `8a30801`
+
+#### A hiba
+
+A `tools/start-eth.sh` és `tools/docker-run-agent-udp.sh` scriptek futtatása után az agent Docker container elindult, de a micro-ROS agent folyamat **nem futott** benne — interaktív `bash` shell indult helyette.
+
+#### Root cause
+
+A `docker-run-agent-udp.sh` scriptben a `CMD` sor `bash`-t tartalmazott az agent parancs helyett:
+
+```bash
+# Hibás:
+docker run ... microros/micro-ros-agent:jazzy bash
+# Helyes:
+docker run ... microros/micro-ros-agent:jazzy udp4 -p "$PORT" -v6
+```
+
+Ráadásul a script egy `$SCRIPT_DIR` változóra hivatkozott a volume mount-ban, ami nem volt definiálva, így a `cyclonedds.xml` sem töltődött be.
+
+#### Javítás
+
+A teljes script átírva: helyes agent parancs (`udp4 -p "$PORT" -v6`), a `$SCRIPT_DIR` undefined változó eltávolítva, a `cyclonedds.xml` mount javítva.
+
+#### Érintett fájl
+
+| Fájl | Megjegyzés |
+|------|-----------|
+| `tools/docker-run-agent-udp.sh` | Teljes újraírás |
+| `tools/cyclonedds.xml` | `eth0` → `auto` interface, stale peer eltávolítva |
+
+---
+
+## ERR-009
+
+### DTR wait blokkolta az autonome bootot
+
+**Dátum:** 2026-03-07
+**Állapot:** ✅ **Javítva** — v2.0
+
+#### A hiba
+
+Ha a board USB serial nélkül kapott tápot (pl. külső 5V adapter), **soha nem indult el** — nem csatlakozott a hálózatra, az LED sem gyulladt ki.
+
+#### Root cause
+
+A `main.c`-ben a DTR wait ciklus blokkolta a továbblépést, amíg USB CDC ACM konzol nem csatlakozott:
+
+```c
+// Hibás — végtelen blokkolás USB nélkül:
+while (!dtr) {
+    uart_line_ctrl_get(uart_dev, UART_LINE_CTRL_DTR, &dtr);
+    k_sleep(K_MSEC(100));
+}
+```
+
+#### Javítás
+
+A blokkoló várakozás **500ms-os non-blocking poll**-ra cserélve:
+
+```c
+// Helyes:
+int64_t dtr_deadline = k_uptime_get() + 500;
+while (k_uptime_get() < dtr_deadline) {
+    uart_line_ctrl_get(uart_dev, UART_LINE_CTRL_DTR, &dtr);
+    if (dtr) break;
+    k_sleep(K_MSEC(50));
+}
+// dtr true = console connected, false = autonomous mode
+```
+
+#### Érintett fájl
+
+| Fájl | Megjegyzés |
+|------|-----------|
+| `app/src/main.c` | DTR wait ciklus |
+
+---
+
+## ERR-010
+
+### Több board publishol ugyanarra az estop topicra
+
+**Dátum:** 2026-03-07
+**Állapot:** ✅ **Javítva** — v2.1
+
+#### A hiba
+
+Az E-Stop nyomógomb helyes értéket adott vissza (`false` = normál, `true` = megnyomva), de a `ros2 topic echo /robot/estop` kimenetében folyamatosan váltakozott a `true` és `false` érték — még akkor is, ha a gomb fizikailag fix állásban volt.
+
+#### Root cause
+
+Minden board ugyanazt a firmware-t futtatja, és az `estop` csatorna alapból regisztrálva volt **minden boardon**. Így:
+
+- Az `estop` board (GP27-re kötött NC kapcsoló) helyesen `false`-t publisholt
+- A `rc` és `pedal` board-okon a GP27 pin lebegő (floating) volt → pullup → `true` értéket publisholtak
+
+Három board egyszerre publisholt ugyanarra a `/robot/estop` topicra, a ROS subscriber mind a háromtól kapott üzenetet — ezért váltakozott az érték.
+
+#### Javítás
+
+**Csatorna enable/disable a config.json-ból.** Minden board csak a saját fizikailag bekötött csatornáit aktiválja:
 
 ```json
-{
-  "network": {
-    "mac": "02:00:00:00:00:01",
-    "ip": "192.168.68.115",
-    ...
-  }
-}
+// E_STOP board:
+"channels": { "estop": true, "rc_ch1": false, ... }
+
+// RC board:
+"channels": { "estop": false, "rc_ch1": true, ... }
 ```
 
-A `config.h` struktúra bővítése:
+A `user_channels.c` `register_if_enabled()` wrapper-je ellenőrzi a config-ot regisztráció előtt.
 
-```c
-typedef struct {
-    bool dhcp;
-    char mac[20];              /* "02:XX:XX:XX:XX:XX" */
-    char ip[CFG_STR_LEN];
-    ...
-} cfg_network_t;
-```
-
-Az `apply_network_config()` elején a MAC cím felülírása a Zephyr net stack-en:
-
-```c
-struct net_if *iface = net_if_get_default();
-
-if (strlen(g_config.network.mac) > 0) {
-    struct net_eth_addr mac;
-    /* parse "02:AA:BB:CC:DD:EE" → 6 bytes */
-    if (parse_mac(g_config.network.mac, &mac) == 0) {
-        net_if_set_link_addr(iface, mac.addr, sizeof(mac.addr),
-                             NET_LINK_ETHERNET);
-    }
-}
-```
-
-**Megjegyzés:** A MAC-nak `02:xx:xx:xx:xx:xx` formátumúnak kell lennie
-(LAA bit beállítva a legfelső oktetben), mert nem regisztrált OUI-t használunk.
-
-##### Opció B: Auto-generált MAC az RP2040 unique ID-ből
-
-Az RP2040-nek van egy 64 bites egyedi flash ID-je, ami kiolvasható:
-
-```c
-#include <hardware/flash.h>
-
-uint8_t uid[8];
-flash_get_unique_id(uid);
-
-struct net_eth_addr mac = {
-    .addr = { 0x02, uid[3], uid[4], uid[5], uid[6], uid[7] }
-};
-```
-
-Előnyök:
-- Nincs szükség kézi konfigurációra
-- Garantáltan egyedi minden board-on
-- A `0x02` prefix jelzi, hogy locally administered
-
-Hátrányok:
-- Az RP2040 flash unique ID API (`flash_get_unique_id`) Zephyr alatt
-  közvetlenül nem mindig elérhető — a Pico SDK-ból kellhet hívni
-- Ha az `pico_unique_board_id` Zephyr-ben wrappelve van, az egyszerűbb
-
-##### Opció C: Overlay-ben `zephyr,random-mac-address`
-
-Az `app/boards/w5500_evb_pico.overlay`-be:
-
-```dts
-&ethernet {
-    compatible = "wiznet,w6100";
-    zephyr,random-mac-address;
-    /delete-property/ local-mac-address;
-};
-```
-
-Ez minden boot-nál új random MAC-et generál. Előnye: egyszerű. Hátránya:
-a DHCP szerver minden rebootnál új lease-t ad → IP cím változik boot-onként.
-50 eszköz esetén ez az IP management-et nehezíti.
-
-##### Ajánlott kombináció (50 eszközhöz)
-
-| Prioritás | Megoldás | Indok |
-|-----------|----------|-------|
-| **1. (kötelező)** | Opció B — auto-generált MAC a flash UID-ből | Nincs kézi konfig, garantáltan egyedi, determinisztikus (nem változik reboot-onként) |
-| **2. (kiegészítő)** | Opció A — `config.json` felülírás | Ha a felhasználó explicit MAC-et akar (pl. vállalati MAC range), az override-olja az auto-generáltat |
-| **3. (fallback)** | Default: `02:` + flash UID utolsó 5 byte | Ha nincs config.json-ban MAC, ez a default |
-
-A boot-szekvencia:
-
-```
-1. DTS-ből indulna a 00:00:00:01:02:03 (de ezt felülírjuk)
-2. apply_network_config() eleje:
-   a. Ha config.json-ban van "mac" → azt használjuk
-   b. Ha nincs → RP2040 flash UID-ből generálunk 02:xx:xx:xx:xx:xx
-3. net_if_set_link_addr() beállítja az új MAC-et
-4. Ezután indul a DHCP / statikus IP konfiguráció
-```
+Ezzel együtt **50ms GPIO debounce** is implementálva (`drv_gpio.c`) a fizikai kapcsoló kontaktus-bounce szűrésére.
 
 #### Érintett fájlok
 
 | Fájl | Megjegyzés |
 |------|-----------|
-| `workspace/zephyr/boards/wiznet/w5500_evb_pico/w5500_evb_pico.dts:157` | `local-mac-address = [00 00 00 01 02 03]` — a probléma forrása |
-| `app/boards/w5500_evb_pico.overlay` | Nem írja felül a MAC-et — bővítendő |
-| `app/src/config/config.h` | `cfg_network_t` — `mac` mező hozzáadandó |
-| `app/src/config/config.c` | `config_load/save/set` — MAC parse/save logika |
-| `app/src/main.c` | `apply_network_config()` — MAC beállítás a net stack-en |
-| `app/config.json` | Új `"mac"` mező (opcionális) |
+| `app/src/user/user_channels.c` | `register_if_enabled()` wrapper |
+| `app/src/drivers/drv_gpio.c/.h` | 50ms debounce |
+| `devices/*/config.json` | Per-board channel enable/disable |
 
 ---
 
 ## Megjegyzések
 
-- **ERR-005 (azonos MAC) az ERR-004 (multi-bridge kapcsolatvesztés) megerősített
-  root cause-a.** Az ERR-005 javítása nélkül a többeszközös működés nem lehetséges.
-- Az ERR-003 (hostname) az ERR-005-höz kapcsolódik: egyedi MAC → egyedi DHCP lease,
-  de egyedi hostname is szükséges a könnyű azonosításhoz.
-- Az ERR-001 (param server) és ERR-004 egymástól függetlenek, de mindkettő a
-  micro-XRCE-DDS réteggel kapcsolatos.
-- A hibák javítási prioritása: **ERR-005 > ERR-004 > ERR-003 > ERR-001 > ERR-002**
-  (az ERR-005 javítása az ERR-004-et is megoldja)
-
-### Provisioning forgatókönyv 50 eszközhöz
-
-Ha az ERR-005 (MAC) és ERR-003 (hostname) javítva van, a 50 eszköz telepítéséhez
-a következő adatoknak kell egyedinek lenniük eszközönként:
-
-| Paraméter | Forrás | Automatikus? |
-|-----------|--------|-------------|
-| MAC cím | Flash UID → auto-generált | **Igen** |
-| IP cím | DHCP | **Igen** |
-| Hostname | config.json `node_name` → auto | **Igen** (ha ERR-003 javítva) |
-| ROS node_name | config.json | **Nem** — felhasználó állítja |
-| ROS namespace | config.json | **Nem** — felhasználó állítja |
-
-Minimálisan a felhasználónak eszközönként csak a `node_name`-t és opcionálisan
-a `namespace`-t kell beállítania. A `upload_config.py` batch módja:
-
-```bash
-for i in $(seq 1 50); do
-    python3 tools/upload_config.py --port /dev/ttyACMx \
-        --set ros.node_name="bridge_$(printf '%02d' $i)" \
-        --set ros.namespace="/fleet"
-done
-```
+- **ERR-007 (dirty struct) és ERR-008 (broken agent script) egymást erősítette**: az agent ténylegesen nem futott, de ha futott volna is, a firmware végtelen reconnect loopba ragadt volna az első failed init után. Mindkettőt javítani kellett.
+- **ERR-010 (topic collision) root cause-a az architektúra**, nem bug: ugyanaz a firmware fut minden boardon. A megoldás a config-driven channel enable/disable — ez tisztán és skálázhatóan kezeli a problémát.
+- **ERR-001 (param server)** és az összes többi hiba egymástól független. Az ERR-001 a micro-XRCE-DDS rétegben van, a többi firmware vagy tool szintű hiba volt.
+- **Javítási prioritás volt:** ERR-009 → ERR-008 → ERR-007 → ERR-006 → ERR-010 → ERR-005 → ERR-003 → ERR-002 → ERR-004 → ERR-001 (nyitott)
