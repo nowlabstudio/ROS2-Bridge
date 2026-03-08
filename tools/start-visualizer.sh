@@ -75,5 +75,5 @@ docker run --rm \
         python3 /ros_graph/gen_dot.py /ros_graph/rosgraph.dot || exit 1
         echo '[visualizer] Opening Dear RosNodeViewer...'
         cd /ros_graph
-        dear_ros_node_viewer rosgraph.dot
+        dear_ros_node_viewer --display-unconnected-nodes rosgraph.dot
     "

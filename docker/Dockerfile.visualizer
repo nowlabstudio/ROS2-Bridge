@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgl1-mesa-dri \
     libegl-mesa0 \
+    fonts-ubuntu \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --break-system-packages pygraphviz dear-ros-node-viewer
