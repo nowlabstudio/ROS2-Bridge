@@ -23,9 +23,14 @@ fi
 
 # ── Dependencies (host) ───────────────────────────────────────────────────────
 
-if ! dpkg -s graphviz &>/dev/null 2>&1; then
-    echo "[visualizer] Installing graphviz..."
-    sudo apt-get install -y graphviz graphviz-dev
+if ! dpkg -s libgraphviz-dev &>/dev/null 2>&1; then
+    echo "[visualizer] Installing graphviz + libgraphviz-dev (required for pygraphviz)..."
+    sudo apt-get install -y graphviz libgraphviz-dev pkg-config
+fi
+
+if ! python3 -c "import pygraphviz" &>/dev/null 2>&1; then
+    echo "[visualizer] Installing pygraphviz..."
+    pip3 install pygraphviz
 fi
 
 if ! python3 -c "import dear_ros_node_viewer" &>/dev/null 2>&1; then
