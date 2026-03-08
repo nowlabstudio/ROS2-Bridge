@@ -36,7 +36,7 @@ build:
 		-v $(APP_DIR):/workdir/app \
 		$(DOCKER_IMG) bash -c "\
 			cd /workdir && \
-			west build -b $(BOARD) app --pristine=auto"
+			west build -b $(BOARD) app --pristine=always"
 
 # ──────────────────────────────────────────────
 .PHONY: flash-uf2
