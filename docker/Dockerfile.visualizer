@@ -9,6 +9,6 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install pygraphviz dear-ros-node-viewer
+RUN pip3 install --break-system-packages pygraphviz dear-ros-node-viewer
 
 WORKDIR /ros_graph

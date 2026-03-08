@@ -28,7 +28,10 @@ fi
 
 if ! docker image inspect "$VIZ_IMAGE" &>/dev/null; then
     echo "[visualizer] Building Docker image (first run, ~1 min)..."
-    docker build -t "$VIZ_IMAGE" -f "$PROJECT_DIR/docker/Dockerfile.visualizer" "$PROJECT_DIR/docker/"
+    if ! docker build -t "$VIZ_IMAGE" -f "$PROJECT_DIR/docker/Dockerfile.visualizer" "$PROJECT_DIR/docker/"; then
+        echo "[visualizer] ERROR: Docker image build failed."
+        exit 1
+    fi
 fi
 
 # ── Step 1: Start agent (skip if --refresh) ───────────────────────────────────
