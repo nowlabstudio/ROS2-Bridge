@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
     <Domain id="any">
         <General>
-            <NetworkInterfaceAddress>eth0</NetworkInterfaceAddress>
+            <!-- "auto" selects the active interface regardless of name (eth0, enp3s0, etc.) -->
+            <NetworkInterfaceAddress>auto</NetworkInterfaceAddress>
             <AllowMulticast>true</AllowMulticast>
             <MaxMessageSize>65500B</MaxMessageSize>
         </General>
         <Discovery>
-            <Peers>
-                <Peer address="192.168.68.201"/>
-            </Peers>
             <ParticipantIndex>auto</ParticipantIndex>
             <LeaseDuration>5s</LeaseDuration>
         </Discovery>

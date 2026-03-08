@@ -15,7 +15,7 @@
   },
 
   "channels": {
-    "estop": true,
+    "estop": false,
     "test_counter": false,
     "test_heartbeat": false,
     "test_echo": false,

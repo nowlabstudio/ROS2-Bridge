@@ -10,7 +10,7 @@
 
 #define CFG_STR_LEN      48
 #define CFG_CH_NAME_LEN  32
-#define CFG_MAX_CHANNELS 16
+#define CFG_MAX_CHANNELS 12
 #define RC_CH_COUNT       6
 #define CFG_FILE_PATH    "/lfs/config.json"
 #define CFG_MOUNT_PT     "/lfs"

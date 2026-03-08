@@ -5,10 +5,10 @@
 # Starts the micro-ROS Jazzy agent in a Docker container (UDP transport).
 #
 # Usage:
-#   ./docker-run-agent-udp.sh          # default port 8888
-#   ./docker-run-agent-udp.sh 9999     # custom port
+#   ./tools/docker-run-agent-udp.sh          # default port 8888
+#   ./tools/docker-run-agent-udp.sh 9999     # custom port
 #
-# Requires: Docker with --net=host (Linux only)
+# Requires: Ubuntu/Linux (--net=host not supported on macOS Docker Desktop)
 # =============================================================================
 
 PORT="${1:-8888}"
@@ -28,22 +28,12 @@ echo " Port:      $PORT (UDP)"
 echo " Container: $CONTAINER_NAME"
 echo " Image:     $IMAGE"
 echo ""
-echo " Pico IP:   192.168.68.114"
-echo " Agent IP:  192.168.68.125 (this host)"
+echo " Agent IP:  $(hostname -I | awk '{print $1}')"
 echo ""
 echo " Press Ctrl+C to stop."
 echo "============================================="
 echo ""
 
-docker run -it --rm --init \
-    --name "$CONTAINER_NAME" \
-    --net=host \
-    -v "$SCRIPT_DIR":/tools:ro \
-    -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
-    -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
-    "$IMAGE" \
-    bash -c "source /opt/ros/jazzy/setup.bash && exec bash"
-: <<'KOMMENT'
 docker run -it --rm \
     --name "$CONTAINER_NAME" \
     --net=host \

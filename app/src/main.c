@@ -272,6 +272,11 @@ static bool ros_session_init(void)
 {
 	allocator = rcl_get_default_allocator();
 
+	/* Ensure clean state even if a previous attempt partially initialized */
+	memset(&support, 0, sizeof(support));
+	memset(&node,    0, sizeof(node));
+	memset(&executor, 0, sizeof(executor));
+
 	if (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {
 		LOG_ERR("rclc_support_init error");
 		return false;

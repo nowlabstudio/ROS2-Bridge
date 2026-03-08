@@ -32,6 +32,9 @@ static struct fs_mount_t bridge_lfs_mount = {
 
 bridge_config_t g_config;
 
+/* Shared I/O buffer for config_load / config_save (never concurrent) */
+static char cfg_io_buf[1536];
+
 /* ------------------------------------------------------------------ */
 /*  Helper macro: safe string copy with explicit null termination      */
 /* ------------------------------------------------------------------ */
@@ -420,8 +423,6 @@ static void parse_rc_trim(const char *json)
 int config_load(void)
 {
 	struct fs_file_t f;
-	/* static: allocated in BSS, not on stack */
-	static char buf[2048];
 	ssize_t bytes_read;
 
 	fs_file_t_init(&f);
@@ -433,7 +434,7 @@ int config_load(void)
 		return rc;
 	}
 
-	bytes_read = fs_read(&f, buf, sizeof(buf) - 1);
+	bytes_read = fs_read(&f, cfg_io_buf, sizeof(cfg_io_buf) - 1);
 	fs_close(&f);
 
 	if (bytes_read < 0) {
@@ -441,21 +442,20 @@ int config_load(void)
 		config_reset_defaults();
 		return (int)bytes_read;
 	}
-	buf[bytes_read] = '\0';
+	cfg_io_buf[bytes_read] = '\0';
 
-	/* Extract JSON fields — errors logged, defaults preserved */
-	json_get_str(buf,  "mac",       g_config.network.mac,        sizeof(g_config.network.mac));
-	json_get_bool(buf, "dhcp",      &g_config.network.dhcp);
-	json_get_str(buf,  "ip",        g_config.network.ip,         CFG_STR_LEN);
-	json_get_str(buf,  "netmask",   g_config.network.netmask,    CFG_STR_LEN);
-	json_get_str(buf,  "gateway",   g_config.network.gateway,    CFG_STR_LEN);
-	json_get_str(buf,  "agent_ip",  g_config.network.agent_ip,   CFG_STR_LEN);
-	json_get_str(buf,  "agent_port",g_config.network.agent_port, sizeof(g_config.network.agent_port));
-	json_get_str(buf,  "node_name", g_config.ros.node_name,      CFG_STR_LEN);
-	json_get_str(buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "mac",       g_config.network.mac,        sizeof(g_config.network.mac));
+	json_get_bool(cfg_io_buf, "dhcp",      &g_config.network.dhcp);
+	json_get_str(cfg_io_buf,  "ip",        g_config.network.ip,         CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "netmask",   g_config.network.netmask,    CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "gateway",   g_config.network.gateway,    CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "agent_ip",  g_config.network.agent_ip,   CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "agent_port",g_config.network.agent_port, sizeof(g_config.network.agent_port));
+	json_get_str(cfg_io_buf,  "node_name", g_config.ros.node_name,      CFG_STR_LEN);
+	json_get_str(cfg_io_buf,  "namespace", g_config.ros.namespace_,     CFG_STR_LEN);
 
-	parse_channels(buf);
-	parse_rc_trim(buf);
+	parse_channels(cfg_io_buf);
+	parse_rc_trim(cfg_io_buf);
 
 	LOG_INF("Config loaded: %s", CFG_FILE_PATH);
 	return 0;
@@ -468,10 +468,8 @@ int config_load(void)
 int config_save(void)
 {
 	struct fs_file_t f;
-	/* static: allocated in BSS, not on stack */
-	static char buf[2048];
 
-	config_to_json(buf, sizeof(buf));
+	config_to_json(cfg_io_buf, sizeof(cfg_io_buf));
 
 	fs_file_t_init(&f);
 	int rc = fs_open(&f, CFG_FILE_PATH, FS_O_CREATE | FS_O_WRITE | FS_O_TRUNC);
@@ -480,7 +478,7 @@ int config_save(void)
 		return rc;
 	}
 
-	ssize_t written = fs_write(&f, buf, strlen(buf));
+	ssize_t written = fs_write(&f, cfg_io_buf, strlen(cfg_io_buf));
 	fs_close(&f);
 
 	if (written < 0) {
