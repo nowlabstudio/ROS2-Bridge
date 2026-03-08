@@ -12,6 +12,11 @@ docker-build:
 	docker build -t $(DOCKER_IMG) docker/
 
 # ──────────────────────────────────────────────
+.PHONY: docker-build-visualizer
+docker-build-visualizer:
+	docker build -t w6100-visualizer:latest -f docker/Dockerfile.visualizer docker/
+
+# ──────────────────────────────────────────────
 .PHONY: workspace-init
 workspace-init:
 	docker run --rm \

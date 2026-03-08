@@ -2,17 +2,20 @@
 # =============================================================================
 # start-visualizer.sh
 # =============================================================================
-# Launches the W6100 bridge agent + Dear RosNodeViewer.
+# Launches the W6100 bridge agent + Dear RosNodeViewer (runs in Docker).
 #
 # Usage:
 #   ./tools/start-visualizer.sh            # start agent + generate graph + open viewer
-#   ./tools/start-visualizer.sh --refresh  # skip agent start, regenerate graph + reopen
+#   ./tools/start-visualizer.sh --refresh  # skip agent start, regenerate + reopen
+#
+# First run builds the visualizer Docker image (~1 min).
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 GRAPH_DIR="$SCRIPT_DIR/ros_graph"
 DOT_FILE="$GRAPH_DIR/rosgraph.dot"
-IMAGE="ros:jazzy"
+VIZ_IMAGE="w6100-visualizer:latest"
 
 # ── Parse args ────────────────────────────────────────────────────────────────
 
@@ -21,21 +24,11 @@ if [ "$1" = "--refresh" ]; then
     REFRESH=true
 fi
 
-# ── Dependencies (host) ───────────────────────────────────────────────────────
+# ── Build visualizer image if needed ─────────────────────────────────────────
 
-if ! dpkg -s libgraphviz-dev &>/dev/null 2>&1; then
-    echo "[visualizer] Installing graphviz + libgraphviz-dev (required for pygraphviz)..."
-    sudo apt-get install -y graphviz libgraphviz-dev pkg-config
-fi
-
-if ! python3 -c "import pygraphviz" &>/dev/null 2>&1; then
-    echo "[visualizer] Installing pygraphviz..."
-    pip3 install pygraphviz
-fi
-
-if ! python3 -c "import dear_ros_node_viewer" &>/dev/null 2>&1; then
-    echo "[visualizer] Installing dear-ros-node-viewer..."
-    pip3 install dear-ros-node-viewer
+if ! docker image inspect "$VIZ_IMAGE" &>/dev/null; then
+    echo "[visualizer] Building Docker image (first run, ~1 min)..."
+    docker build -t "$VIZ_IMAGE" -f "$PROJECT_DIR/docker/Dockerfile.visualizer" "$PROJECT_DIR/docker/"
 fi
 
 # ── Step 1: Start agent (skip if --refresh) ───────────────────────────────────
@@ -56,34 +49,26 @@ else
     echo "[visualizer] --refresh: skipping agent start."
 fi
 
-# ── Step 2: Generate rosgraph.dot via Docker ──────────────────────────────────
+# ── Step 2 + 3: Generate dot + open viewer in one container ──────────────────
 
-echo "[visualizer] Generating rosgraph.dot (this may take ~30s for DDS discovery)..."
+echo "[visualizer] Generating graph and opening viewer..."
+
+xhost +local:docker &>/dev/null || true
 
 docker run --rm \
     --net=host \
+    -e DISPLAY="$DISPLAY" \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v "$GRAPH_DIR":/ros_graph \
     -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
     -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
     -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}" \
-    "$IMAGE" \
-    bash -c "source /opt/ros/jazzy/setup.bash && python3 /ros_graph/gen_dot.py /ros_graph/rosgraph.dot"
-
-if [ ! -f "$DOT_FILE" ]; then
-    echo "[visualizer] ERROR: rosgraph.dot was not generated."
-    echo "             Is the agent running? Are boards connected (LED on)?"
-    exit 1
-fi
-
-# ── Step 3: Open Dear RosNodeViewer ──────────────────────────────────────────
-
-echo ""
-echo "============================================="
-echo " Dear RosNodeViewer — W6100 Bridge"
-echo "============================================="
-echo " Refresh: ./tools/start-visualizer.sh --refresh"
-echo "============================================="
-echo ""
-
-cd "$GRAPH_DIR"
-dear_ros_node_viewer rosgraph.dot
+    "$VIZ_IMAGE" \
+    bash -c "
+        source /opt/ros/jazzy/setup.bash
+        echo '[visualizer] Generating rosgraph.dot...'
+        python3 /ros_graph/gen_dot.py /ros_graph/rosgraph.dot || exit 1
+        echo '[visualizer] Opening Dear RosNodeViewer...'
+        cd /ros_graph
+        dear_ros_node_viewer rosgraph.dot
+    "

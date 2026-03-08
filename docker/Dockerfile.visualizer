@@ -1,0 +1,14 @@
+FROM ros:jazzy
+
+RUN apt-get update && apt-get install -y \
+    graphviz \
+    libgraphviz-dev \
+    pkg-config \
+    python3-pip \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install pygraphviz dear-ros-node-viewer
+
+WORKDIR /ros_graph
