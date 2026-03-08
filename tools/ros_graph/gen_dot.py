@@ -69,15 +69,28 @@ def sanitize(name):
     return '"' + name.replace('"', '\\"') + '"'
 
 
+def wait_for_nodes(retries=10, delay=2):
+    """Retry until at least one node appears (DDS discovery takes a few seconds)."""
+    for attempt in range(1, retries + 1):
+        nodes = get_nodes()
+        if nodes:
+            return nodes
+        print(f"[gen_dot] Waiting for nodes... ({attempt}/{retries})")
+        import time
+        time.sleep(delay)
+    return []
+
+
 def main():
-    print("[gen_dot] Querying ROS2 graph...")
-    nodes = get_nodes()
-    topics = get_topics()
+    print("[gen_dot] Querying ROS2 graph (waiting for DDS discovery)...")
+    nodes = wait_for_nodes(retries=15, delay=2)
 
     if not nodes:
-        print("[gen_dot] ERROR: No nodes found. Is the agent running and are boards connected?")
+        print("[gen_dot] ERROR: No nodes found after waiting.")
+        print("          Is the agent running? Are boards connected (green LED on)?")
         sys.exit(1)
 
+    topics = get_topics()
     print(f"[gen_dot] Found {len(nodes)} node(s), {len(topics)} topic(s)")
 
     edges = []   # (publisher_node, topic, subscriber_node)

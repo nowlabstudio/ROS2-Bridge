@@ -29,6 +29,12 @@ DOT_FILE="$GRAPH_DIR/rosgraph.dot"
 CONTAINER="w6100_bridge_ros2_graphgen"
 IMAGE="ros:jazzy"
 
+# --refresh: skip agent start, just regenerate dot and reopen viewer
+SKIP_AGENT=false
+for arg in "$@"; do
+    [[ "$arg" == "--skip-agent" || "$arg" == "--refresh" ]] && SKIP_AGENT=true
+done
+
 # ── Dependencies (host) ───────────────────────────────────────────────────────
 
 if ! dpkg -s graphviz &>/dev/null 2>&1; then
@@ -43,7 +49,7 @@ fi
 
 # ── Step 1: Start agent ───────────────────────────────────────────────────────
 
-if [[ "$1" != "--skip-agent" ]]; then
+if [[ "$SKIP_AGENT" == "false" ]]; then
     gnome-terminal --title="micro-ROS Agent (Jazzy UDP)" -- bash -c \
         "bash '$SCRIPT_DIR/docker-run-agent-udp.sh'; exec bash"
 
@@ -57,21 +63,8 @@ if [[ "$1" != "--skip-agent" ]]; then
     done
 fi
 
-# ── Step 2: Wait for at least one ROS node ────────────────────────────────────
-
-echo "[visualizer] Waiting for ROS nodes (max 30s)..."
-for i in $(seq 1 30); do
-    NODE_COUNT=$(docker run --rm --net=host \
-        -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}" \
-        "$IMAGE" \
-        bash -c "source /opt/ros/jazzy/setup.bash 2>/dev/null && ros2 node list 2>/dev/null | grep -v '^$' | wc -l" 2>/dev/null || echo 0)
-    if [ "$NODE_COUNT" -gt 0 ] 2>/dev/null; then
-        echo "[visualizer] Found $NODE_COUNT node(s)."
-        break
-    fi
-    echo "[visualizer]   ... ($i/30, 0 nodes so far)"
-    sleep 1
-done
+# ── Step 2: (node discovery handled inside gen_dot.py with retries) ──────────
+# DDS discovery needs a few seconds inside the container — gen_dot.py retries.
 
 # ── Step 3: Generate rosgraph.dot ─────────────────────────────────────────────
 
@@ -110,10 +103,12 @@ echo " Controls:"
 echo "   Middle-button drag — move graph"
 echo "   Mouse scroll       — zoom"
 echo "   Click node title   — highlight connections"
-echo "   Menu → ROS → Load Current Graph — refresh"
+echo ""
+echo " Refresh graph after boards reconnect:"
+echo "   ./tools/start-visualizer.sh --refresh"
 echo "============================================="
 echo ""
 
-# Run viewer from the graph dir so it finds setting.json automatically
+# Run from the graph dir so setting.json is found automatically
 cd "$GRAPH_DIR"
 dear_ros_node_viewer rosgraph.dot
