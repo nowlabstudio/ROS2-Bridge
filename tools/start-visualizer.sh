@@ -2,38 +2,38 @@
 # =============================================================================
 # start-visualizer.sh
 # =============================================================================
-# Launches the full W6100 bridge environment + Dear RosNodeViewer:
-#   Window 1 — micro-ROS Jazzy agent (UDP, port 8888)
-#   Window 2 — Dear RosNodeViewer (live ROS2 node graph)
+# Launches the W6100 bridge agent + Dear RosNodeViewer.
+#
+# Flow:
+#   1. Start micro-ROS agent (new terminal window)
+#   2. Wait for agent + at least one ROS node to appear
+#   3. Generate rosgraph.dot from the live ROS2 graph (via Docker)
+#   4. Launch Dear RosNodeViewer with the generated dot file
 #
 # Usage:
-#   ./tools/start-visualizer.sh               # agent + live graph
-#   ./tools/start-visualizer.sh graph.dot     # agent + static dot file
-#   ./tools/start-visualizer.sh arch.yaml     # agent + static yaml file
+#   ./tools/start-visualizer.sh            # auto: generate + open
+#   ./tools/start-visualizer.sh --skip-agent  # skip agent start (already running)
 #
 # Requirements:
 #   - Ubuntu with GNOME Terminal
 #   - Docker installed and running
-#   - ROS2 Jazzy on the host (/opt/ros/jazzy/setup.bash)
-#     for live graph mode; not needed for static file mode
-#
-# To export a static dot file (inside docker-run-ros2.sh container):
-#   ros2 run rqt_graph rqt_graph   → File → Export → rosgraph.dot
-#   ./tools/start-visualizer.sh rosgraph.dot
-#
-# First run installs: graphviz, dear-ros-node-viewer (pip3)
+#   - dear-ros-node-viewer installed on host (auto-installed on first run)
+#   - graphviz installed on host (auto-installed on first run)
 # =============================================================================
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROS_SETUP="/opt/ros/jazzy/setup.bash"
+GRAPH_DIR="$SCRIPT_DIR/ros_graph"
+DOT_FILE="$GRAPH_DIR/rosgraph.dot"
+CONTAINER="w6100_bridge_ros2_graphgen"
+IMAGE="ros:jazzy"
 
-# ── Dependencies ─────────────────────────────────────────────────────────────
+# ── Dependencies (host) ───────────────────────────────────────────────────────
 
 if ! dpkg -s graphviz &>/dev/null 2>&1; then
     echo "[visualizer] Installing graphviz..."
-    sudo apt-get install -y graphviz
+    sudo apt-get install -y graphviz graphviz-dev
 fi
 
 if ! python3 -c "import dear_ros_node_viewer" &>/dev/null 2>&1; then
@@ -41,54 +41,79 @@ if ! python3 -c "import dear_ros_node_viewer" &>/dev/null 2>&1; then
     pip3 install dear-ros-node-viewer
 fi
 
-# ── Window 1: micro-ROS Agent ─────────────────────────────────────────────────
+# ── Step 1: Start agent ───────────────────────────────────────────────────────
 
-gnome-terminal --title="micro-ROS Agent (Jazzy UDP)" -- bash -c "\
-    bash '$SCRIPT_DIR/docker-run-agent-udp.sh'; \
-    exec bash"
+if [[ "$1" != "--skip-agent" ]]; then
+    gnome-terminal --title="micro-ROS Agent (Jazzy UDP)" -- bash -c \
+        "bash '$SCRIPT_DIR/docker-run-agent-udp.sh'; exec bash"
 
-echo "[visualizer] Waiting for agent container to start..."
+    echo "[visualizer] Waiting for agent container..."
+    for i in $(seq 1 30); do
+        if docker ps -q --filter "name=w6100_bridge_agent_udp" | grep -q .; then
+            echo "[visualizer] Agent running."
+            break
+        fi
+        sleep 1
+    done
+fi
+
+# ── Step 2: Wait for at least one ROS node ────────────────────────────────────
+
+echo "[visualizer] Waiting for ROS nodes (max 30s)..."
 for i in $(seq 1 30); do
-    if docker ps -q --filter "name=w6100_bridge_agent_udp" | grep -q .; then
-        echo "[visualizer] Agent running."
+    NODE_COUNT=$(docker run --rm --net=host \
+        -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}" \
+        "$IMAGE" \
+        bash -c "source /opt/ros/jazzy/setup.bash 2>/dev/null && ros2 node list 2>/dev/null | grep -v '^$' | wc -l" 2>/dev/null || echo 0)
+    if [ "$NODE_COUNT" -gt 0 ] 2>/dev/null; then
+        echo "[visualizer] Found $NODE_COUNT node(s)."
         break
     fi
+    echo "[visualizer]   ... ($i/30, 0 nodes so far)"
     sleep 1
 done
 
-# ── Window 2: Dear RosNodeViewer ─────────────────────────────────────────────
+# ── Step 3: Generate rosgraph.dot ─────────────────────────────────────────────
 
+echo "[visualizer] Generating rosgraph.dot..."
+
+# Stop any leftover graphgen container
+docker rm -f "$CONTAINER" &>/dev/null || true
+
+docker run --rm \
+    --name "$CONTAINER" \
+    --net=host \
+    -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}" \
+    -v "$GRAPH_DIR":/ros_graph \
+    "$IMAGE" \
+    bash -c "
+        source /opt/ros/jazzy/setup.bash 2>/dev/null
+        python3 /ros_graph/gen_dot.py /ros_graph/rosgraph.dot
+    "
+
+if [ ! -f "$DOT_FILE" ]; then
+    echo "[visualizer] ERROR: rosgraph.dot was not generated."
+    echo "             Is the agent running? Are boards connected (LED on)?"
+    exit 1
+fi
+
+# ── Step 4: Launch Dear RosNodeViewer ─────────────────────────────────────────
+
+echo ""
 echo "============================================="
 echo " Dear RosNodeViewer — W6100 Bridge"
 echo "============================================="
+echo " File:     $DOT_FILE"
+echo " Settings: $GRAPH_DIR/setting.json"
+echo ""
+echo " Controls:"
+echo "   Middle-button drag — move graph"
+echo "   Mouse scroll       — zoom"
+echo "   Click node title   — highlight connections"
+echo "   Menu → ROS → Load Current Graph — refresh"
+echo "============================================="
+echo ""
 
-if [ -n "$1" ]; then
-    if [ ! -f "$1" ]; then
-        echo "ERROR: File not found: $1"
-        exit 1
-    fi
-    echo " Mode:   static file — $1"
-    echo "============================================="
-    echo ""
-    if [ -f "$ROS_SETUP" ]; then source "$ROS_SETUP"; fi
-    dear_ros_node_viewer "$1"
-else
-    echo " Mode:   live ROS graph"
-    echo ""
-    echo " Prerequisites:"
-    echo "   [1] Pico boards powered and connected via Ethernet"
-    echo "   [2] Green LED on = agent connected"
-    echo ""
-    echo " Controls:"
-    echo "   Middle-button drag — move graph"
-    echo "   Mouse scroll       — zoom"
-    echo "============================================="
-    echo ""
-    if [ ! -f "$ROS_SETUP" ]; then
-        echo "WARNING: $ROS_SETUP not found — live mode requires ROS2 Jazzy on the host."
-        echo "Pass a .dot or .yaml file as argument for static mode."
-        exit 1
-    fi
-    source "$ROS_SETUP"
-    dear_ros_node_viewer
-fi
+# Run viewer from the graph dir so it finds setting.json automatically
+cd "$GRAPH_DIR"
+dear_ros_node_viewer rosgraph.dot
