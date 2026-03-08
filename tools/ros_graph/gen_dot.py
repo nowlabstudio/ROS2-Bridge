@@ -61,8 +61,9 @@ def q(s):
 
 
 def topic_id(topic):
-    """Unique dot ID for a topic node — avoids collision when topic name == ROS node name."""
-    return '"__topic__' + topic.replace('"', '\\"') + '"'
+    """Unique dot ID for a topic node — avoids collision when topic name == ROS node name.
+    Uses a /t/ prefix namespace so dear_ros_node_viewer still recognises it as a ROS path."""
+    return '"/_t_' + topic.lstrip("/").replace('"', '\\"') + '"'
 
 
 def wait_for_nodes(retries=20, delay=2):

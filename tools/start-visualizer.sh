@@ -66,6 +66,8 @@ docker run --rm \
     -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
     -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
     -e ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}" \
+    -e LIBGL_ALWAYS_SOFTWARE=1 \
+    -e MESA_GL_VERSION_OVERRIDE=3.3 \
     "$VIZ_IMAGE" \
     bash -c "
         source /opt/ros/jazzy/setup.bash
