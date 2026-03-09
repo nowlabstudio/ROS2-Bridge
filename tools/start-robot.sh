@@ -66,13 +66,9 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
-# ── Window 1: RoboClaw driver + safety bridge ────────────────────────────────
+# ── Window 1: RoboClaw driver + safety bridge (Docker) ───────────────────────
 tmux new-window -t "$SESSION" -n "roboclaw" \
-    "source '$HOST_WS/install/setup.bash' 2>/dev/null; \
-     ros2 launch roboclaw_tcp_adapter roboclaw.launch.py \
-       roboclaw_host:=$ROBOCLAW_HOST \
-       roboclaw_port:=$ROBOCLAW_PORT; \
-     exec bash"
+    "bash '$SCRIPT_DIR/docker-run-roboclaw.sh' $ROBOCLAW_HOST $ROBOCLAW_PORT; exec bash"
 
 # ── Window 2: ROS2 interactive shell ─────────────────────────────────────────
 tmux new-window -t "$SESSION" -n "ros2-shell" \

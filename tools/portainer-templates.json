@@ -1,0 +1,38 @@
+{
+  "version": "2",
+  "templates": [
+    {
+      "type": 3,
+      "title": "W6100 Robot Stack",
+      "name": "w6100-robot-stack",
+      "description": "micro-ROS Agent + RoboClaw TCP driver + ROS2 shell (Ethernet-based robot bridge).",
+      "platform": "linux",
+      "categories": ["robotics", "iot"],
+      "repository": {
+        "url": "https://github.com/nowlabstudio/ROS2-Bridge",
+        "stackfile": "docker-compose.yml"
+      },
+      "env": [
+        {
+          "name": "AGENT_PORT",
+          "label": "micro-ROS Agent UDP port",
+          "description": "Port for the micro-ROS agent (default 8888).",
+          "default": "8888"
+        },
+        {
+          "name": "ROBOCLAW_HOST",
+          "label": "RoboClaw host (USR-K6 IP)",
+          "description": "IP of the Ethernet–serial bridge (e.g. USR-K6) or RoboClaw.",
+          "default": "192.168.68.60"
+        },
+        {
+          "name": "ROBOCLAW_PORT",
+          "label": "RoboClaw TCP port",
+          "description": "TCP port for RoboClaw serial bridge.",
+          "default": "8234"
+        }
+      ],
+      "note": "<p><strong>Előfeltétel:</strong> A compose relatív útvonalakat használ (<code>./host_ws</code>, <code>./tools</code>).</p><p><strong>Ajánlott:</strong> Klónozd a repót a hoston, futtasd <code>make host-build-docker</code>, majd Portainerben Add stack → Web editor: másold be a <code>docker-compose.yml</code> tartalmát, és a stack könyvtárát állítsd a repo gyökerére (ahol a <code>host_ws/install</code> már létezik).</p><p><strong>Alternatíva (Deploy from repository):</strong> A template repo URL-jét cseréld ki a saját forkodra. Az első deploy után a klónolt könyvtárban futtasd <code>make host-build-docker</code>, majd indítsd újra a stacket.</p>"
+    }
+  ]
+}

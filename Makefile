@@ -80,9 +80,21 @@ host-install-deps:
 	@echo "If rosdep is available:"
 	rosdep install --from-paths $(HOST_WS)/src --ignore-src -r -y || true
 
+# Host-on (ha van natív ROS2): source /opt/ros/<distro>/setup.bash majd make host-build
 .PHONY: host-build
 host-build:
 	cd $(HOST_WS) && colcon build --symlink-install
+
+# ROS2 Dockerből: build a host_ws a ros:jazzy konténerben (nem kell natív ROS2)
+# basicmicro_python nincs ament csomag → pip install; csak basicmicro_ros2 + roboclaw_tcp_adapter colcon.
+.PHONY: host-build-docker
+host-build-docker:
+	docker run --rm \
+		-v $(PROJECT_DIR)/host_ws:/host_ws -w /host_ws \
+		ros:jazzy \
+		bash -c "rm -rf /host_ws/build /host_ws/log && \
+		source /opt/ros/jazzy/setup.bash && \
+		colcon build --packages-select basicmicro_ros2 roboclaw_tcp_adapter --symlink-install"
 
 .PHONY: host-shell
 host-shell:
@@ -90,7 +102,35 @@ host-shell:
 
 .PHONY: robot-start
 robot-start:
-	bash tools/start-robot.sh
+	docker compose up -d
+
+.PHONY: robot-stop
+robot-stop:
+	docker compose down
+
+.PHONY: robot-logs
+robot-logs:
+	docker compose logs -f
+
+.PHONY: robot-logs-roboclaw
+robot-logs-roboclaw:
+	docker compose logs -f roboclaw
+
+.PHONY: robot-shell
+robot-shell:
+	docker compose exec ros2-shell bash
+
+.PHONY: robot-ps
+robot-ps:
+	docker compose ps
+
+.PHONY: portainer-start
+portainer-start:
+	docker compose --profile management up -d portainer
+
+.PHONY: portainer-stop
+portainer-stop:
+	docker compose --profile management stop portainer
 
 # ==============================================================
 .PHONY: help
@@ -107,8 +147,16 @@ help:
 	@echo "  make clean           - Remove build artifacts"
 	@echo ""
 	@echo "  ── Host Workspace (Tier 2) ──"
-	@echo "  make host-install-deps - Install basicmicro_python + rosdep"
-	@echo "  make host-build        - colcon build host_ws"
-	@echo "  make host-shell        - Shell with host_ws sourced"
-	@echo "  make robot-start       - Launch full robot (tmux)"
+	@echo "  make host-install-deps    - Install basicmicro_python + rosdep"
+	@echo "  make host-build           - colcon build host_ws (needs native ROS2)"
+	@echo "  make host-build-docker    - colcon build host_ws in ros:jazzy (no native ROS2)"
+	@echo "  make host-shell           - Shell with host_ws sourced"
+	@echo "  make robot-start         - Start all robot containers (compose up)"
+	@echo "  make robot-stop          - Stop all robot containers (compose down)"
+	@echo "  make robot-logs          - Follow all container logs"
+	@echo "  make robot-logs-roboclaw - Follow roboclaw logs only"
+	@echo "  make robot-shell         - Open ROS2 shell (exec into container)"
+	@echo "  make robot-ps            - Show container status"
+	@echo "  make portainer-start     - Start Portainer UI (https://localhost:9443)"
+	@echo "  make portainer-stop      - Stop Portainer"
 	@echo ""

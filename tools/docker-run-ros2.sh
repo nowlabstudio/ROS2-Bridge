@@ -8,6 +8,7 @@
 #   ./docker-run-ros2.sh
 #
 # Prerequisites:
+#   - host_ws built in Docker: make host-build-docker
 #   - Agent must be running first (docker-run-agent-udp.sh)
 #   - Pico must be connected and LED on (agent connected)
 #
@@ -37,6 +38,8 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+HOST_WS="$PROJECT_DIR/host_ws"
 CONTAINER_NAME="w6100_bridge_ros2"
 IMAGE="ros:jazzy"
 
@@ -67,7 +70,8 @@ echo ""
 docker run -it --rm --init \
     --name "$CONTAINER_NAME" \
     --net=host \
+    -v "$HOST_WS":/host_ws:rw \
     -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
     -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
     "$IMAGE" \
-    bash -c "source /opt/ros/jazzy/setup.bash && exec bash"
+    bash -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends python3-serial >/dev/null 2>&1; export PYTHONPATH=/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python:\${PYTHONPATH:-}; source /opt/ros/jazzy/setup.bash && [ -f /host_ws/install/setup.bash ] && source /host_ws/install/setup.bash; exec bash"

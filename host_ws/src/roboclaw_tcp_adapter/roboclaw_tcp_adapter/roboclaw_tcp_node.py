@@ -39,12 +39,15 @@ def main():
     )
 
     try:
+        # basicmicro_driver is the Python package inside basicmicro_ros2 source.
+        # PYTHONPATH must include host_ws/src/basicmicro_ros2 so that
+        # "basicmicro_driver" resolves to basicmicro_ros2/basicmicro_driver/.
         from basicmicro_driver.basicmicro_node import main as driver_main
         driver_main()
     except ImportError as exc:
         logger.error(
             "Could not import basicmicro_driver.basicmicro_node. "
-            "Ensure basicmicro_ros2 is built and sourced: %s",
+            "Ensure PYTHONPATH includes host_ws/src/basicmicro_ros2: %s",
             exc,
         )
         sys.exit(1)

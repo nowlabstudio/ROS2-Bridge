@@ -1,9 +1,9 @@
 ---
-description: Auto-update ERRATA.md and CHANGELOG_DEV.md on every code change or bug encounter
+description: Auto-update ERRATA.md, CHANGELOG_DEV.md and ONBOARDING.md on every code change or bug encounter
 alwaysApply: true
 ---
 
-# Errata és Changelog kötelező frissítés
+# Errata, Changelog és Onboarding kötelező frissítés
 
 Minden kódmódosítás vagy hibafelmerülés esetén **azonnal, kérés nélkül**:
 
@@ -13,5 +13,11 @@ Minden kódmódosítás vagy hibafelmerülés esetén **azonnal, kérés nélkü
    - Új hiba → új ERR-XXX szekció + táblázat sor
    - Javított hiba → állapot frissítés a táblázatban ("Nyitott" → "Javítva")
    - Kutatási eredmény → az adott ERR szekció bővítése
+
+3. **ONBOARDING.md** — Ha a rendszer fejlődik (új parancs, új szolgáltatás, architektúra változás, fontos hibaelhárítás):
+   - Parancs referencia (9. szekció) és/vagy Napi használat (6.) frissítése
+   - Új compose service → 7. szekció (Mi fut és hol?) bővítése
+   - Ismert hiba / workaround → 11. Gyors hibaelhárítás bővítése
+   - Új előfeltétel vagy konfig → 3., 4. vagy 5. szekció módosítása
 
 Ne kérdezz, csak csináld. Ezek a fájlok mindig naprakészek legyenek.

@@ -24,6 +24,48 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-012](#err-012) | Monkey-patch nem fedte a `basicmicro.Basicmicro` nevet | Kritikus | **Javítva** |
 | [ERR-013](#err-013) | `safety_bridge` nem létező `/emergency_stop` subscriber-re épített | Magas | **Javítva** |
 | [ERR-014](#err-014) | `RoboClawTCP` konstruktor szignatúra inkompatibilis volt | Kritikus | **Javítva** |
+| [ERR-015](#err-015) | RoboClaw Docker: `ModuleNotFoundError: No module named 'serial'` | Magas | **Javítva** |
+| [ERR-016](#err-016) | safety_bridge_node: `RcutilsLogger.info()` több argumentum → TypeError | Közepes | **Javítva** |
+| [ERR-017](#err-017) | RoboClaw Docker: No module named 'basicmicro_driver' | Magas | **Javítva** |
+
+---
+
+## ERR-017
+
+### RoboClaw Docker: No module named 'basicmicro_driver'
+
+**Dátum:** 2026-03-09  
+**Állapot:** **Javítva**
+
+A basicmicro_ros2 csomagot a colcon **CMake**-kel építi. A CMakeLists.txt a `basicmicro_driver/*.py` scripteket **programként** (executables) telepíti a `lib/basicmicro_ros2/` alá, **de nem Python csomagként** (nincs `__init__.py`). A `basicmicro_driver` Python package (`__init__.py` + összes modul) kizárólag a **forrásban** van: `host_ws/src/basicmicro_ros2/basicmicro_driver/`. A `lib/python3.12/site-packages/basicmicro_ros2/` csak a rosidl-generált msg/srv típusokat tartalmazza.
+
+**Javítás:** A Docker run scriptek PYTHONPATH-jába a **forrás** könyvtárat tesszük: `/host_ws/src/basicmicro_ros2`, így a `from basicmicro_driver.basicmicro_node import main` megtalálja a `basicmicro_driver` csomagot. A `roboclaw_tcp_node.py` importja egyszerűsítve erre az egy útvonalra.
+
+---
+
+## ERR-015
+
+### RoboClaw Docker: No module named 'serial'
+
+**Dátum:** 2026-03-09  
+**Állapot:** **Javítva**
+
+A `roboclaw_tcp_node` a `basicmicro` csomagot használja, ami `import serial`-t hív (pyserial). A ros:jazzy alapimage-ben nincs telepítve a pyserial / python3-serial, ezért a konténerben a node induláskor ModuleNotFoundError-t dobott.
+
+**Javítás:** A `docker-run-roboclaw.sh` és `docker-run-ros2.sh` indulásakor `apt-get install -y python3-serial` (csendesen), így a konténerben elérhető a `serial` modul.
+
+---
+
+## ERR-016
+
+### safety_bridge_node: RcutilsLogger.info() TypeError
+
+**Dátum:** 2026-03-09  
+**Állapot:** **Javítva**
+
+Az rclpy `RcutilsLogger.info()` csak egy üzenetstringet fogad (plusz implícit self), nem printf-stílusú (msg, *args) hívást. A kód `self.get_logger().info("Safety bridge: %s -> ...", a, b, c, d)` formátumban hívta, ami "takes 2 positional arguments but 6 were given" hibát adott.
+
+**Javítás:** Egyetlen formázott stringre cserélve: `self.get_logger().info("... %s ..." % (a, b, c, d))`. A `.warn("EMERGENCY STOP: %s", reason)` ugyanígy: `"... %s" % reason`.
 
 ---
 

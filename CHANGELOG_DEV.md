@@ -4,6 +4,248 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-09 (11) — Portainer custom template (W6100 Robot Stack)
+
+### Új
+
+- **tools/portainer-templates.json:** Portainer CE custom app template — egy „W6100 Robot Stack” bejegyzés (type 3 = Compose stack), repository URL placeholder, stackfile: `docker-compose.yml`, env: `AGENT_PORT`, `ROBOCLAW_HOST`, `ROBOCLAW_PORT` (alapértelmezettekkel). A `note` mező (HTML) elmagyarázza az előfeltételt (relatív útvonalak), az ajánlott Web editor + stack path módszert és az alternatívát (deploy from repo + `make host-build-docker` a klónban).
+- **ONBOARDING.md:** Új alfejezet „Portainer: custom template a robot stackhez” — template hozzáadása (Settings → Custom templates, URL vagy beillesztés), repository URL cseréje, két deploy módszer (Web editor + path vs Repository + build a klónban). A dokumentumtáblázatban megjelenik a `tools/portainer-templates.json`.
+
+### Megjegyzés
+
+A compose relatív volume-okat használ (`./host_ws`, `./tools`); a „Deploy from repository” csak akkor működik készen, ha a klónban már létezik a `host_ws/install` (pl. az első deploy után a hoston a klón könyvtárában `make host-build-docker`, majd stack restart).
+
+---
+
+## 2026-03-09 (10) — ONBOARDING.md + szabály a naprakészen tartásra
+
+### Új
+
+- **ONBOARDING.md** (repo gyökér): Teljes rendszer onboarding — architektúra, előfeltételek, első alkalom (klón + host-build-docker), konfig (robot_network.yaml), napi használat (robot-start/stop, logs, shell, Portainer), mi fut és hol, Foxglove, parancs referencia, dokumentáció index, gyors hibaelhárítás.
+- **.cursor/rules/errata-changelog.mdc:** 3. pont: ONBOARDING.md frissítése, ha a rendszer fejlődik (új parancs, szolgáltatás, architektúra, hibaelhárítás). A rule description bővítve az ONBOARDING.md-re.
+
+---
+
+## 2026-03-09 (9) — Portainer CE hozzáadva (profile: management)
+
+### Változtatások
+
+- **docker-compose.yml:** Portainer CE service hozzáadva `profiles: ["management"]` — nem indul `make robot-start`-tal, külön kell: `make portainer-start`. Port: 9443 (HTTPS), 8000 (Edge Agent). Docker socket mount (ro), persistent volume (portainer_data).
+- **Makefile:** `make portainer-start` / `make portainer-stop` + help szöveg.
+
+### Használat
+
+Ha van internet (első alkalommal image pull): `make portainer-start`, majd böngésző: `https://<robot-ip>:9443`. Ha nincs internet, a robot stack (`make robot-start`) normálisan indul, a Portainer nem blokkolja.
+
+---
+
+## 2026-03-09 (8) — Docker Compose: teljes robot rendszer
+
+### Döntés
+
+A tmux/gnome-terminal tabs helyett **Docker Compose** — mivel már minden Docker konténerben fut, a compose a legátláthatóbb és legkezelhetőbb megoldás.
+
+### Új fájlok
+
+- **docker-compose.yml** (repo gyökér): 3 service:
+  - `agent` — microros/micro-ros-agent:jazzy, UDP, `restart: unless-stopped`
+  - `roboclaw` — ros:jazzy, depends_on agent, mount host_ws + cyclonedds, ros2 launch
+  - `ros2-shell` — ros:jazzy, depends_on agent, stdin_open + tty, interaktív bash
+
+### Makefile parancsok
+
+| Parancs | Docker Compose | Leírás |
+|---------|---------------|--------|
+| `make robot-start` | `docker compose up -d` | Minden elindul háttérben |
+| `make robot-stop` | `docker compose down` | Minden leáll |
+| `make robot-logs` | `docker compose logs -f` | Összes log követése |
+| `make robot-logs-roboclaw` | `docker compose logs -f roboclaw` | Csak roboclaw log |
+| `make robot-shell` | `docker compose exec ros2-shell bash` | ROS2 shell belépés |
+| `make robot-ps` | `docker compose ps` | Konténer állapot |
+
+### Teszt eredmények
+
+- `make robot-start` — 3 konténer elindult (~6s)
+- `make robot-ps` — mind UP
+- `docker compose logs roboclaw` — safety_bridge OK, roboclaw_tcp_node OK (TCP timeout ha nincs hardver, normális)
+- `docker compose exec ros2-shell bash -c "ros2 node list"` — 3 node látható (/robot/estop, /robot/pedal, /robot/rc)
+- `ros2 topic list` — 17 topic (cmd_vel, odom, diagnostics, estop, motor_left/right, stb.)
+- `make robot-stop` — mind leállt
+
+### Eltávolított/deprecált
+
+- `make robot-start-tmux` eltávolítva a Makefile-ból (a shell scriptek megmaradnak visszafelé kompatibilitáshoz)
+- `make robot-start` (tabs) lecserélve compose-ra
+
+---
+
+## 2026-03-09 (7) — RoboClaw TCP driver MŰKÖDIK + tabs javítás
+
+### Siker
+
+A RoboClaw TCP driver **sikeresen csatlakozott** a motorvezérlőhöz Docker konténerből:
+```
+Connected to controller: USB Roboclaw 2x60A v4.4.3
+Port: tcp://192.168.68.60:8234, Baud: 38400, Address: 128
+```
+A safety_bridge_node is rendben elindult. Ctrl+C-re a motorokat leállította.
+
+### Javítások
+
+- **start-robot-tabs.sh:** `gnome-terminal --window` hozzáadva a `--tab` elé. Enélkül egyes rendszereken a gnome-terminal a meglévő ablakhoz próbálta hozzáadni a tabokat, és csak az elsőt (agent) nyitotta meg. A `--window` biztosítja, hogy egy új ablak nyíljon mind a 3 tabbal.
+
+### Nyitott
+
+- [ ] `make robot-start` (tabs) teljes teszt a `--window` javítás után
+- [ ] ROS2 shell topicok ellenőrzése (ros2 topic list, echo) amíg a driver fut
+
+---
+
+## 2026-03-09 (6) — RoboClaw: No module named 'basicmicro_driver' — root cause
+
+### Hiba
+
+`roboclaw_tcp_node` indításakor: `No module named 'basicmicro_driver'`. A basicmicro_ros2 CMakeLists.txt a driver scripteket **programként** (symlink) telepíti `lib/basicmicro_ros2/` alá, de **nem Python csomagként** (nincs `__init__.py`). A `basicmicro_driver` Python package (`__init__.py` + modulok) kizárólag a **forrásban** van: `host_ws/src/basicmicro_ros2/basicmicro_driver/`.
+
+### Javítások
+
+- **docker-run-roboclaw.sh, docker-run-ros2.sh:** PYTHONPATH = `/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python:...` — a **forrás** könyvtár, nem az install lib. Így `from basicmicro_driver.basicmicro_node import main` megtalálja a csomagot.
+- **roboclaw_tcp_node.py:** Visszaegyszerűsítve egyetlen importra: `from basicmicro_driver.basicmicro_node import main`.
+
+### Következő lépés
+
+Nem kell újraépíteni (symlink-install). Indítsd újra a roboclaw tabot.
+
+---
+
+## 2026-03-09 (5) — Terminal fülek (tabs) + robot-stop
+
+### Kérés
+
+- Maradjanak a terminal fülek (kézre esik), ne tmux.
+- Legyen robot-stop (vagy flag), ami leállít minden futó folyamatot.
+
+### Változtatások
+
+- **tools/start-robot-tabs.sh** (új): Egy GNOME Terminal ablak 3 tabbal — [1] agent, [2] roboclaw, [3] ros2-shell. A 2. és 3. tab vár, amíg az agent konténer fut, majd indítja a roboclaw-ot és a ros2-shellt. Konfig: host_ws/config/robot_network.yaml.
+- **tools/stop-robot.sh** (új): Leállítja a három Docker konténert (w6100_bridge_agent_udp, w6100_bridge_roboclaw, w6100_bridge_ros2) és a tmux session "robot"-ot (ha van).
+- **Makefile:** `robot-start` most a **start-robot-tabs.sh**-t hívja (terminal tabs). Új: `robot-start-tmux` → start-robot.sh (tmux, pl. SSH-hoz). Új: `robot-stop` → stop-robot.sh. A help szöveg frissítve.
+
+### Használat
+
+- Indítás: `make robot-start` (3 tab egy ablakban).
+- Leállítás: `make robot-stop`.
+- Tmux (headless): `make robot-start-tmux`; leállítás: `make robot-stop` vagy `tmux kill-session -t robot`.
+
+---
+
+## 2026-03-09 (4) — RoboClaw Docker: serial modul + safety_bridge logger javítás
+
+### Hibák (make robot-start / docker-run-roboclaw.sh)
+
+1. **roboclaw_tcp_node:** `ModuleNotFoundError: No module named 'serial'` — A `basicmicro` a `pyserial`-t használja (`import serial`); a ros:jazzy konténerben ez a csomag nem volt telepítve.
+2. **safety_bridge_node:** `TypeError: RcutilsLogger.info() takes 2 positional arguments but 6 were given` — Az rclpy logger nem fogad több argumentumot (format + args), csak egy stringet.
+
+### Javítások
+
+**1. serial (pyserial) a konténerben**
+- `tools/docker-run-roboclaw.sh`: induláskor `apt-get update && apt-get install -y python3-serial` (csendesen), így a `serial` modul elérhető.
+- `tools/docker-run-ros2.sh`: ugyanez, hogy a ros2-shellből futtatva is működjön a roboclaw_tcp_node.
+
+**2. safety_bridge_node.py logger**
+- `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/safety_bridge_node.py`: a többargumentumos `get_logger().info("fmt", a, b, c, d)` helyett egy formázott string: `get_logger().info("fmt" % (a, b, c, d))`. Ugyanígy a `.warn("EMERGENCY STOP: %s", reason)` → `.warn("EMERGENCY STOP: %s" % reason)`.
+
+### Következő lépés
+
+A safety_bridge forrást módosítottuk; a futó kód a build mappából jön. **Újra kell építeni:** `make host-build-docker`, majd `make robot-start` (vagy csak a roboclaw ablak újraindítása).
+
+---
+
+## 2026-03-09 (3) — ROS2 Dockerből: host-build-docker, RoboClaw + shell konténerben
+
+### Kontextus
+
+A felhasználó jelzi: a ROS2 Dockerből fut (nincs natív ROS2 a hoston). A korábbi utasítások (make host-build, make robot-start host-on) ezért nem megfelelőek.
+
+### Változtatások
+
+**1. Makefile**
+- **host-build-docker:** Colcon build a `ros:jazzy` konténerben; a `host_ws` mountolva van. A konténerben törli a build/log cache-t (path ütközés elkerülésére), majd `colcon build --packages-select basicmicro_ros2 roboclaw_tcp_adapter --symlink-install`. A `basicmicro_python` nem ament csomag, ezért nem épül colcon-nal; futásidőben a `PYTHONPATH=/host_ws/src/basicmicro_python` biztosítja az importot.
+- A help szöveg bővítve: host-build-docker, és hogy a robot-start ROS2-t Dockerből indítja.
+
+**2. tools/docker-run-ros2.sh**
+- Mount: `host_ws` → `/host_ws` (rw).
+- Belépéskor: `PYTHONPATH=/host_ws/src/basicmicro_python`, majd `source /opt/ros/jazzy/setup.bash`, majd ha létezik `source /host_ws/install/setup.bash`. Így a shellben elérhetők a roboclaw_tcp_adapter és basicmicro_ros2 csomagok.
+- Prerequisíte a kommentben: make host-build-docker.
+
+**3. tools/docker-run-roboclaw.sh (új)**
+- A RoboClaw TCP adapter (driver + safety bridge) a `ros:jazzy` konténerben indul: mount `host_ws`, CYCLONEDDS, env `ROBOCLAW_HOST`, `ROBOCLAW_PORT`, majd `ros2 launch roboclaw_tcp_adapter roboclaw.launch.py ...`.
+- Használat: `./docker-run-roboclaw.sh [HOST] [PORT]` (default 192.168.68.60 8234).
+
+**4. tools/start-robot.sh**
+- A [1] roboclaw ablak már nem a hoston futtatja a `ros2 launch`-t, hanem a `docker-run-roboclaw.sh`-t hívja (ugyanaz a host/port kiolvasás a config-ból).
+
+### Ellenőrzés
+
+- `make host-build-docker` sikeres (2 csomag: basicmicro_ros2, roboclaw_tcp_adapter).
+- Dockerben: `source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && ros2 pkg list | grep -E 'roboclaw_tcp_adapter|basicmicro'` → basicmicro_ros2, roboclaw_tcp_adapter.
+
+### Nyitott
+
+- [ ] make robot-start (tmux) teljes teszt: agent + roboclaw (Docker) + ros2-shell (Docker).
+
+---
+
+## 2026-03-09 (2) — Host workspace tesztek előkészítése (Linux)
+
+### Elvégzett lépések (repo gyökérből)
+
+**1) Submodule állapot**
+- `git submodule status`: mindkét submodule kicheckoutolva (space a commit előtt)
+  - `host_ws/src/basicmicro_python` (3231645)
+  - `host_ws/src/basicmicro_ros2` (dc75870)
+- `git submodule update --init --recursive` nem kellett.
+
+**2) Host workspace függőségek (`make host-install-deps`)**
+- **Sikerült:** `pip3 install -e host_ws/src/basicmicro_python` — user install, basicmicro + pyserial telepítve.
+- **Nem sikerült:** `rosdep install ...` — ROS_DISTRO nincs beállítva (ROS2 nincs a gépen), sudo kért jelszót; rosdep hibát dobott (std_msgs, robot_state_publisher definíciók, python3-serial apt). Venv nem kellett (pip nem externally-managed hibát dobott).
+
+**3) Colcon build (`make host-build`)**
+- **Nem sikerült:** `ament_cmake` nem található — a build előtt a ROS2 környezet nincs betöltve (nincs `/opt/ros`, `ros2` nincs a PATH-on). A `basicmicro_ros2` CMake ament_cmake-t keres, ezért a build abort.
+- **Megjegyzés:** `host_ws/install/` már létezik korábbi (ROS2-s környezetben készült) buildből (basicmicro_ros2, roboclaw_tcp_adapter install fájlok megvannak).
+
+**4) Ellenőrzés**
+- `host_ws/install/setup.bash` **létezik**.
+- `source host_ws/install/setup.bash && ros2 pkg list | grep -E "roboclaw_tcp_adapter|basicmicro"` **nem futtatható** — a gépen nincs ROS2 telepítve, így `ros2` parancs nincs.
+
+### Összefoglaló
+
+| Lépés | Eredmény | Megjegyzés |
+|-------|----------|------------|
+| Submodule status | OK | Mind kicheckoutolva |
+| pip basicmicro_python | OK | User install |
+| rosdep | Sikertelen | ROS_DISTRO nincs, sudo, rosdep keys |
+| make host-build | Sikertelen | ament_cmake hiányzik (ROS2 nincs) |
+| setup.bash létezik | OK | Korábbi build maradvány |
+| ros2 pkg list | N/A | ROS2 nincs telepítve |
+
+### Következő tesztlépés (ha ROS2 már telepítve)
+
+- **ROS2 telepítés (Ubuntu):**  
+  `sudo apt update && sudo apt install ros-jazzy-desktop` (vagy használt distro), majd `source /opt/ros/jazzy/setup.bash`. Ezután `make host-build` és a fenti ellenőrzés.
+- **Robot indítás (tmux):**  
+  `make robot-start` — ez a `tools/start-robot.sh`-t futtatja (agent, roboclaw, ros2-shell ablakok). Vagy manuálisan:  
+  - 1. terminál: agent (ha kell)  
+  - 2. terminál: `source host_ws/install/setup.bash && ros2 launch roboclaw_tcp_adapter roboclaw.launch.py`  
+  - 3. terminál: `source host_ws/install/setup.bash && bash` (ROS2 shell)
+
+### Nyitott pontok
+
+- [ ] ROS2 telepítése a Linux hoston (pl. Jazzy), majd `make host-build` újra
+- [ ] `make robot-start` (tmux) vagy manuális indítási parancsok tesztelése
+
+---
+
 ## 2026-03-09 — RoboClaw Host Workspace implementáció
 
 ### Kiindulási állapot

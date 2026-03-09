@@ -65,11 +65,8 @@ class SafetyBridgeNode(Node):
         self._zero_twist = Twist()
 
         self.get_logger().info(
-            "Safety bridge: %s -> zero %s + %s (watchdog %.1fs)",
-            estop_topic,
-            cmd_vel_topic,
-            estop_out,
-            wd_timeout,
+            "Safety bridge: %s -> zero %s + %s (watchdog %.1fs)"
+            % (estop_topic, cmd_vel_topic, estop_out, wd_timeout)
         )
 
     def _estop_callback(self, msg: Bool):
@@ -91,7 +88,7 @@ class SafetyBridgeNode(Node):
 
     def _activate_estop(self, reason: str):
         self._estop_active = True
-        self.get_logger().warn("EMERGENCY STOP: %s", reason)
+        self.get_logger().warn("EMERGENCY STOP: %s" % reason)
         self._emergency_pub.publish(Empty())
         self._cmd_vel_pub.publish(self._zero_twist)
 
