@@ -124,6 +124,11 @@ robot-shell:
 robot-ps:
 	docker compose ps
 
+# Foxglove bridge image (compose has build; Portainer repo-deploy does not build → run once on host)
+.PHONY: foxglove-build
+foxglove-build:
+	docker compose build foxglove
+
 .PHONY: portainer-start
 portainer-start:
 	docker compose --profile management up -d portainer
@@ -157,6 +162,7 @@ help:
 	@echo "  make robot-logs-roboclaw - Follow roboclaw logs only"
 	@echo "  make robot-shell         - Open ROS2 shell (exec into container)"
 	@echo "  make robot-ps            - Show container status"
-	@echo "  make portainer-start     - Start Portainer UI (https://localhost:9443)"
+	@echo "  make foxglove-build      - Build Foxglove bridge image (once; then stack can start it)"
+	@echo "  make portainer-start    - Start Portainer UI (https://localhost:9443)"
 	@echo "  make portainer-stop      - Stop Portainer"
 	@echo ""

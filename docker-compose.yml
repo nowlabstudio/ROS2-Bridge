@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml — Full robot system (micro-ROS Agent + RoboClaw + ROS2)
+# docker-compose.yml — Full robot system (Agent + RoboClaw + ROS2 + Foxglove Bridge)
 # =============================================================================
 #
 # Usage:
@@ -53,6 +53,27 @@ services:
           roboclaw_host:=$$ROBOCLAW_HOST
           roboclaw_port:=$$ROBOCLAW_PORT
       "
+
+  # ── Foxglove Bridge (WebSocket :8765) ──────────────────────────────────────
+  # First time: build image on host: make foxglove-build  (or: docker compose build foxglove)
+  foxglove:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.foxglove
+    image: w6100-foxglove:latest
+    container_name: w6100_foxglove_bridge
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      agent:
+        condition: service_started
+    volumes:
+      - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
+    environment:
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+    command: >
+      bash -c "source /opt/ros/jazzy/setup.bash &&
+        ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 address:=0.0.0.0"
 
   # ── ROS2 interactive shell ─────────────────────────────────────────────────
   ros2-shell:

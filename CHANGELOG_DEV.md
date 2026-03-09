@@ -4,6 +4,41 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-09 (14) — Foxglove: build lépés, hibaelhárítás
+
+### Probléma
+
+A Foxglove konténer nem indult, a localhost:8765 nem volt elérhető: a Portainer (repository deploy) nem futtatja a `docker compose build`-et, ezért a `w6100-foxglove:latest` image hiányzott.
+
+### Változtatások
+
+- **Makefile:** `make foxglove-build` — buildeli a Foxglove image-et (`docker compose build foxglove`). Első alkalommal a hoston futtatandó, utána a stack (Portainer vagy make robot-start) elindítja a konténert.
+- **docker-compose.yml:** Foxglove parancs: `address:=0.0.0.0` hozzáadva; komment: first time `make foxglove-build`.
+- **ONBOARDING.md:** Foxglove szekció: image build kötelező elsőre (`make foxglove-build`), majd stack restart. Hibaelhárítás: „Foxglove konténer nem indul / localhost:8765 nem elérhető” → `make foxglove-build`, stack újraindítás, `docker compose logs foxglove`.
+
+---
+
+## 2026-03-09 (13) — Foxglove Bridge a compose-ban (Portainer indítja)
+
+### Változtatások
+
+- **docker-compose.yml:** `foxglove` szolgáltatás hozzáadva — build `docker/Dockerfile.foxglove`, image `w6100-foxglove:latest`, host network, CycloneDDS, `ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765`. A Portainer „Start this stack” indítja, ha az image létezik.
+- **ONBOARDING.md:** „Mi fut és hol” táblázat + Foxglove szekció: a bridge a stack része.
+
+### Megjegyzés
+
+A Portainer repo-deploy nem buildel; elsőre a hoston: `make foxglove-build`. A `tools/start-foxglove.sh` továbbra használható.
+
+---
+
+## 2026-03-09 (12) — Portainer: indítás/leállítás
+
+### Dokumentáció
+
+- **ONBOARDING.md:** A Portainerből a „Start/Stop this stack” működik; tartalék: hoston `make robot-stop`.
+
+---
+
 ## 2026-03-09 (11) — Portainer custom template (W6100 Robot Stack)
 
 ### Új

@@ -122,6 +122,8 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 - **Web editor (ajánlott):** Add stack → **Web editor** → beilleszted a `docker-compose.yml` tartalmát. A stack **path** legyen a repo gyökere a hoston (ahol már lefutott a `make host-build-docker`), hogy a `./host_ws` és `./tools` mountok és a `host_ws/install` létezzen.
 - **Deploy from repository:** Add stack → **Repository** → repo URL + `docker-compose.yml`. Portainer klónozza a repót; a klónban nincs `host_ws/install`, ezért az első deploy után a klónolt könyvtárban futtasd a hoston: `make host-build-docker`, majd a stacket indítsd újra.
 
+**Indítás / leállítás:** A Portainerből a „Start this stack” és a „Stop this stack” működik. Ha mégsem állna le: a hoston `make robot-stop` (vagy `docker compose down`).
+
 ---
 
 ## 7. Mi fut és hol?
@@ -130,6 +132,7 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 |--------------|----------|-----|------------|
 | agent | w6100_bridge_agent_udp | microros/micro-ros-agent:jazzy | UDP :8888, micro-ROS → DDS |
 | roboclaw | w6100_bridge_roboclaw | ros:jazzy | roboclaw_tcp_adapter launch (driver + safety_bridge) |
+| foxglove | w6100_foxglove_bridge | w6100-foxglove (build) | WebSocket :8765 → Foxglove Studio |
 | ros2-shell | w6100_bridge_ros2 | ros:jazzy | Interaktív bash, ROS2 + host_ws be van töltve |
 | portainer | portainer | portainer/portainer-ce | Web UI (profile: management) |
 
@@ -140,8 +143,8 @@ Mindegyik `network_mode: host`, így ugyanaz a DDS látótér (CycloneDDS, `tool
 ## 8. Foxglove
 
 - **Cél:** ROS2 topicok vizualizálása (robot működés).
-- **Bridge:** pl. `tools/start-foxglove.sh` (WebSocket, port 8765), vagy saját bridge a compose-on kívül.
-- **Studio:** Connect → Foxglove WebSocket → `ws://<robot-ip>:8765`.
+- **Bridge:** A stack része (compose: `foxglove` szolgáltatás). A Portainer „Start this stack” indítja, **ha** a Foxglove image már meg van építve. Első alkalommal (vagy ha a konténer nem indul): a **hoston** futtasd egyszer: `make foxglove-build` (vagy `docker compose build foxglove`), majd indítsd újra a stacket. Alternatíva: `tools/start-foxglove.sh` a compose-on kívül.
+- **Studio:** Connect → Foxglove WebSocket → `ws://<robot-ip>:8765` (vagy localhost, ha a Studio a hoston fut).
 
 A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** való.
 
@@ -186,3 +189,4 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 - **"No module named 'basicmicro_driver'":** `make host-build-docker` lefutott? PYTHONPATH a compose-ban a forrásra mutat (`host_ws/src/basicmicro_ros2`).
 - **Pico-k nem látszanak:** Agent fut? `make robot-ps`. Pico-k `agent_ip`/`agent_port` a config.json-ban = host IP és 8888?
 - **Portainer nem indul:** Van internet? Első indításkor image pull kell. Ha nincs net: `make robot-start` ettől még működik (Portainer profile külön indul).
+- **Foxglove konténer nem indul / localhost:8765 nem elérhető:** A Foxglove image a Portainer (repo) deploy-nál nem épül meg. A hoston futtasd egyszer: `make foxglove-build`, majd a stacket indítsd újra (Portainerben vagy `make robot-start`). Log: `docker compose logs foxglove`.
