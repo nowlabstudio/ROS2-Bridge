@@ -1,0 +1,40 @@
+# =============================================================================
+# robot_network.yaml — Single source of truth for all network parameters
+# =============================================================================
+#
+# Used by:
+#   - tools/start-robot.sh  (micro-ROS agent IP/port)
+#   - launch/roboclaw.launch.py  (RoboClaw host/port)
+#   - safety_bridge_node  (topic names)
+#
+# All IP addresses belong to the test LAN (192.168.68.0/24).
+# In production, these move to the Tier 1 VLAN (10.0.10.x/24)
+# as defined in robot_architecture.md.
+# =============================================================================
+
+robot_network:
+
+  # micro-ROS Agent (Tier 2 Linux host, Docker container)
+  micro_ros_agent:
+    ip: 192.168.68.125
+    port: 8888
+
+  # RoboClaw motor controller via USR-K6 Ethernet-to-Serial converter
+  roboclaw:
+    host: 192.168.68.60
+    port: 8234
+    baud: 115200             # USR-K6 UART side baudrate (matches RoboClaw)
+    address: 128             # RoboClaw Packet Serial address (0x80)
+    inter_byte_timeout: 0.05 # TCP socket recv timeout (seconds)
+
+  # W6100 EVB Pico bridges (Tier 1 MCUs)
+  pico_bridges:
+    estop:  { ip: 192.168.68.203, node: estop }
+    rc:     { ip: 192.168.68.202, node: rc    }
+    pedal:  { ip: 192.168.68.201, node: pedal }
+
+  # ROS2 topic conventions
+  ros:
+    namespace: /robot
+    estop_topic: estop
+    emergency_stop_topic: /emergency_stop

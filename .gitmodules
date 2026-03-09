@@ -1,0 +1,6 @@
+[submodule "host_ws/src/basicmicro_python"]
+	path = host_ws/src/basicmicro_python
+	url = https://github.com/basicmicro/basicmicro_python.git
+[submodule "host_ws/src/basicmicro_ros2"]
+	path = host_ws/src/basicmicro_ros2
+	url = https://github.com/basicmicro/basicmicro_ros2.git

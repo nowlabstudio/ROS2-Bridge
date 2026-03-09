@@ -1,0 +1,31 @@
+# =============================================================================
+# roboclaw_params.yaml — basicmicro_ros2 driver parameters
+# =============================================================================
+# These parameters are loaded by the launch file and passed to the
+# monkey-patched basicmicro_ros2 driver node.
+#
+# The 'port' parameter is overridden at launch time with the TCP URL
+# constructed from robot_network.yaml values.
+# =============================================================================
+
+roboclaw_driver:
+  ros__parameters:
+
+    # Hardware connection (overridden by launch file with tcp:// URL)
+    port: "tcp://192.168.68.60:8234"
+    baud: 115200
+    address: 128
+
+    # Robot type preset
+    robot_type: "diff_drive"
+
+    # Physical parameters (adjust to actual robot)
+    wheel_radius: 0.1
+    wheel_separation: 0.3
+    encoder_counts_per_rev: 1000
+    gear_ratio: 1.0
+
+    # Motion control
+    motion_strategy: "speed_accel"
+    default_acceleration: 1000
+    buffer_depth: 4

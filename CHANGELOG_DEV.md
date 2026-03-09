@@ -4,6 +4,118 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-09 — RoboClaw Host Workspace implementáció
+
+### Kiindulási állapot
+
+- A motorvezérlő (Basicmicro RoboClaw) integrációs architektúra véglegesítve
+- Döntés: közvetlen TCP socket adapter (socat nélkül), monorepo host_ws/ könyvtárban
+- Terv: `/Users/m2mini/.cursor/plans/roboclaw_host_workspace_8223f7cd.plan.md`
+
+### Elvégzett munka
+
+**1. Git submodule-ok hozzáadása**
+- `host_ws/src/basicmicro_python` — upstream Python library (Packet Serial, CRC, 150+ parancs)
+- `host_ws/src/basicmicro_ros2` — upstream ROS2 driver (ros2_control, /cmd_vel, odometry)
+- `.gitmodules` automatikusan frissítve
+
+**2. `roboclaw_tcp_adapter` ROS2 csomag — 4 Python modul**
+- `tcp_port.py` — `RoboClawTCPPort`: serial.Serial API-kompatibilis TCP socket adapter
+  - `TCP_NODELAY=1`, `sendall()`, non-blocking `flushInput()`
+- `basicmicro_tcp.py` — `RoboClawTCP(Basicmicro)`: csak `Open()` override, 150+ parancs öröklődik
+- `safety_bridge_node.py` — `/robot/estop` (Bool) → `/emergency_stop` (Empty) bridge
+  - Két trigger: aktív E-Stop + 2s silence watchdog
+- `roboclaw_tcp_node.py` — monkey-patch entry point
+  - `basicmicro.controller.Basicmicro` → `RoboClawTCP` csere import előtt
+
+**3. ROS2 package infrastruktúra**
+- `package.xml` (ament_python, rclpy, std_msgs)
+- `setup.py` + `setup.cfg` (console_scripts: roboclaw_tcp_node, safety_bridge_node)
+- `resource/roboclaw_tcp_adapter` (ament index marker)
+- `config/roboclaw_params.yaml` (driver paraméterek)
+
+**4. Launch és hálózati konfiguráció**
+- `launch/roboclaw.launch.py` — két node (driver + safety bridge), paraméterezett
+- `host_ws/config/robot_network.yaml` — egyetlen hálózati konfig forrás (agent, RoboClaw, Picók, ROS)
+
+**5. Startup és build rendszer**
+- `tools/start-robot.sh` — tmux session 3 ablakkal (agent, roboclaw, ros2-shell)
+  - Headless, SSH-n is működik (gnome-terminal kiváltva)
+  - robot_network.yaml-ból olvassa a hálózati paramétereket
+- `Makefile` bővítve: `host-install-deps`, `host-build`, `host-shell`, `robot-start`
+
+**6. `host_ws/README.md` — részletes architektúra dokumentáció**
+- 11 fejezet: bevezető, döntési napló, rendszer architektúra, hálózati topológia
+- Komponens deep dive (TCPPort, RoboClawTCP, monkey-patch, safety bridge)
+- Telepítés, konfiguráció, futtatás, hibakeresés, kiszakítási terv, roadmap
+
+### Létrehozott fájlok (13 fájl)
+
+| Fájl | Leírás |
+|------|--------|
+| `host_ws/README.md` | Verbose architektúra dokumentáció |
+| `host_ws/config/robot_network.yaml` | Hálózati konfig SSOT |
+| `host_ws/src/roboclaw_tcp_adapter/package.xml` | ROS2 csomag definíció |
+| `host_ws/src/roboclaw_tcp_adapter/setup.py` | Python setup |
+| `host_ws/src/roboclaw_tcp_adapter/setup.cfg` | Install scripts config |
+| `host_ws/src/roboclaw_tcp_adapter/resource/roboclaw_tcp_adapter` | ament marker |
+| `host_ws/src/roboclaw_tcp_adapter/config/roboclaw_params.yaml` | Driver paraméterek |
+| `host_ws/src/roboclaw_tcp_adapter/launch/roboclaw.launch.py` | ROS2 launch file |
+| `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/__init__.py` | Package init |
+| `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/tcp_port.py` | TCP socket adapter |
+| `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/basicmicro_tcp.py` | Basicmicro subclass |
+| `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/safety_bridge_node.py` | Safety bridge |
+| `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/roboclaw_tcp_node.py` | Entry point |
+
+### Módosított fájlok (1 fájl)
+
+| Fájl | Változás |
+|------|---------|
+| `Makefile` | +4 target: host-install-deps, host-build, host-shell, robot-start |
+
+### Új fájlok (git által kezelt)
+
+| Fájl | Változás |
+|------|---------|
+| `.gitmodules` | 2 submodule (basicmicro_python, basicmicro_ros2) |
+| `tools/start-robot.sh` | tmux startup script |
+
+### Érintetlen maradt
+
+- `app/` — Zephyr firmware (Tier 1)
+- `devices/` — per-board config.json
+- `tools/start-eth.sh`, `docker-run-agent-udp.sh` — visszafelé kompatibilitás
+
+### Pre-deployment validáció — 4 bug javítva (ERR-011..014)
+
+A kód review során 4 kritikus hiba derült ki, mind hardveres teszt előtt javítva:
+
+**ERR-011: Hibás import path** — `basicmicro_driver.basicmicro_driver` → `basicmicro_driver.basicmicro_node`
+
+**ERR-012: Hiányos monkey-patch** — Python `from X import Y` name binding: a patch nem propagálódott `basicmicro.Basicmicro`-ra. Javítás: mindkét helyen (`basicmicro.controller.Basicmicro` + `basicmicro.Basicmicro`) patchelni kell.
+
+**ERR-013: Nem létező /emergency_stop subscriber** — Az upstream driver nem implementálta (a doksija említi, a kódja nem). Javítás: zero Twist a `cmd_vel`-re 10 Hz-en amíg E-Stop aktív.
+
+**ERR-014: Konstruktor inkompatibilitás** — `RoboClawTCP(host, port)` vs upstream hívás `Basicmicro(comport, rate)`. Javítás: azonos `(comport, rate, ...)` szignatúra, TCP URL parse belülről.
+
+| Fájl | Változás |
+|------|---------|
+| `roboclaw_tcp_node.py` | Import path fix + dual monkey-patch |
+| `basicmicro_tcp.py` | Konstruktor átírás: `(comport, rate)` + URL parser |
+| `safety_bridge_node.py` | Zero Twist cmd_vel override + /emergency_stop forward compat |
+| `roboclaw.launch.py` | Új safety bridge paraméterek (cmd_vel_topic, rate) |
+
+### Még nem tesztelt / nyitott
+
+- [ ] Hardveres teszt: TCP kapcsolat a valós USR-K6 modulhoz
+- [ ] `make host-install-deps` + `make host-build` teljes pipeline teszt
+- [ ] `make robot-start` tmux session end-to-end
+- [ ] Safety bridge E-Stop → zero cmd_vel → motor halt lánc validáció
+- [ ] Odometria kalibrálás (wheel radius, separation, encoder CPR)
+- [ ] Reconnect loop teszt: USR-K6 hálózati megszakítás kezelése
+
+---
+
 ## 2026-03-08 — Foxglove Studio integráció, start-all.sh
 
 ### Elvégzett munka

@@ -69,8 +69,34 @@ shell:
 clean:
 	rm -rf $(WORKSPACE)/build
 
+# ==============================================================
+# Host Workspace (RoboClaw TCP adapter, safety bridge)
+# ==============================================================
+HOST_WS := $(PROJECT_DIR)/host_ws
+
+.PHONY: host-install-deps
+host-install-deps:
+	cd $(HOST_WS)/src/basicmicro_python && pip3 install -e .
+	@echo "If rosdep is available:"
+	rosdep install --from-paths $(HOST_WS)/src --ignore-src -r -y || true
+
+.PHONY: host-build
+host-build:
+	cd $(HOST_WS) && colcon build --symlink-install
+
+.PHONY: host-shell
+host-shell:
+	bash -c "source $(HOST_WS)/install/setup.bash && exec bash"
+
+.PHONY: robot-start
+robot-start:
+	bash tools/start-robot.sh
+
+# ==============================================================
 .PHONY: help
 help:
+	@echo ""
+	@echo "  ── Zephyr Firmware (Tier 1) ──"
 	@echo "  make docker-build    - Build Docker image (once)"
 	@echo "  make workspace-init  - Download Zephyr workspace (~2GB, once)"
 	@echo "  make build           - Build firmware"
@@ -79,3 +105,10 @@ help:
 	@echo "  make monitor         - Serial monitor 115200 baud"
 	@echo "  make shell           - Open Docker shell"
 	@echo "  make clean           - Remove build artifacts"
+	@echo ""
+	@echo "  ── Host Workspace (Tier 2) ──"
+	@echo "  make host-install-deps - Install basicmicro_python + rosdep"
+	@echo "  make host-build        - colcon build host_ws"
+	@echo "  make host-shell        - Shell with host_ws sourced"
+	@echo "  make robot-start       - Launch full robot (tmux)"
+	@echo ""

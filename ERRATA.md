@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-03-08
+**Utolsó frissítés:** 2026-03-09
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -20,6 +20,10 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-008](#err-008) | `docker-run-agent-udp.sh` bash-t indított az agent helyett | Kritikus | **Javítva** v2.1 |
 | [ERR-009](#err-009) | DTR wait blokkolta az autonome bootot | Magas | **Javítva** v2.0 |
 | [ERR-010](#err-010) | Több board publishol ugyanarra az estop topicra | Magas | **Javítva** v2.1 |
+| [ERR-011](#err-011) | `roboclaw_tcp_node` hibás import path | Kritikus | **Javítva** |
+| [ERR-012](#err-012) | Monkey-patch nem fedte a `basicmicro.Basicmicro` nevet | Kritikus | **Javítva** |
+| [ERR-013](#err-013) | `safety_bridge` nem létező `/emergency_stop` subscriber-re épített | Magas | **Javítva** |
+| [ERR-014](#err-014) | `RoboClawTCP` konstruktor szignatúra inkompatibilis volt | Kritikus | **Javítva** |
 
 ---
 
@@ -398,9 +402,129 @@ Ezzel együtt **50ms GPIO debounce** is implementálva (`drv_gpio.c`) a fizikai 
 
 ---
 
+## ERR-011
+
+### `roboclaw_tcp_node` hibás import path
+
+**Dátum:** 2026-03-09
+**Súlyosság:** Kritikus — a node egyáltalán nem indult volna
+**Állapot:** **Javítva**
+**Komponens:** `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/roboclaw_tcp_node.py`
+
+#### Leírás
+
+A monkey-patch entry point a driver `main()` függvényét `basicmicro_driver.basicmicro_driver` modulból próbálta importálni. Ez a modul **nem létezik** — az upstream csomag neve `basicmicro_driver.basicmicro_node`.
+
+#### Root cause
+
+Az upstream `basicmicro_ros2` csomag `setup.py` entry point-ja: `basicmicro_node = basicmicro_driver.basicmicro_node:main`. A kód írása során tévesen `basicmicro_driver` volt feltételezve modul névként.
+
+#### Javítás
+
+```python
+# Hibás:
+from basicmicro_driver.basicmicro_driver import main as driver_main
+# Javított:
+from basicmicro_driver.basicmicro_node import main as driver_main
+```
+
+---
+
+## ERR-012
+
+### Monkey-patch nem fedte a `basicmicro.Basicmicro` nevet
+
+**Dátum:** 2026-03-09
+**Súlyosság:** Kritikus — a TCP adapter sosem aktiválódott volna
+**Állapot:** **Javítva**
+**Komponens:** `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/roboclaw_tcp_node.py`
+
+#### Leírás
+
+A monkey-patch csak `basicmicro.controller.Basicmicro`-t cserélte ki, de az upstream driver `basicmicro_node.py` így importál:
+
+```python
+from basicmicro import Basicmicro  # basicmicro/__init__.py re-export
+```
+
+A Python `from X import Y` az import pillanatában köti a nevet. Mivel `basicmicro.__init__.py` a `from basicmicro.controller import Basicmicro` sort futtatja a modul betöltésekor, `basicmicro.Basicmicro` egy **független** referencia lett az eredeti osztályra. A `basicmicro.controller.Basicmicro` patchelése **nem propagálódik** a `basicmicro.Basicmicro`-ra.
+
+#### Root cause
+
+Python name binding mechanizmus: `from X import Y` másolatot hoz létre a névről, nem referenciát a modul attribútumra.
+
+#### Javítás
+
+Mindkét helyen patchelni kell:
+
+```python
+import basicmicro
+import basicmicro.controller
+basicmicro.controller.Basicmicro = RoboClawTCP  # a definiáló modul
+basicmicro.Basicmicro = RoboClawTCP             # az __init__.py re-export
+```
+
+---
+
+## ERR-013
+
+### `safety_bridge` nem létező `/emergency_stop` subscriber-re épített
+
+**Dátum:** 2026-03-09
+**Súlyosság:** Magas — E-Stop nem állította volna meg a motorokat
+**Állapot:** **Javítva**
+**Komponens:** `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/safety_bridge_node.py`
+
+#### Leírás
+
+A `safety_bridge_node` `std_msgs/Empty` üzeneteket publisholt `/emergency_stop` topicra. Az upstream `basicmicro_ros2` driver dokumentációja említi ezt a topic-ot, de a **tényleges kódban nincs** rá subscriber. Az egyetlen parancs bemenet a `cmd_vel` (geometry_msgs/Twist).
+
+#### Root cause
+
+A `basicmicro_ros2` repo dokumentációja és kódja inkonzisztens. A `docs/architecture.md` és `README.md` említi az `/emergency_stop` topic-ot és service-t, de az aktuális `basicmicro_node.py` csak `cmd_vel` subscription-t tartalmaz.
+
+#### Javítás
+
+A safety bridge mostantól **zero Twist-et publishol a `cmd_vel` topicra** 10 Hz-en amíg az E-Stop aktív. Ez a driver tényleges, működő interfészét használja. Az `/emergency_stop` publish megmaradt forward-kompatibilitásnak.
+
+---
+
+## ERR-014
+
+### `RoboClawTCP` konstruktor szignatúra inkompatibilis volt
+
+**Dátum:** 2026-03-09
+**Súlyosság:** Kritikus — a driver `TypeError`-t dobott volna
+**Állapot:** **Javítva**
+**Komponens:** `host_ws/src/roboclaw_tcp_adapter/roboclaw_tcp_adapter/basicmicro_tcp.py`
+
+#### Leírás
+
+Az upstream driver így hívja a konstruktort:
+```python
+self.controller = Basicmicro(self.port, self.baud)  # ("tcp://192.168.68.60:8234", 115200)
+```
+
+A `RoboClawTCP.__init__` eredeti szignatúrája:
+```python
+def __init__(self, host: str, port: int, ...)  # (host, port) — más!
+```
+
+A `host` megkapta volna a teljes `"tcp://..."` stringet, a `port` pedig az `115200` baud rate-et.
+
+#### Root cause
+
+A monkey-patch lényege, hogy az eredeti osztályt **transparensen** helyettesíti. Ehhez **azonos konstruktor szignatúra** kell: `(comport: str, rate: int, ...)`.
+
+#### Javítás
+
+`RoboClawTCP.__init__` mostantól az eredeti `Basicmicro(comport, rate, timeout, retries, verbose)` szignatúrát fogadja, és a `comport` stringből parse-olja a TCP host:port párost (`tcp://host:port` vagy `host:port` formátum).
+
+---
+
 ## Megjegyzések
 
 - **ERR-007 (dirty struct) és ERR-008 (broken agent script) egymást erősítette**: az agent ténylegesen nem futott, de ha futott volna is, a firmware végtelen reconnect loopba ragadt volna az első failed init után. Mindkettőt javítani kellett.
 - **ERR-010 (topic collision) root cause-a az architektúra**, nem bug: ugyanaz a firmware fut minden boardon. A megoldás a config-driven channel enable/disable — ez tisztán és skálázhatóan kezeli a problémát.
 - **ERR-001 (param server)** és az összes többi hiba egymástól független. Az ERR-001 a micro-XRCE-DDS rétegben van, a többi firmware vagy tool szintű hiba volt.
-- **Javítási prioritás volt:** ERR-009 → ERR-008 → ERR-007 → ERR-006 → ERR-010 → ERR-005 → ERR-003 → ERR-002 → ERR-004 → ERR-001 (nyitott)
+- **ERR-011..014 (host_ws bugok)** mind a pre-deployment validáció során derültek ki. A négy hiba együttesen megakadályozta volna a `roboclaw_tcp_adapter` működését. Mindegyik a kód review fázisban javítva, hardveres teszt előtt.
