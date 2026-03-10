@@ -180,24 +180,28 @@ robot-motor-test-standalone-m2:
 		roboclaw bash -c "apt-get update -qq && apt-get install -y -qq python3-serial >/dev/null && PYTHONPATH=/workspace/host_ws/src/roboclaw_tcp_adapter:/workspace/host_ws/src/basicmicro_python python3 /workspace/tools/test_motor_duty.py m2" ; \
 	docker compose start roboclaw
 
-# Start ros2_control C++ driver (stop Python driver first!)
+# C++ ros2_control driver (default — started by robot-start)
 .PHONY: robot-hw-start
 robot-hw-start:
-	docker compose stop roboclaw 2>/dev/null || true
-	docker compose --profile ros2control up -d roboclaw-hw
+	docker compose up -d roboclaw-hw
 
 .PHONY: robot-hw-stop
 robot-hw-stop:
-	docker compose --profile ros2control stop roboclaw-hw
+	docker compose stop roboclaw-hw
 
 .PHONY: robot-hw-logs
 robot-hw-logs:
-	docker compose --profile ros2control logs -f roboclaw-hw
+	docker compose logs -f roboclaw-hw
 
 # Motor test via ros2_control diff_drive_controller cmd_vel (TwistStamped for Jazzy)
 .PHONY: robot-hw-motor-test
 robot-hw-motor-test:
-	docker compose --profile ros2control exec roboclaw-hw bash -c "source /opt/ros/jazzy/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /diff_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped '{header: {stamp: {sec: 0, nanosec: 0}, frame_id: \"\"}, twist: {linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}' --rate 10" || true
+	docker compose exec roboclaw-hw bash -c "source /opt/ros/jazzy/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /diff_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped '{header: {stamp: {sec: 0, nanosec: 0}, frame_id: \"\"}, twist: {linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}' --rate 10" || true
+
+# Legacy Python driver (use only if needed)
+.PHONY: robot-legacy-start
+robot-legacy-start:
+	docker compose --profile legacy up -d roboclaw
 
 .PHONY: robot-ps
 robot-ps:

@@ -27,12 +27,13 @@ services:
     restart: unless-stopped
     command: udp4 -p ${AGENT_PORT:-8888} -v6
 
-  # ── RoboClaw TCP driver + safety bridge ────────────────────────────────────
+  # ── RoboClaw TCP driver + safety bridge (LEGACY — replaced by roboclaw-hw)
   roboclaw:
     image: ros:jazzy
     container_name: w6100_bridge_roboclaw
     network_mode: host
     restart: unless-stopped
+    profiles: ["legacy"]
     depends_on:
       agent:
         condition: service_started
@@ -56,15 +57,12 @@ services:
           roboclaw_port:=$$ROBOCLAW_PORT
       "
 
-  # ── RoboClaw C++ ros2_control driver ──────────────────────────────────────
-  # Replaces the Python driver above.  Use: docker compose up roboclaw-hw
-  # (stop the python driver first: docker compose stop roboclaw)
+  # ── RoboClaw C++ ros2_control driver (DEFAULT) ───────────────────────────
   roboclaw-hw:
     image: ros:jazzy
     container_name: w6100_bridge_roboclaw_hw
     network_mode: host
-    restart: "no"
-    profiles: ["ros2control"]
+    restart: unless-stopped
     depends_on:
       agent:
         condition: service_started
