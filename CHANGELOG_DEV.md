@@ -4,6 +4,37 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23h) — TCP auto-reconnect a motorvezérlő driverben
+
+### Probléma
+
+Ha a TCP kapcsolat a RoboClaw felé megszakadt (kábel kihúzás, USR-K6 restart, hálózati hiba), a driver emergency stop-ba ment és a konténert kellett újraindítani.
+
+### Változások
+
+**`roboclaw_hardware.hpp`:**
+- Új állapot: `connection_lost_`, `reconnect_attempts_`, `reconnect_cooldown_`
+- `kReconnectIntervalCycles = 100` (~1s @100Hz)
+- Új metódus: `attempt_reconnect()`
+
+**`roboclaw_hardware.cpp`:**
+- `read()`: comm failure → reconnect mód (emergency stop helyett)
+- `write()`: `connection_lost_` → skip (ne próbáljon törött socketre írni)
+- `attempt_reconnect()`: `transport_->reconnect()` + `ReadVersion()` validáció
+- Sikeres reconnect → állapot reset, folytatás konténer restart nélkül
+
+### Viselkedés
+
+```
+[WARN] TCP comm failure (10 consecutive) -- entering reconnect mode
+[INFO] Reconnect attempt #1 ...
+[WARN] TCP reconnect failed (attempt #1), retry in ~1s
+[INFO] Reconnect attempt #2 ...
+[INFO] Reconnected after 2 attempts: USB Roboclaw 2x60a v4.2.4
+```
+
+---
+
 ## 2026-03-10 (23g) — RC responsiveness: gyorsulási limitek + duty_max_rad_s paraméterezés
 
 ### Probléma

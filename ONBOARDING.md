@@ -353,6 +353,7 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 
 - **Driver nem indul:** `make host-build` lefutott? A roboclaw konténer logja: `make robot-logs-roboclaw`.
 - **RoboClaw "timed out" / "ReadVersion failed":** USR-K6 + RoboClaw bekapcsolva és elérhető? `ROBOCLAW_HOST`/`ROBOCLAW_PORT` helyes?
+- **TCP kábel kihúzva / hálózati hiba:** A driver automatikusan reconnectel ~1s-enként. Logban: `entering reconnect mode` → `Reconnected after N attempts`. Nincs szükség konténer újraindításra.
 - **Motor nem áll meg:** `cmd_vel_timeout: 0.5` a `diff_drive_controllers.yaml`-ban. Ha RC mód aktív, CH5-öt kapcsold ROS módra vagy engedd el a botokat.
 - **Overrun figyelmeztetés:** Ethernet-en 100Hz-en normális teljesítmény (1 overrun/30s). WiFi-n gyakoribb — nem hiba, hálózati latencia (ERR-023).
 - **Pico-k nem látszanak:** Agent fut? `make robot-ps`. Pico config.json-ban `agent_ip`/`agent_port` = host IP és 8888.
