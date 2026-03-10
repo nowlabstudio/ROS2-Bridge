@@ -1,1 +1,25 @@
-/host_ws/build/roboclaw_tcp_adapter/package.xml
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>roboclaw_tcp_adapter</name>
+  <version>0.2.0</version>
+  <description>
+    RC teleop node for RoboClaw diff-drive robot.
+    Converts tank-mixed or arcade RC inputs to cmd_vel (TwistStamped)
+    with CH5 ROS/RC mode switch and E-Stop gating.
+  </description>
+  <maintainer email="eduard@nowlab.eu">Eduard Sik</maintainer>
+  <license>MIT</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

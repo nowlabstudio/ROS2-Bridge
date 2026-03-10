@@ -4,6 +4,43 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23j) — Hardver szintű accel/decel szétválasztás, tank mód kinematika fix
+
+### Új feature: `duty_accel_rate` / `duty_decel_rate` — külön indulási és megállási gyorsulás
+
+A RoboClaw `DutyAccelM1M2` parancsát most **motoronként, irányonként** különböző rate-tel hívjuk:
+- Ha a motor duty **nő** (|new| ≥ |old|) → `duty_accel_rate` (default: 15000)
+- Ha a motor duty **csökken** (|new| < |old|) → `duty_decel_rate` (default: 30000)
+- Megállásnál (cmd_vel = 0) → `duty_decel_rate` a sima lefékezéshez
+
+Skála: 0–32767 (duty change/sec). 32767 = azonnali, 5000 = lassú, 15000 = snappy.
+
+### További változások ebben a session-ben
+
+- **`diff_drive_controller` acceleration limits kikapcsolva** (`has_acceleration_limits: false`) — a szoftver szintű ramping torzította a per-motor independenciát tank módban
+- **`angular.z.max_velocity`** 3.0 → 22.5 rad/s — teljes tartomány tank módhoz
+- **`rc_teleop_node.py` tank mód kinematika javítva** — `max_wheel_speed` + `wheel_separation` alapú diff drive formula
+- **`motion_strategy`** `duty` → `duty_accel` — hardver szintű ramp engedélyezve
+
+| Fájl | Változás |
+|------|---------|
+| `urdf/roboclaw_diff_drive.urdf.xacro` | +`duty_accel_rate`, +`duty_decel_rate` args; motion_strategy=duty_accel; default_acceleration=15000 |
+| `src/roboclaw_hardware.cpp` | accel/decel rate beolvasás, per-motor rate választás write()-ban, stop path decel rate |
+| `include/.../roboclaw_hardware.hpp` | +`duty_accel_rate_`, +`duty_decel_rate_`, +`prev_duty_m1_/m2_` memberek |
+| `config/diff_drive_controllers.yaml` | `has_acceleration_limits: false`, `angular.z.max_velocity: 22.5` |
+| `roboclaw_tcp_adapter/rc_teleop_node.py` | tank mód: diff drive kinematika (`max_wheel_speed`, `wheel_separation`) |
+| `launch/roboclaw.launch.py` | +`max_wheel_speed`, `wheel_separation` paraméterek rc_teleop-nak |
+
+### Teszt terv
+- [ ] RC throttle (CH1) → csak M1 mozog
+- [ ] RC steering (CH2) → csak M2 mozog
+- [ ] Mindkét kar → mindkét motor függetlenül
+- [ ] Indulás sima (15000 accel rate)
+- [ ] Megállás gyors de nem durva (30000 decel rate)
+- [ ] Rate-ek hangolhatók XACRO-ból (build + restart)
+
+---
+
 ## 2026-03-10 (23i) — SEGFAULT fix (ERR-024), build, commit
 
 ### Kritikus bugfix: node crash a reconnect path-on

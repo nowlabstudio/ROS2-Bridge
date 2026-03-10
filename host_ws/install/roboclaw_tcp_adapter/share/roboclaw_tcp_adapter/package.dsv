@@ -4,6 +4,3 @@ source;share/roboclaw_tcp_adapter/hook/pythonpath.sh
 source;share/roboclaw_tcp_adapter/hook/ament_prefix_path.ps1
 source;share/roboclaw_tcp_adapter/hook/ament_prefix_path.dsv
 source;share/roboclaw_tcp_adapter/hook/ament_prefix_path.sh
-source;../../build/roboclaw_tcp_adapter/share/roboclaw_tcp_adapter/hook/pythonpath_develop.ps1
-source;../../build/roboclaw_tcp_adapter/share/roboclaw_tcp_adapter/hook/pythonpath_develop.dsv
-source;../../build/roboclaw_tcp_adapter/share/roboclaw_tcp_adapter/hook/pythonpath_develop.sh

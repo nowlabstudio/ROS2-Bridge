@@ -22,12 +22,25 @@
   <xacro:arg name="encoder_counts_per_rev" default="1000"/>
   <xacro:arg name="gear_ratio"            default="16.0"/>
 
-  <xacro:arg name="motion_strategy"       default="speed_accel"/>
-  <xacro:arg name="default_acceleration"  default="2000"/>
+  <!-- Motion strategy: duty, duty_accel, speed, speed_accel -->
+  <xacro:arg name="motion_strategy"       default="duty_accel"/>
+  <!-- Acceleration/deceleration for duty_accel mode (RoboClaw hardware ramp).
+       Higher = faster ramp. Unit: duty change per second (0-32767 scale).
+       15000 ≈ snappy RC feel, 5000 ≈ gentle, 32767 = instant.
+       Decel can be higher for quick stops. -->
+  <xacro:arg name="duty_accel_rate"       default="50000"/>
+  <xacro:arg name="duty_decel_rate"       default="50000"/>
+  <xacro:arg name="default_acceleration"  default="15000"/>
+  <xacro:arg name="duty_max_rad_s"       default="22.5"/>
   <xacro:arg name="buffer_depth"          default="4"/>
 
-  <xacro:arg name="auto_home_on_startup"  default="false"/>
-  <xacro:arg name="position_limits_enabled" default="false"/>
+  <xacro:arg name="auto_home_on_startup"      default="false"/>
+  <xacro:arg name="position_limits_enabled"   default="false"/>
+
+  <xacro:arg name="encoder_stuck_limit"       default="0"/>
+  <xacro:arg name="encoder_runaway_limit"     default="5"/>
+  <xacro:arg name="encoder_comm_fail_limit"   default="10"/>
+  <xacro:arg name="encoder_max_speed_rad_s"   default="30.0"/>
 
   <!-- ================================================================== -->
   <!-- Derived properties                                                 -->
@@ -162,10 +175,18 @@
 
       <param name="motion_strategy">$(arg motion_strategy)</param>
       <param name="default_acceleration">$(arg default_acceleration)</param>
+      <param name="duty_accel_rate">$(arg duty_accel_rate)</param>
+      <param name="duty_decel_rate">$(arg duty_decel_rate)</param>
+      <param name="duty_max_rad_s">$(arg duty_max_rad_s)</param>
       <param name="buffer_depth">$(arg buffer_depth)</param>
 
       <param name="auto_home_on_startup">$(arg auto_home_on_startup)</param>
       <param name="position_limits_enabled">$(arg position_limits_enabled)</param>
+
+      <param name="encoder_stuck_limit">$(arg encoder_stuck_limit)</param>
+      <param name="encoder_runaway_limit">$(arg encoder_runaway_limit)</param>
+      <param name="encoder_comm_fail_limit">$(arg encoder_comm_fail_limit)</param>
+      <param name="encoder_max_speed_rad_s">$(arg encoder_max_speed_rad_s)</param>
     </hardware>
 
     <joint name="left_wheel_joint">
@@ -192,6 +213,7 @@
       <state_interface name="error_status"/>
       <state_interface name="current_left_a"/>
       <state_interface name="current_right_a"/>
+      <state_interface name="encoder_health"/>
     </gpio>
   </ros2_control>
 

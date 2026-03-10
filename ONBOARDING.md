@@ -270,11 +270,12 @@ angular.z = (ch2 - ch1) / 2.0 * max_angular_speed     # fordulás
 
 | Fájl | Paraméter | Érték | Leírás |
 |------|-----------|-------|--------|
-| `diff_drive_controllers.yaml` | `linear.x.max_acceleration` | 6.0 m/s² | Gyors RC reakció; Nav2 velocity smoother felülírhatja |
-| `diff_drive_controllers.yaml` | `angular.z.max_acceleration` | 6.0 rad/s² | Gyors fordulás RC-vel |
+| `diff_drive_controllers.yaml` | `has_acceleration_limits` | false | Kikapcsolva — gyorsulást a RoboClaw hardver kezeli (duty_accel/decel) |
 | `diff_drive_controllers.yaml` | `cmd_vel_timeout` | 0.5 s | Motor stop ha nem jön parancs |
 | `diff_drive_controllers.yaml` | `open_loop` | true | Amíg enkóderek nincsenek bekötve |
-| `roboclaw_diff_drive.urdf.xacro` | `motion_strategy` | duty | Open-loop PWM (nem kell enkóder) |
+| `roboclaw_diff_drive.urdf.xacro` | `motion_strategy` | duty_accel | Open-loop PWM + hardver ramp (nem kell enkóder) |
+| `roboclaw_diff_drive.urdf.xacro` | `duty_accel_rate` | 15000 | Gyorsulás rate (0-32767; magasabb = gyorsabb indulás) |
+| `roboclaw_diff_drive.urdf.xacro` | `duty_decel_rate` | 30000 | Lassulás rate (0-32767; magasabb = gyorsabb megállás) |
 | `roboclaw_diff_drive.urdf.xacro` | `duty_max_rad_s` | 22.5 | Max kerékszögsebesség → 100% PWM |
 | `roboclaw_diff_drive.urdf.xacro` | `encoder_stuck_limit` | 0 | Letiltva (nincs enkóder) |
 

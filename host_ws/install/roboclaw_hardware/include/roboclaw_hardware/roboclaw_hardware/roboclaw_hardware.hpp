@@ -71,6 +71,14 @@ struct BufferStatus
   bool    executing = false;
 };
 
+/// Per-wheel encoder health tracking for stuck/runaway detection.
+struct EncoderHealthState
+{
+  uint32_t stuck_counter[2]   = {0, 0};
+  uint32_t runaway_counter[2] = {0, 0};
+  uint32_t comm_fail_counter  = 0;
+};
+
 // ===========================================================================
 // RoboClawHardware  --  ros2_control SystemInterface plugin
 // ===========================================================================
@@ -183,6 +191,8 @@ private:
   void initialize_state_interfaces();
   hardware_interface::return_type execute_velocity_command(
     double left_rad_s, double right_rad_s);
+  void read_one_diagnostic();
+  void check_encoder_health();
 
   // ---- Connection ---------------------------------------------------------
   std::string    tcp_host_ = "192.168.68.60";
@@ -205,6 +215,11 @@ private:
   MotionStrategy motion_strategy_ = MotionStrategy::SPEED_ACCEL;
   int            buffer_depth_    = 4;
   uint32_t       default_accel_   = 1000;
+  uint32_t       duty_accel_rate_ = 15000;
+  uint32_t       duty_decel_rate_ = 30000;
+  double         duty_max_rad_s_  = 22.5;
+  int16_t        prev_duty_m1_    = 0;
+  int16_t        prev_duty_m2_    = 0;
 
   // ---- Servo parameters ---------------------------------------------------
   bool   auto_home_on_startup_     = false;
@@ -219,6 +234,13 @@ private:
   bool servo_capable_             = false;
   bool emergency_stop_active_     = false;
 
+  // ---- TCP reconnection ---------------------------------------------------
+  bool   connection_lost_         = false;
+  uint32_t reconnect_attempts_   = 0;
+  static constexpr uint32_t kReconnectIntervalCycles = 100;  // try every ~1s @100Hz
+  uint32_t reconnect_cooldown_   = 0;
+  bool attempt_reconnect();
+
   // ---- ros2_control state & command arrays --------------------------------
   // Indices: 0 = left, 1 = right
   std::array<double, 2> hw_cmd_vel_  = {0.0, 0.0};
@@ -230,20 +252,31 @@ private:
   bool   cmd_vel_dirty_ = false;
 
   // ---- Diagnostics GPIO state interfaces ----------------------------------
-  double gpio_main_battery_v_  = 0.0;
-  double gpio_temperature_c_   = 0.0;
-  double gpio_error_status_    = 0.0;
-  double gpio_current_left_a_  = 0.0;
-  double gpio_current_right_a_ = 0.0;
+  double gpio_main_battery_v_   = 0.0;
+  double gpio_temperature_c_    = 0.0;
+  double gpio_error_status_     = 0.0;
+  double gpio_current_left_a_   = 0.0;
+  double gpio_current_right_a_  = 0.0;
+  double gpio_encoder_health_   = 0.0;   // 0=OK, 1=stuck, 2=runaway, 3=comm_fail
 
   // ---- Velocity estimation from encoder deltas ----------------------------
   std::array<double, 2> prev_state_pos_ = {0.0, 0.0};
   bool   first_read_ = true;
 
-  // ---- Diagnostics scheduling ---------------------------------------------
-  int    diag_cycle_counter_ = 0;
-  static constexpr int kDiagIntervalCycles = 25;  // 4 slots × 25 cycles = 100 cycles = 1Hz full refresh
-  int    diag_slot_ = 0;                          // rotates 0..3 across slots
+  // ---- Rotating diagnostics (one TCP read every N-th cycle, 4 slots) ----
+  // Slot 0: volts, 1: temps, 2: error, 3: currents
+  // At 100Hz with interval=1: diag every cycle, full refresh 40ms = 25Hz
+  uint8_t  diag_slot_ = 0;
+  uint16_t diag_cycle_counter_ = 0;
+  static constexpr uint8_t  kDiagSlotCount = 4;
+  static constexpr uint16_t kDiagIntervalCycles = 1;
+
+  // ---- Encoder health monitoring -----------------------------------------
+  EncoderHealthState  enc_health_;
+  uint32_t enc_stuck_limit_     = 50;    // cycles before e-stop (500ms @ 100Hz)
+  uint32_t enc_runaway_limit_   = 5;     // consecutive impossible-speed reads
+  uint32_t enc_comm_fail_limit_ = 10;    // consecutive TCP failures
+  double   enc_max_speed_rad_s_ = 30.0;  // physical maximum wheel speed
 };
 
 }  // namespace roboclaw_hardware
