@@ -9,7 +9,7 @@
 **Univerzális ROS2 bridge** Ethernet alapú robotkonfigurációhoz:
 
 - **Tier 1 (MCU):** W6100 EVB Pico táblák (Zephyr + micro-ROS) — E-Stop, RC vevő, szenzorok → UDP → agent
-- **Tier 2 (Linux host):** Dockerben futó micro-ROS agent + RoboClaw TCP driver + safety bridge + ROS2 Jazzy
+- **Tier 2 (Linux host):** Dockerben futó micro-ROS agent + C++ ros2_control RoboClaw driver + RC teleop + ROS2 Jazzy
 - **Motorvezérlés:** RoboClaw (Basicmicro) TCP-n keresztül (USR-K6 Ethernet–Serial)
 
 Minden **Etherneten** megy; a hoston nincs USB/serial függőség. A ROS2 gráfban minden node (Pico-k, RoboClaw driver) egy helyen látszik.
@@ -77,7 +77,7 @@ Minden **Etherneten** megy; a hoston nincs USB/serial függőség. A ROS2 gráfb
 └───────────────────┘
 ```
 
-- **docker-compose** indítja: `agent`, `roboclaw-hw` (C++ driver), `foxglove`, `ros2-shell`. Opcionálisan: `portainer`.
+- **docker-compose** indítja: `agent`, `roboclaw`, `foxglove`, `ros2-shell`. Opcionálisan: `portainer`.
 - **Foxglove** = ROS2 vizualizáció (topicok, robot működés).
 - **Portainer** = konténerek, logok, restart, shell (rendszer szint).
 
@@ -125,26 +125,30 @@ git clone <repo-url>
 cd W6100_EVB_Pico_Zephyr_MicroROS
 git submodule update --init --recursive
 
-# 2. Host workspace build (ROS2 csomagok Dockerben — nem kell natív ROS2)
-make host-build-docker
+# 2. Host workspace build (C++ driver + RC teleop, Dockerben — nem kell natív ROS2)
+make host-build
+
+# 3. Foxglove bridge image (egyszer, ha Foxglove-ot használni akarsz)
+make foxglove-build
 ```
 
-Ez létrehozza a `host_ws/install/`-t (basicmicro_ros2, roboclaw_tcp_adapter). Ha a kódot később módosítod, ugyanezt futtasd újra.
+Ez létrehozza a `host_ws/install/`-t (`roboclaw_hardware`, `roboclaw_tcp_adapter`). Ha a kódot később módosítod, `make host-build` újra.
 
 ---
 
 ## 5. Konfiguráció (egy helyen)
 
-**Fájl:** `host_ws/config/robot_network.yaml`
+**Környezeti változók** (docker-compose.yml, felülírható `.env` fájlból vagy parancssorból):
 
-| Jelentés | Alapértelmezett | Hol használják |
-|----------|-----------------|----------------|
-| Agent port | 8888 | compose: `AGENT_PORT` |
-| RoboClaw host | 192.168.68.60 | compose: `ROBOCLAW_HOST` |
-| RoboClaw port | 8234 | compose: `ROBOCLAW_PORT` |
-| Pico-k IP (estop, rc, pedal) | 192.168.68.201–203 | dokumentáció / Pico config.json |
+| Változó | Alapértelmezett | Hol használják |
+|---------|-----------------|----------------|
+| `AGENT_PORT` | 8888 | micro-ROS Agent UDP port |
+| `ROBOCLAW_HOST` | 192.168.68.60 | USR-K6 IP (Ethernet-Serial bridge) |
+| `ROBOCLAW_PORT` | 8234 | USR-K6 TCP port |
 
-Compose-ban a környezeti változókat át lehet írni (pl. `.env` vagy `ROBOCLAW_HOST=192.168.68.61 make robot-start`). A YAML a single source of truth a doksi és a scriptek számára.
+Felülírás: `ROBOCLAW_HOST=192.168.68.61 make robot-start`
+
+**Pico konfiguráció:** Minden Pico saját `config.json`-ban tartja az `agent_ip`/`agent_port` értékeket (192.168.68.201–203).
 
 ---
 
@@ -195,8 +199,8 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 
 **Deploy két gyakori módszer:**
 
-- **Web editor (ajánlott):** Add stack → **Web editor** → beilleszted a `docker-compose.yml` tartalmát. A stack **path** legyen a repo gyökere a hoston (ahol már lefutott a `make host-build-docker`), hogy a `./host_ws` és `./tools` mountok és a `host_ws/install` létezzen.
-- **Deploy from repository:** Add stack → **Repository** → repo URL + `docker-compose.yml`. Portainer klónozza a repót; a klónban nincs `host_ws/install`, ezért az első deploy után a klónolt könyvtárban futtasd a hoston: `make host-build-docker`, majd a stacket indítsd újra.
+- **Web editor (ajánlott):** Add stack → **Web editor** → beilleszted a `docker-compose.yml` tartalmát. A stack **path** legyen a repo gyökere a hoston (ahol már lefutott a `make host-build`), hogy a `./host_ws` és `./tools` mountok és a `host_ws/install` létezzen.
+- **Deploy from repository:** Add stack → **Repository** → repo URL + `docker-compose.yml`. Portainer klónozza a repót; a klónban nincs `host_ws/install`, ezért az első deploy után a klónolt könyvtárban futtasd a hoston: `make host-build`, majd a stacket indítsd újra.
 
 **Indítás / leállítás:** A Portainerből a „Start this stack” és a „Stop this stack” működik. Ha mégsem állna le: a hoston `make robot-stop` (vagy `docker compose down`).
 
@@ -207,8 +211,7 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 | Szolgáltatás | Konténer | Kép | Mit csinál |
 |--------------|----------|-----|------------|
 | agent | w6100_bridge_agent_udp | microros/micro-ros-agent:jazzy | UDP :8888, micro-ROS → DDS |
-| roboclaw | w6100_bridge_roboclaw | ros:jazzy | roboclaw_tcp_adapter launch (driver + safety_bridge + rc_teleop) — **régi Python driver** |
-| roboclaw-hw | w6100_bridge_roboclaw_hw | ros:jazzy | **C++ ros2_control** driver (controller_manager + diff_drive_controller) — profile: ros2control |
+| roboclaw | w6100_roboclaw | ros:jazzy | C++ ros2_control driver + rc_teleop (controller_manager, diff_drive, diagnostics, RC teleop) |
 | foxglove | w6100_foxglove_bridge | w6100-foxglove (build) | WebSocket :8765 → Foxglove Studio |
 | ros2-shell | w6100_bridge_ros2 | ros:jazzy | Interaktív bash, ROS2 + host_ws be van töltve |
 | portainer | portainer | portainer/portainer-ce | Web UI (profile: management) |
@@ -300,22 +303,23 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 | Parancs | Rövid leírás |
 |---------|----------------|
 | `make help` | Összes cél |
-| `make robot-start` | Stack indítása |
+| `make host-build` | C++ driver + RC teleop buildelése Dockerben |
+| `make robot-start` | Stack indítása (agent + roboclaw + foxglove) |
 | `make robot-stop` | Stack leállítása |
+| `make robot-restart` | Stack újraindítása |
 | `make robot-ps` | Konténer állapot |
 | `make robot-logs` | Logok követése |
-| `make robot-logs-roboclaw` | Csak roboclaw log |
+| `make robot-logs-roboclaw` | Csak RoboClaw driver log |
 | `make robot-shell` | ROS2 shell (detach: Ctrl+P, Ctrl+Q) |
-| `make host-build-docker` | host_ws újraépítése Dockerben |
-| `make host-build-roboclaw-hw` | C++ roboclaw_hardware csomag buildelése |
-| `make robot-hw-start` | C++ ros2_control driver indítása (Python leáll) |
-| `make robot-hw-stop` | C++ driver leállítása |
-| `make robot-hw-logs` | C++ driver logok |
-| `make robot-hw-motor-test` | Motor teszt diff_drive_controlleren keresztül |
+| `make robot-diagnostics` | GPIO diagnosztika echo (battery, temp, error, áram) |
+| `make robot-motor-test` | Motor teszt cmd_vel-lel (LINEAR=0.05, DURATION=3) |
+| `make robot-topics` | ROS2 topic lista |
+| `make robot-controllers` | ros2_control kontrollerek listája |
+| `make foxglove-build` | Foxglove bridge image buildelése (egyszer) |
 | `make portainer-start` | Portainer indítása |
 | `make portainer-stop` | Portainer leállítása |
 
-**Zephyr (Tier 1) — ha firmware-t építesz:**  
+**Zephyr (Tier 1) — ha firmware-t építesz:**
 `make docker-build`, `make workspace-init`, `make build`, `tools/flash.sh`, `make monitor`. Részletek: `README.md`.
 
 ---
@@ -335,10 +339,10 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 
 ## 11. Gyors hibaelhárítás
 
-- **C++ driver nem indul:** `make host-build-roboclaw-hw` lefutott? A ros2-control és ros2-controllers csomagok telepítve a konténerben?
-- **Motor szaggatott (Python driver):** Ismert hiba (ERR-019). Használd a C++ drivert: `make robot-hw-start`.
-- **RoboClaw "timed out":** USR-K6 + RoboClaw elérhető? `ROBOCLAW_HOST`/`ROBOCLAW_PORT` és a hálózat rendben?
-- **"No module named 'basicmicro_driver'":** `make host-build-docker` lefutott? PYTHONPATH a compose-ban a forrásra mutat (`host_ws/src/basicmicro_ros2`).
-- **Pico-k nem látszanak:** Agent fut? `make robot-ps`. Pico-k `agent_ip`/`agent_port` a config.json-ban = host IP és 8888?
-- **Portainer nem indul:** Van internet? Első indításkor image pull kell. Ha nincs net: `make robot-start` ettől még működik (Portainer profile külön indul).
-- **Foxglove konténer nem indul / localhost:8765 nem elérhető:** A Foxglove image a Portainer (repo) deploy-nál nem épül meg. A hoston futtasd egyszer: `make foxglove-build`, majd a stacket indítsd újra (Portainerben vagy `make robot-start`). Log: `docker compose logs foxglove`.
+- **Driver nem indul:** `make host-build` lefutott? A roboclaw konténer logja: `make robot-logs-roboclaw`.
+- **RoboClaw "timed out" / "ReadVersion failed":** USR-K6 + RoboClaw bekapcsolva és elérhető? `ROBOCLAW_HOST`/`ROBOCLAW_PORT` helyes?
+- **Motor nem áll meg:** `cmd_vel_timeout: 0.5` a `diff_drive_controllers.yaml`-ban. Ha RC mód aktív, CH5-öt kapcsold ROS módra vagy engedd el a botokat.
+- **Overrun figyelmeztetés:** Ethernet-en 100Hz-en normális teljesítmény (1 overrun/30s). WiFi-n gyakoribb — nem hiba, hálózati latencia (ERR-023).
+- **Pico-k nem látszanak:** Agent fut? `make robot-ps`. Pico config.json-ban `agent_ip`/`agent_port` = host IP és 8888.
+- **Portainer nem indul:** Van internet? Első indításkor image pull kell. `make robot-start` ettől még működik (Portainer profile külön indul).
+- **Foxglove konténer nem indul:** `make foxglove-build` lefutott? Log: `docker compose logs foxglove`.

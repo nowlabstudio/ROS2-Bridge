@@ -4,6 +4,23 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23f) — Legacy Python driver eltávolítása, Makefile/compose tisztítás
+
+### Eltávolított legacy komponensek
+
+- **docker-compose.yml**: `roboclaw` legacy service törölve, `roboclaw-hw` átnevezve `roboclaw`-ra
+- **Makefile**: 10 legacy target eltávolítva (`robot-motor-test-m1/m2`, `standalone`, `legacy-start`,
+  `host-install-deps`, `host-build-docker`, `robot-hw-*` duplikátumok). Új target-ek: `robot-restart`,
+  `robot-diagnostics`, `robot-topics`, `robot-controllers`. `host-build` most egyben épít mindent.
+- **roboclaw_tcp_adapter**: Törölt fájlok: `roboclaw_tcp_node.py`, `safety_bridge_node.py`,
+  `basicmicro_tcp.py`, `tcp_port.py`, `launch/roboclaw.launch.py`, `config/roboclaw_params.yaml`.
+  Csak `rc_teleop_node.py` maradt. Package version: 0.2.0, `basicmicro_driver` dependency törölve.
+- **ros2-shell**: `PYTHONPATH` (basicmicro_ros2/python) és `python3-serial` install eltávolítva
+- **Portainer template**: leírás frissítve C++ driver + rc_teleop-ra
+- **ONBOARDING.md**: szolgáltatás táblázat, parancs referencia, hibaelhárítás, build utasítások frissítve
+
+---
+
 ## 2026-03-10 (23e) — RC → Motor összekötés terv dokumentálása
 
 ### RC csatorna kiosztás (végleges)

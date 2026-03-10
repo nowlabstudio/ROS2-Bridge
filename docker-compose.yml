@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.yml — Full robot system (Agent + RoboClaw + ROS2 + Foxglove Bridge)
+# docker-compose.yml — Robot stack (Agent + RoboClaw C++ driver + Foxglove)
 # =============================================================================
 #
 # Usage:
@@ -12,9 +12,8 @@
 #   Portainer: https://<robot-ip>:9443
 #
 # Prerequisites:
-#   make host-build-docker    # build host_ws (once, or after code changes)
+#   make host-build           # build host_ws (once, or after code changes)
 #
-# Network config: host_ws/config/robot_network.yaml
 # =============================================================================
 
 services:
@@ -27,40 +26,10 @@ services:
     restart: unless-stopped
     command: udp4 -p ${AGENT_PORT:-8888} -v6
 
-  # ── RoboClaw TCP driver + safety bridge (LEGACY — replaced by roboclaw-hw)
+  # ── RoboClaw C++ ros2_control driver + rc_teleop ───────────────────────────
   roboclaw:
     image: ros:jazzy
-    container_name: w6100_bridge_roboclaw
-    network_mode: host
-    restart: unless-stopped
-    profiles: ["legacy"]
-    depends_on:
-      agent:
-        condition: service_started
-    volumes:
-      - ./host_ws:/host_ws:rw
-      - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
-    environment:
-      - ROS_DOMAIN_ID=0
-      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
-      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
-      - ROBOCLAW_HOST=${ROBOCLAW_HOST:-192.168.68.60}
-      - ROBOCLAW_PORT=${ROBOCLAW_PORT:-8234}
-    command: >
-      bash -c "
-        apt-get update -qq && apt-get install -y -qq --no-install-recommends python3-serial >/dev/null 2>&1;
-        export PYTHONPATH=/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python:$${PYTHONPATH:-};
-        source /opt/ros/jazzy/setup.bash &&
-        source /host_ws/install/setup.bash &&
-        ros2 launch roboclaw_tcp_adapter roboclaw.launch.py
-          roboclaw_host:=$$ROBOCLAW_HOST
-          roboclaw_port:=$$ROBOCLAW_PORT
-      "
-
-  # ── RoboClaw C++ ros2_control driver (DEFAULT) ───────────────────────────
-  roboclaw-hw:
-    image: ros:jazzy
-    container_name: w6100_bridge_roboclaw_hw
+    container_name: w6100_roboclaw
     network_mode: host
     restart: unless-stopped
     depends_on:
@@ -85,7 +54,6 @@ services:
       "
 
   # ── Foxglove Bridge (WebSocket :8765) ──────────────────────────────────────
-  # First time: build image on host: make foxglove-build  (or: docker compose build foxglove)
   foxglove:
     build:
       context: ./docker
@@ -122,20 +90,16 @@ services:
       - ROS_DOMAIN_ID=0
       - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
       - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
-      - PYTHONPATH=/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python
     stdin_open: true
     tty: true
     command: >
       bash -c "
-        apt-get update -qq && apt-get install -y -qq --no-install-recommends python3-serial >/dev/null 2>&1;
         source /opt/ros/jazzy/setup.bash &&
         [ -f /host_ws/install/setup.bash ] && source /host_ws/install/setup.bash;
         exec bash
       "
 
   # ── Portainer CE — Docker management UI ───────────────────────────────────
-  # Not started by default. Use: make portainer-start
-  # or: docker compose --profile management up -d portainer
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
