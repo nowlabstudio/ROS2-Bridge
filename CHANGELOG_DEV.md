@@ -4,6 +4,88 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23d) — Architektúra refaktor: 100Hz→50Hz, thread→rotating diag, WiFi latencia azonosítás
+
+### Probléma: folyamatos overrun 100Hz-en
+
+A C++ driver 100Hz update rate mellett **minden másodpercben többször overrunolt** (read time 10-23ms a 10ms budget helyett).
+Három egymásra épülő megközelítéssel próbáltuk megoldani:
+
+1. **Háttérszál (diag_thread + protocol_mutex_):** A diagnosztikát külön thread-be tettük. Eredmény: rosszabb,
+   mert a `std::mutex` nem fair — a diag thread 4 TCP parancsra egyben tartotta a lock-ot (~20-40ms),
+   a RT loop várt. Szeparált lock-ok + `yield()` + `sleep_for(2ms)` sem segített eléggé.
+
+2. **Diagnosztika teljes kikapcsolása (izolációs teszt):** *Csak GetEncoders, semmi más* — az overrun
+   TOVÁBBRA IS fennállt (read 10-23ms). Ez bizonyította: nem a mutex/thread a gond, hanem maga a
+   TCP round-trip.
+
+3. **Root cause azonosítás: WiFi latencia.** A fejlesztő laptop WiFi-n csatlakozik a USR-K6-hoz
+   (laptop → WiFi → router → switch → switch → USR-K6). Ping mérés: **avg 4.2ms, max 9.3ms**.
+   Egy GetEncoders kétszer megy át a WiFi-n (oda+vissza) → **8-18ms csak WiFi overhead**.
+   A roboton közvetlen Ethernet kapcsolat lesz → ~0.5ms RTT → GetEncoders **~3ms**.
+
+### USR-K6 adatlap megerősítés
+
+| Paraméter | Érték |
+|-----------|-------|
+| Serial packing delay (115200 baud) | 0.35ms (4 byte idle time) |
+| Max package length | 400 byte |
+| Átlagos transport delay | < 10ms (LAN-on jellemzően 1-2ms) |
+| Baud rate (K6 és RoboClaw) | 115200 (max: 460800) |
+
+### Architekturális döntés
+
+Az eredeti Python driver stratégiáját követjük — szétválasztott motor control és diagnostics,
+de a végleges Ethernet mérés alapján **100Hz-re emeltük vissza** a loop rate-et:
+
+| | Eredeti Python | Előző C++ (thread) | Végleges C++ (rotating) |
+|--|---------------|--------------------|--------------------|
+| Motor control rate | 50Hz | 100Hz | **100Hz** |
+| Diagnostics rate | 1Hz (burst) | 4Hz (250ms thread) | **25Hz** (rotating, minden ciklus) |
+| Thread/mutex | Nincs (ROS2 timer) | Igen (2 thread, 2 mutex) | **Nincs** |
+| TCP hívás/ciklus | 2 (enc+speed) | 1 (enc) + háttér | **2** (enc + 1 diag) |
+
+### Változtatások
+
+**roboclaw_hardware.hpp:**
+- Eltávolítva: `<atomic>`, `<mutex>`, `<thread>` include-ok
+- Eltávolítva: `DiagShadow` struct, `diag_thread_`, `diag_mutex_`, `diag_shadow_`, `diag_running_`, `protocol_mutex_`
+- Hozzáadva: `diag_slot_`, `diag_cycle_counter_`, `kDiagSlotCount=4`, `kDiagIntervalCycles=1`
+- `diag_thread_func()` → `read_one_diagnostic()`
+
+**roboclaw_hardware.cpp:**
+- `diag_thread_func()` teljes eltávolítás
+- `read()`: mutex lock eltávolítva, rotating diag hozzáadva (minden ciklusban 1 TCP diag read)
+- `write()`: mutex lock eltávolítva
+- `on_activate()`: thread indítás eltávolítva, `diag_slot_` és `diag_cycle_counter_` init
+- `on_deactivate()`: thread join eltávolítva
+- `read_one_diagnostic()`: 4-slot switch (volts/temps/error/currents), ciklikusan forgat
+
+**diff_drive_controllers.yaml:**
+- `update_rate: 100` (változatlan — az Ethernet mérés igazolta)
+
+### Ethernet mérés eredménye (végleges)
+
+A laptop kábeles Ethernet-re kötve, közvetlen hálózati útvonal a USR-K6-hoz:
+
+| Mérés | WiFi | Ethernet |
+|-------|------|----------|
+| Ping RTT (avg / max) | 4.2ms / 9.3ms | **1.4ms / 1.9ms** |
+| Overrun / 30s (100Hz, teljes diag) | ~30-50 | **1** (10.2ms, alig a határ felett) |
+
+- GetEncoders + 1 diag: ~6ms Ethernet-en
+- 100Hz budget: 10ms → **4ms tartalék**
+- Diagnosztika: 4 slot × 100Hz = **25Hz** teljes frissítés (25x jobb mint az eredeti Python 1Hz)
+- Overrun: **gyakorlatilag nulla** Ethernet-en
+
+### Tanulság
+
+A fejlesztési környezet (WiFi) nem reprezentálja a végleges topológiát (Ethernet).
+A WiFi RTT (avg 4.2ms) többszörösen meghaladja az Ethernet-ét (1.4ms).
+Az overrunok nem szoftver, hanem hálózati latencia eredetűek.
+
+---
+
 ## 2026-03-10 (23) — C++ ros2_control RoboClaw hardware interface (ROS2_RoboClaw)
 
 ### Döntés

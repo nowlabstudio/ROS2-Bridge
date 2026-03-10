@@ -32,6 +32,35 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-020](#err-020) | SetTimeout 4 byte-ot küldött 1 helyett → protokoll korrupció, ERR LED | Kritikus | **Javítva** |
 | [ERR-021](#err-021) | Motor nem állt le cmd_vel timeout után (PID + lebegő encoder) | Kritikus | **Javítva** |
 | [ERR-022](#err-022) | Motor induláskor forgott (cmd_vel_dirty + open_loop: false) | Magas | **Javítva** |
+| [ERR-023](#err-023) | Folyamatos overrun 100Hz-en — WiFi latencia, nem szoftver hiba | Közepes | **Megoldva** (Ethernet-en 100Hz OK) |
+
+---
+
+## ERR-023
+
+### Folyamatos overrun 100Hz-en — WiFi latencia, nem szoftver hiba
+
+**Dátum:** 2026-03-10
+**Állapot:** **Megoldva**
+
+A C++ ros2_control driver 100Hz-en folyamatosan overrunolt (read time 10-23ms a 10ms budget helyett).
+Több megoldási kísérlet után (háttérszál + mutex, mutex szeparálás, yield/sleep, diagnosztika kikapcsolás)
+derült ki, hogy az overrun nem szoftver eredetú.
+
+**Izolációs teszt:** Diagnosztika thread teljes kikapcsolásával, *csak egyetlen GetEncoders* TCP hívással
+a read time TOVÁBBRA IS 10-23ms volt — bizonyítva, hogy a probléma a hálózati rétegben van.
+
+**Root cause:** A fejlesztő laptop WiFi-n csatlakozik a USR-K6-hoz (laptop → WiFi → router → switch →
+switch → USR-K6). Ping mérés: avg **4.2ms**, max **9.3ms**. Egy GetEncoders round-trip kétszer megy
+át ezen az útvonalon → **8-18ms WiFi overhead** per parancs.
+
+**USR-K6 adatlap:** A konverter átlagos transport delay-e **< 10ms** (LAN-on 1-2ms), serial packing
+delay 115200 baud-on **0.35ms**. Közvetlen Ethernet-en egy GetEncoders **~3ms** lesz.
+
+**Megoldás:**
+1. Háttérszál és mutex eltávolítva → egyszerűbb, single-threaded rotating diagnostics
+2. Ethernet mérés: ping avg **1.4ms** (vs WiFi 4.2ms), 100Hz + teljes diag → **30s alatt 1 overrun** (10.2ms)
+3. `update_rate: 100` megtartva — Ethernet-en a 100Hz működik teljes diagnosztikával
 
 ---
 
