@@ -4,6 +4,47 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23i) — SEGFAULT fix (ERR-024), build, commit
+
+### Kritikus bugfix: node crash a reconnect path-on
+
+A konténer váratlan crashének valódi oka nem a TCP reconnect logika volt, hanem egy **segmentation fault** a `roboclaw_hardware.cpp` `execute_velocity_command()` error path-jában.
+
+**Root cause:** `RCLCPP_WARN_THROTTLE(*rclcpp::Clock::make_shared(), ...)` — a temporális `shared_ptr` a kifejezés végén megsemmisül, de a makró belső `last_time` változója referenciát tárol rá. A második híváskor **dangling pointer** → segfault.
+
+**Javítás:** `static rclcpp::Clock steady_clock(RCL_STEADY_TIME)` — a Clock a process végéig él.
+
+### Elvégzett lépések
+
+1. ✅ `make host-build` — 2 csomag, 0 hiba (roboclaw_hardware + roboclaw_tcp_adapter)
+2. ✅ Commit + push `roboclaw_hardware` submodule (GitHub: `14d42c5`)
+3. ✅ ERRATA.md — ERR-024 szekció hozzáadva (root cause, javítás, tanulság)
+4. ✅ Fő repo commit + push (submodule pointer + doksik)
+
+### Összegzés: session 23h-23i teljes változáslista
+
+| Fájl | Változás |
+|------|---------|
+| `config/diff_drive_controllers.yaml` | accel 2.0/3.0→6.0 m/s² |
+| `urdf/roboclaw_diff_drive.urdf.xacro` | +duty_max_rad_s arg, motion_strategy=duty, encoder_stuck_limit=0 |
+| `include/roboclaw_hardware/roboclaw_hardware.hpp` | +duty_max_rad_s_, +reconnect állapotok, +attempt_reconnect() |
+| `include/roboclaw_hardware/roboclaw_tcp.hpp` | +is_alive() |
+| `src/roboclaw_hardware.cpp` | duty_max_rad_s param, reconnect logika, **SEGFAULT FIX** (static Clock) |
+| `src/roboclaw_tcp.cpp` | TCP keepalive, TCP_USER_TIMEOUT, non-blocking connect, is_alive() |
+| `launch/roboclaw.launch.py` | topic-ok /robot/motor_left\|right-ra |
+| `ERRATA.md` | +ERR-024 |
+| `CHANGELOG_DEV.md` | Session összefoglaló |
+
+### Következő lépések
+
+- [ ] `docker compose restart roboclaw` — tesztelés a javított binárissal
+- [ ] Teszt 1: RC módban motor reagál-e (gyorsulás, teljes tartomány)
+- [ ] Teszt 2: RoboClaw áramtalanítás → visszakapcsolás → auto-reconnect (log: "Reconnected after N attempts")
+- [ ] Teszt 3: Konténer nem crashel hosszabb futás közben (segfault fix verifikáció)
+- [ ] Pico firmware újrafordítás ha EMA szűrés kell (user csinálja)
+
+---
+
 ## 2026-03-10 (23h) — TCP auto-reconnect a motorvezérlő driverben
 
 ### Probléma

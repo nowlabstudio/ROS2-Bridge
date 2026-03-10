@@ -33,6 +33,62 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-021](#err-021) | Motor nem állt le cmd_vel timeout után (PID + lebegő encoder) | Kritikus | **Javítva** |
 | [ERR-022](#err-022) | Motor induláskor forgott (cmd_vel_dirty + open_loop: false) | Magas | **Javítva** |
 | [ERR-023](#err-023) | Folyamatos overrun 100Hz-en — WiFi latencia, nem szoftver hiba | Közepes | **Megoldva** (Ethernet-en 100Hz OK) |
+| [ERR-024](#err-024) | SEGFAULT: RCLCPP_WARN_THROTTLE temporális Clock shared_ptr lifetime | Kritikus | **Javítva** |
+
+---
+
+## ERR-024
+
+### SEGFAULT: RCLCPP_WARN_THROTTLE temporális Clock shared_ptr lifetime issue
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus |
+| **Állapot** | **Javítva** |
+| **Felfedezés** | 2026-03-10 (session 23h) |
+| **Javítás** | 2026-03-10 (session 23h) |
+
+#### Tünet
+
+A `roboclaw` konténer váratlanul crashelt (Segmentation fault). A node nem reconnectelt — a konténert kézzel kellett újraindítani. A logban SEGFAULT jelent meg. Korábban TCP reconnect hibának tűnt, de a valódi ok a node crash volt.
+
+#### Root cause
+
+A `roboclaw_hardware.cpp` 455–457. sorában:
+
+```cpp
+// HIBÁS — segfault:
+RCLCPP_WARN_THROTTLE(rclcpp::get_logger("RoboClawHardware"),
+  *rclcpp::Clock::make_shared(), 2000,
+  "Motor command failed -- check connection");
+```
+
+A `rclcpp::Clock::make_shared()` egy **temporális shared_ptr-t** hoz létre, ami a `RCLCPP_WARN_THROTTLE` makró kifejtése közben referenciát (`*`) kap. A makró belső `last_time` változója az első híváskor elmenti az `rclcpp::Clock&` referenciát, de a temporális objektum a kifejezés végén megsemmisül. A következő híváskor a tárolt referencia **dangling pointer** → **segfault**.
+
+Ez nem minden híváskor történt meg — csak ha a `!ok` ág lefutott (motor command fail), ami jellemzően TCP reconnect közben fordult elő. Ezért tűnt úgy, mintha a reconnect logika lenne hibás.
+
+#### Javítás
+
+```cpp
+if (!ok) {
+  static rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+  RCLCPP_WARN_THROTTLE(rclcpp::get_logger("RoboClawHardware"),
+    steady_clock, 2000,
+    "Motor command failed -- check connection");
+}
+```
+
+A `static rclcpp::Clock` a függvény első hívásakor jön létre és a process végéig él — nincs dangling reference.
+
+#### Érintett fájl
+
+| Fájl | Sor | Megjegyzés |
+|------|-----|-----------|
+| `host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp` | 454–459 | `execute_velocity_command()` error path |
+
+#### Tanulság
+
+Az `RCLCPP_*_THROTTLE` makrók belsőleg referenciát tárolnak a Clock objektumra. **Soha ne adj nekik temporális objektumot** (`*make_shared()`, `Clock{}`). Használj `static` lokális változót vagy class member-t.
 
 ---
 
