@@ -15,7 +15,7 @@ manifest:
 
     - name: micro_ros_zephyr_module
       remote: micro-ros
-      revision: humble
+      revision: jazzy
       path: modules/lib/micro_ros_zephyr_module
 
   self:

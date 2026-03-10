@@ -4,6 +4,44 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23g) — RC responsiveness: gyorsulási limitek + duty_max_rad_s paraméterezés
+
+### Probléma
+
+RC irányítás alatt a motor remegett és nagyon lassan gyorsult. Két fő ok:
+1. `diff_drive_controller` gyorsulási limit 2.0 m/s² volt — RC-hez túl konzervatív
+2. `rad_per_sec_to_duty()` hardcoded `max_rad_s = 10.0`-t használt, a robot max 22.5 rad/s — a teljes karstartomány 44%-a ki volt használva
+
+### Változások
+
+**`diff_drive_controllers.yaml`:**
+- `linear.x.max_acceleration`: 2.0 → **6.0** m/s²
+- `angular.z.max_acceleration`: 3.0 → **6.0** rad/s²
+- Nav2 velocity smoother majd felülírja ha kell
+
+**`roboclaw_diff_drive.urdf.xacro`:**
+- Új XACRO arg: `duty_max_rad_s` (default: 22.5 — a robot max kerékszögsebessége)
+- URDF `<param name="duty_max_rad_s">` átadva a hardware interface-nek
+
+**`roboclaw_hardware.hpp` + `roboclaw_hardware.cpp`:**
+- Új member: `duty_max_rad_s_` (default 22.5)
+- `extract_motion_parameters()` beolvassa a XACRO paramétert
+- `write()` → `rad_per_sec_to_duty(rad_s, duty_max_rad_s_)` — a teljes PWM tartomány kihasználva
+- Startup log: `Motion: strategy=... accel=... duty_max_rad_s=... buffer=...`
+
+### Eredmény
+
+- Teljes karstartomány (0–100% PWM) elérhető RC-vel
+- Gyors reakció: 6.0 m/s² gyorsulás
+- Host build OK (2 package, 0 error)
+
+### Nyitott pontok
+
+- [ ] Pico firmware újrafordítás (EMA filter + helyes csatornák) — user manuálisan
+- [ ] Tesztelés: RC válasz gyorsaság, teljes sebesség elérés
+
+---
+
 ## 2026-03-10 (23f) — Legacy Python driver eltávolítása, Makefile/compose tisztítás
 
 ### Eltávolított legacy komponensek

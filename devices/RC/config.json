@@ -16,8 +16,8 @@
   },
 
   "channels": {
-    "rc_ch1": { "enabled": true, "topic": "motor_left" },
-    "rc_ch2": { "enabled": true, "topic": "motor_right" },
+    "rc_ch1": { "enabled": true, "topic": "motor_right" },
+    "rc_ch2": { "enabled": true, "topic": "motor_left" },
     "rc_ch3": { "enabled": true, "topic": "rc_ch3" },
     "rc_ch4": { "enabled": true, "topic": "rc_ch4" },
     "rc_ch5": { "enabled": true, "topic": "rc_mode" },
@@ -35,6 +35,7 @@
     "ch4_min": 1000, "ch4_center": 1500, "ch4_max": 2000,
     "ch5_min": 1000, "ch5_center": 1500, "ch5_max": 2000,
     "ch6_min": 1000, "ch6_center": 1500, "ch6_max": 2000,
-    "deadzone": 20
+    "deadzone": 20,
+    "ema_alpha": 0.3
   }
 }

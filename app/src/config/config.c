@@ -68,6 +68,7 @@ void config_reset_defaults(void)
 		g_config.rc_trim.ch[i].max    = 2000;
 	}
 	g_config.rc_trim.deadzone = 20;
+	g_config.rc_trim.ema_alpha = 1.0f;
 }
 
 /* ------------------------------------------------------------------ */
@@ -173,6 +174,31 @@ static int json_get_int(const char *json, const char *key, int32_t *out)
 	return -EINVAL;
 }
 
+static int json_get_float(const char *json, const char *key, float *out)
+{
+	char search[JSON_SEARCH_BUF];
+
+	if (strlen(key) >= CFG_STR_LEN) {
+		return -EINVAL;
+	}
+	snprintf(search, sizeof(search), "\"%s\"", key);
+
+	const char *pos = strstr(json, search);
+	if (!pos) {
+		return -ENOENT;
+	}
+	pos += strlen(search);
+	while (*pos == ' ' || *pos == ':' || *pos == '\t' ||
+	       *pos == '\r' || *pos == '\n') {
+		pos++;
+	}
+	if (*pos == '-' || *pos == '.' || (*pos >= '0' && *pos <= '9')) {
+		*out = strtof(pos, NULL);
+		return 0;
+	}
+	return -EINVAL;
+}
+
 /* ------------------------------------------------------------------ */
 /*  JSON generator                                                     */
 /* ------------------------------------------------------------------ */
@@ -240,8 +266,9 @@ static void config_to_json(char *buf, size_t buf_len)
 			i + 1, t->min, i + 1, t->center, i + 1, t->max);
 	}
 	pos += snprintf(buf + pos, buf_len - pos,
-		",\n    \"deadzone\": %u\n  }",
-		g_config.rc_trim.deadzone);
+		",\n    \"deadzone\": %u,\n    \"ema_alpha\": %.2f\n  }",
+		g_config.rc_trim.deadzone,
+		(double)g_config.rc_trim.ema_alpha);
 
 	snprintf(buf + pos, buf_len - pos, "\n}\n");
 }
@@ -414,6 +441,11 @@ static void parse_rc_trim(const char *json)
 	if (json_get_int(scope_buf, "deadzone", &ival) == 0) {
 		g_config.rc_trim.deadzone = (uint16_t)ival;
 	}
+
+	float fval;
+	if (json_get_float(scope_buf, "ema_alpha", &fval) == 0) {
+		g_config.rc_trim.ema_alpha = fval;
+	}
 }
 
 /* ------------------------------------------------------------------ */
@@ -581,6 +613,8 @@ int config_set(const char *key, const char *value)
 
 		if (strcmp(field, "deadzone") == 0) {
 			g_config.rc_trim.deadzone = (uint16_t)ival;
+		} else if (strcmp(field, "ema_alpha") == 0) {
+			g_config.rc_trim.ema_alpha = strtof(value, NULL);
 		} else if (strlen(field) >= 6 && field[0] == 'c' && field[1] == 'h' &&
 			   field[2] >= '1' && field[2] <= '6' && field[3] == '_') {
 			int ch_idx = field[2] - '1';
@@ -644,6 +678,7 @@ void config_print(void)
 		LOG_INF("  ch%d: %u/%u/%u", i + 1, t->min, t->center, t->max);
 	}
 	LOG_INF("  deadzone: %u", g_config.rc_trim.deadzone);
+	LOG_INF("  ema_alpha: %.2f", (double)g_config.rc_trim.ema_alpha);
 }
 
 /* ------------------------------------------------------------------ */

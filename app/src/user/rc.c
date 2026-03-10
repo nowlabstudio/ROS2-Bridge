@@ -28,6 +28,13 @@ static int rc_init(void)
 }
 
 /* ------------------------------------------------------------------ */
+/*  EMA filter state (per channel)                                     */
+/* ------------------------------------------------------------------ */
+
+static float ema_state[RC_CH_COUNT];
+static bool  ema_initialized[RC_CH_COUNT];
+
+/* ------------------------------------------------------------------ */
 /*  Normalize raw PWM (us) to -1.0 .. +1.0 using trim from config    */
 /* ------------------------------------------------------------------ */
 
@@ -40,7 +47,7 @@ static float rc_normalize(int hw_idx)
 	int16_t centered = (int16_t)raw - (int16_t)t->center;
 
 	if (abs(centered) < (int16_t)dz) {
-		return 0.0f;
+		centered = 0;
 	}
 
 	float norm;
@@ -49,10 +56,12 @@ static float rc_normalize(int hw_idx)
 		uint16_t range = t->max - t->center;
 
 		norm = (range > 0) ? (float)centered / (float)range : 0.0f;
-	} else {
+	} else if (centered < 0) {
 		uint16_t range = t->center - t->min;
 
 		norm = (range > 0) ? (float)centered / (float)range : 0.0f;
+	} else {
+		norm = 0.0f;
 	}
 
 	if (norm > 1.0f) {
@@ -60,7 +69,21 @@ static float rc_normalize(int hw_idx)
 	} else if (norm < -1.0f) {
 		norm = -1.0f;
 	}
-	return norm;
+
+	float alpha = g_config.rc_trim.ema_alpha;
+
+	if (alpha >= 1.0f) {
+		return norm;
+	}
+
+	if (!ema_initialized[hw_idx]) {
+		ema_state[hw_idx] = norm;
+		ema_initialized[hw_idx] = true;
+		return norm;
+	}
+
+	ema_state[hw_idx] = alpha * norm + (1.0f - alpha) * ema_state[hw_idx];
+	return ema_state[hw_idx];
 }
 
 /* ------------------------------------------------------------------ */

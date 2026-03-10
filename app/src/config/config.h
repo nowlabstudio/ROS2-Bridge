@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
 	cfg_rc_trim_ch_t ch[RC_CH_COUNT];
 	uint16_t         deadzone;
+	float            ema_alpha;
 } cfg_rc_trim_t;
 
 typedef struct {

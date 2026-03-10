@@ -257,14 +257,26 @@ angular.z = (ch2 - ch1) / 2.0 * max_angular_speed     # fordulás
 | Paraméter | Alapértelmezett | Leírás |
 |-----------|----------------|--------|
 | `mixing_mode` | `tank` | `tank` vagy `arcade` (jövőben váltható) |
-| `left_topic` | `/robot/rc_ch2` | Bal motor csatorna (CH2) |
-| `right_topic` | `/robot/rc_ch1` | Jobb motor csatorna (CH1) |
-| `mode_switch_topic` | `/robot/rc_ch5` | ROS/RC mode switch (CH5) |
+| `left_topic` | `/robot/motor_left` | Bal motor csatorna (CH2 a Pico config-ban) |
+| `right_topic` | `/robot/motor_right` | Jobb motor csatorna (CH1 a Pico config-ban) |
+| `mode_switch_topic` | `/robot/rc_mode` | ROS/RC mode switch (CH5 a Pico config-ban) |
 | `max_linear_speed` | 4.5 m/s | Robot max sebesség (~16 km/h) |
 | `max_angular_speed` | 3.0 rad/s | Robot max fordulási sebesség |
 | `deadzone` | 0.05 | 5% — joystick/trim holtjáték |
 | `publish_rate` | 20.0 Hz | cmd_vel publikálási frekvencia |
 | `estop_topic` | `/robot/estop` | E-Stop gating: aktív → zero output |
+
+### Fontos controller / driver paraméterek
+
+| Fájl | Paraméter | Érték | Leírás |
+|------|-----------|-------|--------|
+| `diff_drive_controllers.yaml` | `linear.x.max_acceleration` | 6.0 m/s² | Gyors RC reakció; Nav2 velocity smoother felülírhatja |
+| `diff_drive_controllers.yaml` | `angular.z.max_acceleration` | 6.0 rad/s² | Gyors fordulás RC-vel |
+| `diff_drive_controllers.yaml` | `cmd_vel_timeout` | 0.5 s | Motor stop ha nem jön parancs |
+| `diff_drive_controllers.yaml` | `open_loop` | true | Amíg enkóderek nincsenek bekötve |
+| `roboclaw_diff_drive.urdf.xacro` | `motion_strategy` | duty | Open-loop PWM (nem kell enkóder) |
+| `roboclaw_diff_drive.urdf.xacro` | `duty_max_rad_s` | 22.5 | Max kerékszögsebesség → 100% PWM |
+| `roboclaw_diff_drive.urdf.xacro` | `encoder_stuck_limit` | 0 | Letiltva (nincs enkóder) |
 
 ### Safety rétegek (5 szint)
 

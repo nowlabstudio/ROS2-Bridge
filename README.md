@@ -1,7 +1,7 @@
 # W6100 EVB Pico — Zephyr + micro-ROS Universal Bridge
 
 > **Developer Reference Documentation**
-> Last updated: 2026-03-08 | Version: v2.1 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
+> Last updated: 2026-03-10 | Version: v2.2 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
 
 ---
 
@@ -319,6 +319,7 @@ bridge config set rc_trim.ch1_min     1000
 bridge config set rc_trim.ch1_center  1500
 bridge config set rc_trim.ch1_max     2000
 bridge config set rc_trim.deadzone    20
+bridge config set rc_trim.ema_alpha   0.3
 ```
 
 > **Important:** `set` only changes RAM. Use `save` to persist, then `reboot` to activate.
@@ -368,8 +369,8 @@ bridge bootsel        # reboot into BOOTSEL mode for firmware flashing
     "test_counter":  false,
     "test_heartbeat": false,
     "test_echo":     false,
-    "rc_ch1": { "enabled": true, "topic": "motor_left" },
-    "rc_ch2": { "enabled": true, "topic": "motor_right" },
+    "rc_ch1": { "enabled": true, "topic": "motor_right" },
+    "rc_ch2": { "enabled": true, "topic": "motor_left" },
     "rc_ch5": { "enabled": true, "topic": "rc_mode" },
     "rc_ch6": { "enabled": true, "topic": "winch" }
   },
@@ -381,7 +382,8 @@ bridge bootsel        # reboot into BOOTSEL mode for firmware flashing
     "ch4_min": 1000, "ch4_center": 1500, "ch4_max": 2000,
     "ch5_min": 1000, "ch5_center": 1500, "ch5_max": 2000,
     "ch6_min": 1000, "ch6_center": 1500, "ch6_max": 2000,
-    "deadzone": 20
+    "deadzone": 20,
+    "ema_alpha": 0.3
   }
 }
 ```
@@ -421,12 +423,13 @@ Channels not listed in `config.json` are **enabled by default** (backward compat
 
 **`rc_trim`** — RC receiver calibration (used only by the `rc` board)
 
-| Field | Description |
-|-------|-------------|
-| `chN_min` | Raw PWM value (µs) at minimum stick position (default: 1000) |
-| `chN_center` | Raw PWM value (µs) at center/neutral (default: 1500) |
-| `chN_max` | Raw PWM value (µs) at maximum stick position (default: 2000) |
-| `deadzone` | ±deadzone (µs) around center treated as 0.0 (default: 20) |
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `chN_min` | int | 1000 | Raw PWM value (µs) at minimum stick position |
+| `chN_center` | int | 1500 | Raw PWM value (µs) at center/neutral |
+| `chN_max` | int | 2000 | Raw PWM value (µs) at maximum stick position |
+| `deadzone` | int | 20 | ±deadzone (µs) around center treated as 0.0 |
+| `ema_alpha` | float | 1.0 | EMA smoothing factor (0.0–1.0). Lower = smoother. 1.0 = no filtering. Recommended: 0.3 |
 
 ### Three ways to modify config
 
@@ -665,19 +668,22 @@ Located in `app/src/user/rc.c`. Uses `app/src/drivers/drv_pwm_in.c` (pulse-width
 - `max` → `+1.0`
 - `min` → `−1.0`
 - ±`deadzone` µs around center → `0.0`
+- Optional EMA smoothing: `filtered = α × sample + (1−α) × prev`. Set `ema_alpha` in `rc_trim` (0.3 recommended, 1.0 = off).
 
 **Failsafe:** No firmware-level timeout. The RC transmitter's own failsafe output is trusted — the last received value is held.
 
 **Typical `rc` board config:**
 ```json
 "channels": {
-  "rc_ch1": { "enabled": true, "topic": "motor_left" },
-  "rc_ch2": { "enabled": true, "topic": "motor_right" },
+  "rc_ch1": { "enabled": true, "topic": "motor_right" },
+  "rc_ch2": { "enabled": true, "topic": "motor_left" },
   "rc_ch5": { "enabled": true, "topic": "rc_mode" },
   "rc_ch6": { "enabled": true, "topic": "winch" },
   "estop": false
 }
 ```
+
+> **Channel assignment:** CH1 = steering (left-right), CH2 = throttle (forward-backward). The RC transmitter applies tank mixing, so CH1 output = right motor, CH2 output = left motor.
 
 ---
 
@@ -824,8 +830,8 @@ Open Connection → **Foxglove WebSocket** → `ws://localhost:8765`
 | Topic | Type | Source |
 |-------|------|--------|
 | `/robot/estop` | `std_msgs/Bool` | E-Stop board |
-| `/robot/motor_left` | `std_msgs/Float32` | RC CH1 |
-| `/robot/motor_right` | `std_msgs/Float32` | RC CH2 |
+| `/robot/motor_right` | `std_msgs/Float32` | RC CH1 (right motor) |
+| `/robot/motor_left` | `std_msgs/Float32` | RC CH2 (left motor) |
 | `/robot/rc_mode` | `std_msgs/Float32` | RC CH5 |
 | `/robot/winch` | `std_msgs/Float32` | RC CH6 |
 | `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | All boards |
@@ -912,6 +918,7 @@ What it does:
 | Config-driven topic name override | ✅ Done | v2.1 |
 | RC PWM input driver (GP2–GP7, 6ch) | ✅ Done | v2.1 |
 | RC trim calibration from config.json | ✅ Done | v2.1 |
+| RC EMA smoothing filter (configurable) | ✅ Done | v2.2 |
 | Multi-board tested (3 boards) | ✅ Done | v2.1 |
 | Foxglove Studio visualization | ✅ Done | v2.1 |
 | Serial (UART) driver | 🔄 Planned | — |
