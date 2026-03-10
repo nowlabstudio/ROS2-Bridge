@@ -1,0 +1,21 @@
+[0.861s] Invoking command in '/host_ws/build/roboclaw_tcp_adapter': PYTHONPATH=/host_ws/build/roboclaw_tcp_adapter/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /host_ws/build/roboclaw_tcp_adapter/build --no-deps symlink_data
+[1.227s] running develop
+[1.406s] running egg_info
+[1.406s] creating roboclaw_tcp_adapter.egg-info
+[1.423s] writing roboclaw_tcp_adapter.egg-info/PKG-INFO
+[1.424s] writing dependency_links to roboclaw_tcp_adapter.egg-info/dependency_links.txt
+[1.424s] writing entry points to roboclaw_tcp_adapter.egg-info/entry_points.txt
+[1.424s] writing requirements to roboclaw_tcp_adapter.egg-info/requires.txt
+[1.424s] writing top-level names to roboclaw_tcp_adapter.egg-info/top_level.txt
+[1.424s] writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+[1.459s] reading manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+[1.460s] writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+[1.480s] running build_ext
+[1.480s] Creating /host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages/roboclaw-tcp-adapter.egg-link (link to .)
+[1.482s] Installing rc_teleop_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+[1.482s] Installing roboclaw_tcp_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+[1.482s] Installing safety_bridge_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+[1.483s] 
+[1.483s] Installed /host_ws/build/roboclaw_tcp_adapter
+[1.483s] running symlink_data
+[1.532s] Invoked command in '/host_ws/build/roboclaw_tcp_adapter' returned '0': PYTHONPATH=/host_ws/build/roboclaw_tcp_adapter/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /host_ws/build/roboclaw_tcp_adapter/build --no-deps symlink_data

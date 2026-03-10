@@ -1,0 +1,1 @@
+/host_ws/build/basicmicro_ros2/rosidl_generator_cpp/basicmicro_ros2/msg/detail/position_point__type_support.hpp

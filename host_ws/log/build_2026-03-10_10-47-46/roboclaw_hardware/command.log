@@ -1,0 +1,4 @@
+Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /host_ws/src/roboclaw_hardware -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/host_ws/install/roboclaw_hardware
+Invoked command in '/host_ws/build/roboclaw_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /host_ws/src/roboclaw_hardware -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/host_ws/install/roboclaw_hardware
+Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8
+Invoked command in '/host_ws/build/roboclaw_hardware' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8

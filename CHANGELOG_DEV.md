@@ -21,8 +21,8 @@ strukturálisak — a ros2_control determinisztikus 100Hz loopja megoldja.
 
 ### Funkciók (21 + 2 stub)
 - **Lifecycle:** on_init (URDF param extraction), on_configure (TCP connect, controller detect), on_activate (state init, SetTimeout), on_deactivate (motor stop)
-- **read/write:** GetEncoders + GetSpeeds @ 100Hz, 4 motion stratégia (duty, duty_accel, speed, speed_accel)
-- **Diagnostics:** comprehensive (voltage, current, temp, errors, buffers), health monitor, error limits
+- **read/write:** GetEncoders @ 100Hz + velocity delta-ból, write-on-change (keepalive-al), 4 motion stratégia (duty, duty_accel, speed, speed_accel)
+- **Diagnostics:** rotating 1Hz (4 slot × 25 ciklus: volts, temps, error, currents)
 - **Position:** absolute position, distance command, servo errors
 - **Stubs:** configure_servo_parameters, perform_auto_homing
 
@@ -40,13 +40,75 @@ strukturálisak — a ros2_control determinisztikus 100Hz loopja megoldja.
 - `test_unit_converter.cpp` — matek, overflow, gear ratio
 - `test_protocol_crc.cpp` — CRC16 table vs reference, buffer interpretation
 
+### Teljesítmény-optimalizálás (session 23b — HW teszt)
+
+TCP-over-serial latency (~7ms/parancs) miatt három optimalizálás:
+
+1. **GetSpeeds eliminálás** — velocity encoder pozíció-deltából (saves ~8ms/ciklus)
+2. **Write-on-change** — motor parancs csak ha cmd_vel változott (Write: 6-9ms → 4-6µs)
+3. **Rotating diagnostics** — 4 slot × 25 ciklus = 1Hz teljes frissítés (burst helyett)
+
+Eredmény 100Hz-en: normál ciklusok 85%-a belefér 10ms-be (1 TCP hívás ~7ms).
+
+### Hardware teszt eredmények
+
+- **Build**: tiszta, 0 hiba, 20/20 unit teszt zöld
+- **TCP connect**: 192.168.68.60:8234 — `USB Roboclaw 2x60A v4.4.3` azonosítva
+- **Motor teszt**: 0.05 m/s `cmd_vel` → **sima, rángatásmentes forgás** ✅
+- **Encoder read**: mindkét csatorna él, 100Hz-en folyamatos adat ✅
+- **Overrun**: 99% ciklus belefér 10ms-be, alkalmi 10-14ms TCP jitter overrun
+- **docker-compose YAML fix**: `>` block scalar extra indent → csomagneveket parancsként futtatott
+
+### Javított fájlok (docker-compose, launch)
+- `docker-compose.yml` — roboclaw-hw command YAML formázás javítás
+- `launch/roboclaw.launch.py` — `ParameterValue(value, value_type=str)` Jazzy fix
+
 ### Nyitott pontok
-- [ ] `make host-build-roboclaw-hw` — első build, fordítási hibák javítása
-- [ ] Hardware teszt: TCP connect, ReadVersion, encoder read
-- [ ] Motor teszt: cmd_vel -> diff_drive_controller -> RoboClawHardware -> motor
-- [ ] Összehasonlítás: C++ driver vs standalone Python script simaság
 - [ ] GitHub remote beállítása az ROS2_RoboClaw repohoz
-- [ ] GPIO diagnostics state interfaces (URDF deklarációval)
+- [ ] Encoder rögzítése motortengelyre → odometria validálás → `open_loop: false` visszaváltás
+- [x] ~~GPIO diagnostics state interfaces (URDF deklarációval)~~ → kész (session 23c)
+- [x] ~~Makefile `robot-hw-motor-test` frissítés TwistStamped-re (Jazzy)~~ → kész
+- [ ] Overrun csökkentés vizsgálata (diagnosztika intervallum / 50Hz)
+
+---
+
+## 2026-03-10 (23c) — Protokoll bugfixek, motor stop safety, GPIO diagnostics
+
+### Kritikus bugfixek
+
+1. **ERR-020: SetTimeout protokoll korrupció** — `send_long()` (4 byte) → `send_byte()` (1 byte).
+   A RoboClaw CMD 14 egyetlen byte-ot vár 10ms egységben. A 3 extra byte elrontotta a
+   protokoll szinkronizációt → ERR LED. Javítás: `send_byte(timeout_ms / 10)`.
+
+2. **ERR-021: Motor nem állt le cmd_vel timeout után** — `SpeedAccelM1M2(0,0)` a RoboClaw
+   belső PID-jét használja, ami az encoder-ből ellenőriz. Lebegő encoder → PID végtelen
+   korrekciós loop. Javítás: velocity=0 esetén mindig `DutyM1M2(0,0)` (PWM stop, PID bypass).
+
+3. **ERR-022: Motor induláskor forgott** — `cmd_vel_dirty_ = true` + `open_loop: false` +
+   zajos encoder → diff_drive_controller korrekciós parancsot küldött. Javítás:
+   - `on_activate`: explicit `DutyM1M2(0,0)` motor stop
+   - `cmd_vel_dirty_ = false` alapértelmezés
+   - `open_loop: true` amíg encoder nincs motorra rögzítve
+
+### GPIO diagnostics state interfaces
+
+- URDF: `<gpio name="diagnostics">` blokk 5 state interface-szel
+- `export_state_interfaces()`: GPIO regisztráció (`main_battery_v`, `temperature_c`, `error_status`, `current_left_a`, `current_right_a`)
+- Dedikált `diagnostics_broadcaster` (joint_state_broadcaster instance) a GPIO értékek publikáláshoz
+- Launch file: spawner chain (joint_state → diagnostics → diff_drive)
+
+### Segfault fix
+
+A `RCLCPP_INFO_THROTTLE` + `rclcpp::Clock::make_shared()` temporális objektum élettartam
+probléma → Segmentation fault. Eltávolítva, mert a GPIO diagnostics kiváltja.
+
+### Verifikált működés
+
+- ✅ Motor áll induláskor (DutyM1M2(0,0) on_activate)
+- ✅ Motor reagál cmd_vel-re (SpeedAccelM1M2)
+- ✅ Motor megáll cmd_vel timeout után (DutyM1M2(0,0) PID bypass)
+- ✅ GPIO state interfaces regisztrálva (`ros2 control list_hardware_interfaces`)
+- ✅ `diagnostics_broadcaster` aktív
 
 ---
 

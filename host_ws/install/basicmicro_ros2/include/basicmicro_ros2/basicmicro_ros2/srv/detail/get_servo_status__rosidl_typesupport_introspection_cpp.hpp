@@ -1,0 +1,1 @@
+/host_ws/build/basicmicro_ros2/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_introspection_cpp.hpp

@@ -1,0 +1,226 @@
+[0.000000] (-) TimerEvent: {}
+[0.000509] (-) JobUnselected: {'identifier': 'basicmicro'}
+[0.000570] (-) JobUnselected: {'identifier': 'basicmicro_ros2'}
+[0.000627] (-) JobUnselected: {'identifier': 'roboclaw_tcp_adapter'}
+[0.000665] (roboclaw_hardware) JobQueued: {'identifier': 'roboclaw_hardware', 'dependencies': OrderedDict()}
+[0.000700] (roboclaw_hardware) JobStarted: {'identifier': 'roboclaw_hardware'}
+[0.013725] (roboclaw_hardware) JobProgress: {'identifier': 'roboclaw_hardware', 'progress': 'cmake'}
+[0.014329] (roboclaw_hardware) Command: {'cmd': ['/usr/bin/cmake', '/host_ws/src/roboclaw_hardware', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=/host_ws/install/roboclaw_hardware'], 'cwd': '/host_ws/build/roboclaw_hardware', 'env': OrderedDict({'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/share/gz', 'HOSTNAME': '693b46655666', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_hardware', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy'}), 'shell': False}
+[0.099746] (-) TimerEvent: {}
+[0.197137] (roboclaw_hardware) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 13.3.0\n'}
+[0.199853] (-) TimerEvent: {}
+[0.222014] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.299998] (-) TimerEvent: {}
+[0.354453] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.366689] (roboclaw_hardware) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.367403] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.368333] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.376248] (roboclaw_hardware) StdoutLine: {'line': b'-- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)\n'}
+[0.400131] (-) TimerEvent: {}
+[0.500282] (-) TimerEvent: {}
+[0.522255] (roboclaw_hardware) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[0.600404] (-) TimerEvent: {}
+[0.668679] (roboclaw_hardware) StdoutLine: {'line': b'-- Found hardware_interface: 4.42.2 (/opt/ros/jazzy/share/hardware_interface/cmake)\n'}
+[0.700481] (-) TimerEvent: {}
+[0.732563] (roboclaw_hardware) StdoutLine: {'line': b'-- Found rosidl_generator_c: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)\n'}
+[0.756696] (roboclaw_hardware) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)\n'}
+[0.782333] (roboclaw_hardware) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.800586] (-) TimerEvent: {}
+[0.809236] (roboclaw_hardware) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.900699] (-) TimerEvent: {}
+[1.000878] (-) TimerEvent: {}
+[1.101067] (-) TimerEvent: {}
+[1.135389] (roboclaw_hardware) StdoutLine: {'line': b'-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2\n'}
+[1.199650] (roboclaw_hardware) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 7.3.3 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)\n'}
+[1.201099] (-) TimerEvent: {}
+[1.204227] (roboclaw_hardware) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 8.4.3 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)\n'}
+[1.242142] (roboclaw_hardware) StdoutLine: {'line': b'-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2\n'}
+[1.301161] (-) TimerEvent: {}
+[1.304042] (roboclaw_hardware) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  \n'}
+[1.309723] (roboclaw_hardware) StdoutLine: {'line': b'-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2\n'}
+[1.322930] (roboclaw_hardware) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") \n'}
+[1.327689] (roboclaw_hardware) StdoutLine: {'line': b'-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2\n'}
+[1.337981] (roboclaw_hardware) StdoutLine: {'line': b'-- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2\n'}
+[1.347752] (roboclaw_hardware) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[1.401252] (-) TimerEvent: {}
+[1.501477] (-) TimerEvent: {}
+[1.601675] (-) TimerEvent: {}
+[1.701883] (-) TimerEvent: {}
+[1.738218] (roboclaw_hardware) StdoutLine: {'line': b'-- Found ament_cmake_gtest: 2.5.5 (/opt/ros/jazzy/share/ament_cmake_gtest/cmake)\n'}
+[1.743198] (roboclaw_hardware) StdoutLine: {'line': b"-- Found gtest sources under '/opt/ros/jazzy/src/gtest_vendor': C++ tests using 'Google Test' will be built\n"}
+[1.801989] (-) TimerEvent: {}
+[1.844500] (roboclaw_hardware) StdoutLine: {'line': b'-- The C compiler identification is GNU 13.3.0\n'}
+[1.864450] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[1.902138] (-) TimerEvent: {}
+[1.982555] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[1.998059] (roboclaw_hardware) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[1.998640] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[1.999557] (roboclaw_hardware) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[2.002216] (-) TimerEvent: {}
+[2.003643] (roboclaw_hardware) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[2.102320] (-) TimerEvent: {}
+[2.113601] (roboclaw_hardware) StdoutLine: {'line': b'-- Configuring done (2.1s)\n'}
+[2.199794] (roboclaw_hardware) StdoutLine: {'line': b'-- Generating done (0.1s)\n'}
+[2.202435] (-) TimerEvent: {}
+[2.211871] (roboclaw_hardware) StdoutLine: {'line': b'-- Build files have been written to: /host_ws/build/roboclaw_hardware\n'}
+[2.224142] (roboclaw_hardware) CommandEnded: {'returncode': 0}
+[2.224821] (roboclaw_hardware) JobProgress: {'identifier': 'roboclaw_hardware', 'progress': 'build'}
+[2.225657] (roboclaw_hardware) Command: {'cmd': ['/usr/bin/cmake', '--build', '/host_ws/build/roboclaw_hardware', '--', '-j8', '-l8'], 'cwd': '/host_ws/build/roboclaw_hardware', 'env': OrderedDict({'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/share/gz', 'HOSTNAME': '693b46655666', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_hardware', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy'}), 'shell': False}
+[2.296215] (roboclaw_hardware) StdoutLine: {'line': b'[  7%] Building CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o\n'}
+[2.296781] (roboclaw_hardware) StdoutLine: {'line': b'[ 15%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_protocol.cpp.o\n'}
+[2.298961] (roboclaw_hardware) StdoutLine: {'line': b'[ 23%] Building CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o\n'}
+[2.299256] (roboclaw_hardware) StdoutLine: {'line': b'[ 30%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o\n'}
+[2.299899] (roboclaw_hardware) StdoutLine: {'line': b'[ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_tcp.cpp.o\n'}
+[2.300429] (roboclaw_hardware) StdoutLine: {'line': b'[ 46%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o\n'}
+[2.302548] (-) TimerEvent: {}
+[2.402708] (-) TimerEvent: {}
+[2.502920] (-) TimerEvent: {}
+[2.603138] (-) TimerEvent: {}
+[2.703739] (-) TimerEvent: {}
+[2.803927] (-) TimerEvent: {}
+[2.904109] (-) TimerEvent: {}
+[3.004316] (-) TimerEvent: {}
+[3.014261] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/unit_converter.cpp: In member function \xe2\x80\x98int16_t roboclaw_hardware::UnitConverter::rad_per_sec_to_duty(double, double) const\xe2\x80\x99:\n'}
+[3.014567] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/unit_converter.cpp:72:16: error: \xe2\x80\x98clamp\xe2\x80\x99 is not a member of \xe2\x80\x98std\xe2\x80\x99\n'}
+[3.014760] (roboclaw_hardware) StderrLine: {'line': b'   72 |   ratio = std::clamp(ratio, -1.0, 1.0);\n'}
+[3.014930] (roboclaw_hardware) StderrLine: {'line': b'      |                ^~~~~\n'}
+[3.104522] (-) TimerEvent: {}
+[3.135350] (roboclaw_hardware) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/roboclaw_hardware.dir/build.make:76: CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o] Error 1\n'}
+[3.135548] (roboclaw_hardware) StderrLine: {'line': b'gmake[2]: *** Waiting for unfinished jobs....\n'}
+[3.204648] (-) TimerEvent: {}
+[3.304857] (-) TimerEvent: {}
+[3.405067] (-) TimerEvent: {}
+[3.505244] (-) TimerEvent: {}
+[3.605423] (-) TimerEvent: {}
+[3.673550] (roboclaw_hardware) StdoutLine: {'line': b'[ 53%] Linking CXX static library libgtest_main.a\n'}
+[3.705522] (-) TimerEvent: {}
+[3.716613] (roboclaw_hardware) StdoutLine: {'line': b'[ 53%] Built target gtest_main\n'}
+[3.805663] (-) TimerEvent: {}
+[3.905875] (-) TimerEvent: {}
+[4.006087] (-) TimerEvent: {}
+[4.106279] (-) TimerEvent: {}
+[4.206499] (-) TimerEvent: {}
+[4.306718] (-) TimerEvent: {}
+[4.406931] (-) TimerEvent: {}
+[4.507095] (-) TimerEvent: {}
+[4.607274] (-) TimerEvent: {}
+[4.707496] (-) TimerEvent: {}
+[4.807717] (-) TimerEvent: {}
+[4.907890] (-) TimerEvent: {}
+[5.008068] (-) TimerEvent: {}
+[5.108231] (-) TimerEvent: {}
+[5.208420] (-) TimerEvent: {}
+[5.308677] (-) TimerEvent: {}
+[5.408907] (-) TimerEvent: {}
+[5.509127] (-) TimerEvent: {}
+[5.609299] (-) TimerEvent: {}
+[5.709485] (-) TimerEvent: {}
+[5.812204] (-) TimerEvent: {}
+[5.912421] (-) TimerEvent: {}
+[6.012647] (-) TimerEvent: {}
+[6.112861] (-) TimerEvent: {}
+[6.198682] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function \xe2\x80\x98virtual hardware_interface::CallbackReturn roboclaw_hardware::RoboClawHardware::on_init(const hardware_interface::HardwareInfo&)\xe2\x80\x99:\n'}
+[6.198889] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:133:51: warning: \xe2\x80\x98virtual rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn hardware_interface::HardwareComponentInterface::on_init(const hardware_interface::HardwareInfo&)\xe2\x80\x99 is deprecated: Use on_init(const HardwareComponentInterfaceParams & params) instead. [-Wdeprecated-declarations]\n'}
+[6.198992] (roboclaw_hardware) StderrLine: {'line': b'  133 |   if (hardware_interface::SystemInterface::on_init(info) !=\n'}
+[6.199102] (roboclaw_hardware) StderrLine: {'line': b'      |       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~\n'}
+[6.199205] (roboclaw_hardware) StderrLine: {'line': b'In file included from /opt/ros/jazzy/include/hardware_interface/hardware_interface/system_interface.hpp:18,\n'}
+[6.199299] (roboclaw_hardware) StderrLine: {'line': b'                 from /host_ws/src/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware.hpp:9,\n'}
+[6.199397] (roboclaw_hardware) StderrLine: {'line': b'                 from /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:1:\n'}
+[6.199477] (roboclaw_hardware) StderrLine: {'line': b'/opt/ros/jazzy/include/hardware_interface/hardware_interface/hardware_component_interface.hpp:140:26: note: declared here\n'}
+[6.199557] (roboclaw_hardware) StderrLine: {'line': b'  140 |   virtual CallbackReturn on_init(const HardwareInfo & hardware_info);\n'}
+[6.199637] (roboclaw_hardware) StderrLine: {'line': b'      |                          ^~~~~~~\n'}
+[6.212990] (-) TimerEvent: {}
+[6.313140] (-) TimerEvent: {}
+[6.413334] (-) TimerEvent: {}
+[6.513542] (-) TimerEvent: {}
+[6.613751] (-) TimerEvent: {}
+[6.713965] (-) TimerEvent: {}
+[6.814131] (-) TimerEvent: {}
+[6.914296] (-) TimerEvent: {}
+[7.014468] (-) TimerEvent: {}
+[7.114688] (-) TimerEvent: {}
+[7.214904] (-) TimerEvent: {}
+[7.315083] (-) TimerEvent: {}
+[7.415255] (-) TimerEvent: {}
+[7.515446] (-) TimerEvent: {}
+[7.615651] (-) TimerEvent: {}
+[7.715862] (-) TimerEvent: {}
+[7.816085] (-) TimerEvent: {}
+[7.916265] (-) TimerEvent: {}
+[8.016500] (-) TimerEvent: {}
+[8.116720] (-) TimerEvent: {}
+[8.216910] (-) TimerEvent: {}
+[8.317122] (-) TimerEvent: {}
+[8.417331] (-) TimerEvent: {}
+[8.517536] (-) TimerEvent: {}
+[8.617743] (-) TimerEvent: {}
+[8.717946] (-) TimerEvent: {}
+[8.747553] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function \xe2\x80\x98void roboclaw_hardware::RoboClawHardware::initialize_state_interfaces()\xe2\x80\x99:\n'}
+[8.747764] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:470:58: warning: dangling pointer to \xe2\x80\x98enc\xe2\x80\x99 may be used [-Wdangling-pointer=]\n'}
+[8.747903] (roboclaw_hardware) StderrLine: {'line': b'  470 |     hw_state_pos_[0] = unit_converter_->counts_to_radians(enc.enc1);\n'}
+[8.748055] (roboclaw_hardware) StderrLine: {'line': b'      |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~\n'}
+[8.748207] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:468:8: note: \xe2\x80\x98enc\xe2\x80\x99 declared here\n'}
+[8.748347] (roboclaw_hardware) StderrLine: {'line': b'  468 |   auto enc = protocol_->GetEncoders(address_);\n'}
+[8.748492] (roboclaw_hardware) StderrLine: {'line': b'      |        ^~~\n'}
+[8.748619] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:58: warning: dangling pointer to \xe2\x80\x98enc\xe2\x80\x99 may be used [-Wdangling-pointer=]\n'}
+[8.748747] (roboclaw_hardware) StderrLine: {'line': b'  471 |     hw_state_pos_[1] = unit_converter_->counts_to_radians(enc.enc2);\n'}
+[8.748875] (roboclaw_hardware) StderrLine: {'line': b'      |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~\n'}
+[8.749001] (roboclaw_hardware) StderrLine: {'line': b'/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:468:8: note: \xe2\x80\x98enc\xe2\x80\x99 declared here\n'}
+[8.749179] (roboclaw_hardware) StderrLine: {'line': b'  468 |   auto enc = protocol_->GetEncoders(address_);\n'}
+[8.749308] (roboclaw_hardware) StderrLine: {'line': b'      |        ^~~\n'}
+[8.818081] (-) TimerEvent: {}
+[8.918269] (-) TimerEvent: {}
+[9.018495] (-) TimerEvent: {}
+[9.118717] (-) TimerEvent: {}
+[9.218936] (-) TimerEvent: {}
+[9.319127] (-) TimerEvent: {}
+[9.419367] (-) TimerEvent: {}
+[9.519590] (-) TimerEvent: {}
+[9.619815] (-) TimerEvent: {}
+[9.720071] (-) TimerEvent: {}
+[9.820272] (-) TimerEvent: {}
+[9.826711] (roboclaw_hardware) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:159: CMakeFiles/roboclaw_hardware.dir/all] Error 2\n'}
+[9.826921] (roboclaw_hardware) StderrLine: {'line': b'gmake[1]: *** Waiting for unfinished jobs....\n'}
+[9.920404] (-) TimerEvent: {}
+[10.020625] (-) TimerEvent: {}
+[10.120840] (-) TimerEvent: {}
+[10.221104] (-) TimerEvent: {}
+[10.321372] (-) TimerEvent: {}
+[10.421587] (-) TimerEvent: {}
+[10.521812] (-) TimerEvent: {}
+[10.622072] (-) TimerEvent: {}
+[10.722265] (-) TimerEvent: {}
+[10.822516] (-) TimerEvent: {}
+[10.922738] (-) TimerEvent: {}
+[11.022991] (-) TimerEvent: {}
+[11.123233] (-) TimerEvent: {}
+[11.223454] (-) TimerEvent: {}
+[11.323670] (-) TimerEvent: {}
+[11.423890] (-) TimerEvent: {}
+[11.524123] (-) TimerEvent: {}
+[11.624396] (-) TimerEvent: {}
+[11.724611] (-) TimerEvent: {}
+[11.824835] (-) TimerEvent: {}
+[11.925086] (-) TimerEvent: {}
+[12.025263] (-) TimerEvent: {}
+[12.125459] (-) TimerEvent: {}
+[12.225646] (-) TimerEvent: {}
+[12.328097] (-) TimerEvent: {}
+[12.428293] (-) TimerEvent: {}
+[12.528518] (-) TimerEvent: {}
+[12.628695] (-) TimerEvent: {}
+[12.728886] (-) TimerEvent: {}
+[12.829095] (-) TimerEvent: {}
+[12.929249] (-) TimerEvent: {}
+[13.029430] (-) TimerEvent: {}
+[13.129647] (-) TimerEvent: {}
+[13.229849] (-) TimerEvent: {}
+[13.330012] (-) TimerEvent: {}
+[13.430202] (-) TimerEvent: {}
+[13.500868] (roboclaw_hardware) StdoutLine: {'line': b'[ 61%] Linking CXX static library libgtest.a\n'}
+[13.530325] (-) TimerEvent: {}
+[13.557447] (roboclaw_hardware) StdoutLine: {'line': b'[ 61%] Built target gtest\n'}
+[13.558919] (roboclaw_hardware) StderrLine: {'line': b'gmake: *** [Makefile:146: all] Error 2\n'}
+[13.561360] (roboclaw_hardware) CommandEnded: {'returncode': 2}
+[13.578179] (roboclaw_hardware) JobEnded: {'identifier': 'roboclaw_hardware', 'rc': 2}
+[13.588620] (-) EventReactorShutdown: {}

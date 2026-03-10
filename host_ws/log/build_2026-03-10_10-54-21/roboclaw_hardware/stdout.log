@@ -1,0 +1,43 @@
+[ 15%] Built target gtest_main
+[ 30%] Built target gtest
+[ 69%] Built target roboclaw_hardware
+[ 84%] Built target test_unit_converter
+[100%] Built target test_protocol_crc
+-- Install configuration: "Release"
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/roboclaw_hardware_plugin.xml
+-- Up-to-date: /host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_protocol.hpp
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_tcp.hpp
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/visibility_control.h
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_hardware.hpp
+-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/unit_converter.hpp
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config/diff_drive_controllers.yaml
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch/roboclaw.launch.py
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf/roboclaw_diff_drive.urdf.xacro
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.sh
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.dsv
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/package_run_dependencies/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/parent_prefix_path/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.sh
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.dsv
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.sh
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.dsv
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.bash
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.sh
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.zsh
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.dsv
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/packages/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/roboclaw_hardware
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport-release.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig-version.cmake
+-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.xml

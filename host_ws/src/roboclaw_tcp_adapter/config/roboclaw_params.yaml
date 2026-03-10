@@ -15,6 +15,7 @@ roboclaw_driver:
     port: "tcp://192.168.68.60:8234"
     baud: 115200
     address: 128
+    read_timeout: 0.5   # seconds for serial/TCP read (TCP needs more than 50 ms)
 
     # Robot type preset
     robot_type: "diff_drive"
@@ -29,3 +30,18 @@ roboclaw_driver:
     motion_strategy: "speed_accel"
     default_acceleration: 1000
     buffer_depth: 4
+
+# =============================================================================
+# rc_teleop — RC-to-cmd_vel translator (arcade style)
+# =============================================================================
+rc_teleop:
+  ros__parameters:
+    max_linear_speed: 1.0     # m/s
+    max_angular_speed: 1.0    # rad/s
+    deadzone: 0.05            # 5% — joystick center slop
+    is_pwm_input: false       # true if Pico sends raw 1000-2000 us PWM values
+    throttle_topic: "rc_ch2"  # Pico channel for forward/backward
+    steering_topic: "rc_ch1"  # Pico channel for left/right
+    cmd_vel_topic: "cmd_vel"
+    estop_topic: "estop"
+    publish_rate: 20.0        # Hz

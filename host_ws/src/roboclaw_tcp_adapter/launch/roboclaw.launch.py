@@ -1,12 +1,12 @@
 """
 RoboClaw TCP launch file.
 
-Starts two nodes:
-  1. roboclaw_tcp_node  — monkey-patched basicmicro_ros2 driver over TCP
-  2. safety_bridge_node — /robot/estop -> /emergency_stop bridge
+Starts three nodes:
+  1. roboclaw_tcp_node   — monkey-patched basicmicro_ros2 driver over TCP (cmd_vel)
+  2. safety_bridge_node  — /robot/estop -> zero cmd_vel + /emergency_stop
+  3. rc_teleop_node      — RC throttle/steering (Float32) -> cmd_vel (Twist)
 
-All parameters are read from robot_network.yaml or can be overridden
-on the command line.
+All parameters are read from roboclaw_params.yaml or can be overridden on the command line.
 """
 
 import os
@@ -82,6 +82,17 @@ def generate_launch_description():
                         "watchdog_timeout_sec": 2.0,
                         "estop_cmd_vel_rate_sec": 0.1,
                     }
+                ],
+                output="screen",
+            ),
+            # --- RC Teleop (arcade: throttle + steering -> cmd_vel) ---
+            Node(
+                package="roboclaw_tcp_adapter",
+                executable="rc_teleop_node",
+                name="rc_teleop",
+                namespace=LaunchConfiguration("namespace"),
+                parameters=[
+                    roboclaw_params_file,
                 ],
                 output="screen",
             ),

@@ -1,0 +1,110 @@
+[0.000000] (-) TimerEvent: {}
+[0.000067] (roboclaw_hardware) JobQueued: {'identifier': 'roboclaw_hardware', 'dependencies': OrderedDict({'roboclaw_hardware': '/host_ws/install/roboclaw_hardware'})}
+[0.000523] (roboclaw_hardware) JobStarted: {'identifier': 'roboclaw_hardware'}
+[0.055507] (roboclaw_hardware) Command: {'cmd': ['/usr/bin/ctest', '-C', 'Release', '-D', 'ExperimentalTest', '--no-compress-output', '-V', '--force-new-ctest-process'], 'cwd': '/host_ws/build/roboclaw_hardware', 'env': OrderedDict({'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/share/gz', 'HOSTNAME': '62819af07854', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/host_ws/install/roboclaw_hardware/lib:/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/host_ws/install/roboclaw_hardware:/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_hardware', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/host_ws/install/roboclaw_hardware:/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor'}), 'shell': False}
+[0.065993] (roboclaw_hardware) StdoutLine: {'line': b'UpdateCTestConfiguration  from :/host_ws/build/roboclaw_hardware/CTestConfiguration.ini\n'}
+[0.066526] (roboclaw_hardware) StdoutLine: {'line': b'Parse Config file:/host_ws/build/roboclaw_hardware/CTestConfiguration.ini\n'}
+[0.066690] (roboclaw_hardware) StdoutLine: {'line': b'   Site: 693b46655666\n'}
+[0.066870] (roboclaw_hardware) StdoutLine: {'line': b'   Build name: (empty)\n'}
+[0.067223] (roboclaw_hardware) StdoutLine: {'line': b' Add coverage exclude regular expressions.\n'}
+[0.067544] (roboclaw_hardware) StdoutLine: {'line': b'Create new tag: 20260310-1054 - Experimental\n'}
+[0.067689] (roboclaw_hardware) StdoutLine: {'line': b'UpdateCTestConfiguration  from :/host_ws/build/roboclaw_hardware/CTestConfiguration.ini\n'}
+[0.067832] (roboclaw_hardware) StdoutLine: {'line': b'Parse Config file:/host_ws/build/roboclaw_hardware/CTestConfiguration.ini\n'}
+[0.067995] (roboclaw_hardware) StdoutLine: {'line': b'Test project /host_ws/build/roboclaw_hardware\n'}
+[0.068144] (roboclaw_hardware) StdoutLine: {'line': b'Constructing a list of tests\n'}
+[0.068285] (roboclaw_hardware) StdoutLine: {'line': b'Done constructing a list of tests\n'}
+[0.068426] (roboclaw_hardware) StdoutLine: {'line': b'Updating test list for fixtures\n'}
+[0.068566] (roboclaw_hardware) StdoutLine: {'line': b'Added 0 tests to meet fixture requirements\n'}
+[0.068705] (roboclaw_hardware) StdoutLine: {'line': b'Checking test dependency graph...\n'}
+[0.068847] (roboclaw_hardware) StdoutLine: {'line': b'Checking test dependency graph end\n'}
+[0.068999] (roboclaw_hardware) StdoutLine: {'line': b'test 1\n'}
+[0.069142] (roboclaw_hardware) StdoutLine: {'line': b'    Start 1: test_unit_converter\n'}
+[0.069281] (roboclaw_hardware) StdoutLine: {'line': b'\n'}
+[0.069420] (roboclaw_hardware) StdoutLine: {'line': b'1: Test command: /usr/bin/python3 "-u" "/opt/ros/jazzy/share/ament_cmake_test/cmake/run_test.py" "/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_unit_converter.gtest.xml" "--package-name" "roboclaw_hardware" "--output-file" "/host_ws/build/roboclaw_hardware/ament_cmake_gtest/test_unit_converter.txt" "--command" "/host_ws/build/roboclaw_hardware/test_unit_converter" "--gtest_output=xml:/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_unit_converter.gtest.xml"\n'}
+[0.069567] (roboclaw_hardware) StdoutLine: {'line': b'1: Working Directory: /host_ws/build/roboclaw_hardware\n'}
+[0.069720] (roboclaw_hardware) StdoutLine: {'line': b'1: Test timeout computed to be: 60\n'}
+[0.099725] (-) TimerEvent: {}
+[0.150559] (roboclaw_hardware) StdoutLine: {'line': b"1: -- run_test.py: invoking following command in '/host_ws/build/roboclaw_hardware':\n"}
+[0.150733] (roboclaw_hardware) StdoutLine: {'line': b'1:  - /host_ws/build/roboclaw_hardware/test_unit_converter --gtest_output=xml:/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_unit_converter.gtest.xml\n'}
+[0.177402] (roboclaw_hardware) StdoutLine: {'line': b'1: Running main() from /opt/ros/jazzy/src/gtest_vendor/src/gtest_main.cc\n'}
+[0.177571] (roboclaw_hardware) StdoutLine: {'line': b'1: [==========] Running 14 tests from 1 test suite.\n'}
+[0.177663] (roboclaw_hardware) StdoutLine: {'line': b'1: [----------] Global test environment set-up.\n'}
+[0.177748] (roboclaw_hardware) StdoutLine: {'line': b'1: [----------] 14 tests from UnitConverterTest\n'}
+[0.177831] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.ThrowsOnInvalidParams\n'}
+[0.177912] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.ThrowsOnInvalidParams (0 ms)\n'}
+[0.178014] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.OneRevolutionSimple\n'}
+[0.178097] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.OneRevolutionSimple (0 ms)\n'}
+[0.178176] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.RadiansToCountsRoundTrip\n'}
+[0.178256] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.RadiansToCountsRoundTrip (0 ms)\n'}
+[0.178335] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.GearRatioApplied\n'}
+[0.178414] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.GearRatioApplied (0 ms)\n'}
+[0.178492] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.NegativeCounts\n'}
+[0.178630] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.NegativeCounts (0 ms)\n'}
+[0.178795] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.VelocityConversion\n'}
+[0.179187] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.VelocityConversion (0 ms)\n'}
+[0.179344] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.VelocityWithGearRatio\n'}
+[0.179479] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.VelocityWithGearRatio (0 ms)\n'}
+[0.179614] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.DutyClamp\n'}
+[0.179748] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.DutyClamp (0 ms)\n'}
+[0.179882] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.DutyThrowsOnZeroMax\n'}
+[0.180077] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.DutyThrowsOnZeroMax (0 ms)\n'}
+[0.180215] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.MetersToCounts\n'}
+[0.180350] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.MetersToCounts (0 ms)\n'}
+[0.180531] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.CountsToMeters\n'}
+[0.180686] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.CountsToMeters (0 ms)\n'}
+[0.180841] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.OverflowProtection\n'}
+[0.180997] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.OverflowProtection (0 ms)\n'}
+[0.181140] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.Accessors\n'}
+[0.181277] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.Accessors (0 ms)\n'}
+[0.181426] (roboclaw_hardware) StdoutLine: {'line': b'1: [ RUN      ] UnitConverterTest.ToString\n'}
+[0.181587] (roboclaw_hardware) StdoutLine: {'line': b'1: [       OK ] UnitConverterTest.ToString (0 ms)\n'}
+[0.181714] (roboclaw_hardware) StdoutLine: {'line': b'1: [----------] 14 tests from UnitConverterTest (0 ms total)\n'}
+[0.181798] (roboclaw_hardware) StdoutLine: {'line': b'1: \n'}
+[0.181956] (roboclaw_hardware) StdoutLine: {'line': b'1: [----------] Global test environment tear-down\n'}
+[0.182122] (roboclaw_hardware) StdoutLine: {'line': b'1: [==========] 14 tests from 1 test suite ran. (0 ms total)\n'}
+[0.182273] (roboclaw_hardware) StdoutLine: {'line': b'1: [  PASSED  ] 14 tests.\n'}
+[0.182361] (roboclaw_hardware) StdoutLine: {'line': b'1: -- run_test.py: return code 0\n'}
+[0.182443] (roboclaw_hardware) StdoutLine: {'line': b"1: -- run_test.py: inject classname prefix into gtest result file '/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_unit_converter.gtest.xml'\n"}
+[0.182526] (roboclaw_hardware) StdoutLine: {'line': b"1: -- run_test.py: verify result file '/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_unit_converter.gtest.xml'\n"}
+[0.191438] (roboclaw_hardware) StdoutLine: {'line': b'1/2 Test #1: test_unit_converter ..............   Passed    0.12 sec\n'}
+[0.191649] (roboclaw_hardware) StdoutLine: {'line': b'test 2\n'}
+[0.191794] (roboclaw_hardware) StdoutLine: {'line': b'    Start 2: test_protocol_crc\n'}
+[0.191924] (roboclaw_hardware) StdoutLine: {'line': b'\n'}
+[0.192071] (roboclaw_hardware) StdoutLine: {'line': b'2: Test command: /usr/bin/python3 "-u" "/opt/ros/jazzy/share/ament_cmake_test/cmake/run_test.py" "/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_protocol_crc.gtest.xml" "--package-name" "roboclaw_hardware" "--output-file" "/host_ws/build/roboclaw_hardware/ament_cmake_gtest/test_protocol_crc.txt" "--command" "/host_ws/build/roboclaw_hardware/test_protocol_crc" "--gtest_output=xml:/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_protocol_crc.gtest.xml"\n'}
+[0.192244] (roboclaw_hardware) StdoutLine: {'line': b'2: Working Directory: /host_ws/build/roboclaw_hardware\n'}
+[0.192392] (roboclaw_hardware) StdoutLine: {'line': b'2: Test timeout computed to be: 60\n'}
+[0.199841] (-) TimerEvent: {}
+[0.265387] (roboclaw_hardware) StdoutLine: {'line': b"2: -- run_test.py: invoking following command in '/host_ws/build/roboclaw_hardware':\n"}
+[0.265699] (roboclaw_hardware) StdoutLine: {'line': b'2:  - /host_ws/build/roboclaw_hardware/test_protocol_crc --gtest_output=xml:/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_protocol_crc.gtest.xml\n'}
+[0.289258] (roboclaw_hardware) StdoutLine: {'line': b'2: Running main() from /opt/ros/jazzy/src/gtest_vendor/src/gtest_main.cc\n'}
+[0.289429] (roboclaw_hardware) StdoutLine: {'line': b'2: [==========] Running 4 tests from 1 test suite.\n'}
+[0.289519] (roboclaw_hardware) StdoutLine: {'line': b'2: [----------] Global test environment set-up.\n'}
+[0.289602] (roboclaw_hardware) StdoutLine: {'line': b'2: [----------] 4 tests from ProtocolCRC\n'}
+[0.289683] (roboclaw_hardware) StdoutLine: {'line': b'2: [ RUN      ] ProtocolCRC.TableMatchesReferenceSingleByte\n'}
+[0.289763] (roboclaw_hardware) StdoutLine: {'line': b'2: [       OK ] ProtocolCRC.TableMatchesReferenceSingleByte (0 ms)\n'}
+[0.289843] (roboclaw_hardware) StdoutLine: {'line': b'2: [ RUN      ] ProtocolCRC.MultiByteMatchesReference\n'}
+[0.289921] (roboclaw_hardware) StdoutLine: {'line': b'2: [       OK ] ProtocolCRC.MultiByteMatchesReference (0 ms)\n'}
+[0.290022] (roboclaw_hardware) StdoutLine: {'line': b'2: [ RUN      ] ProtocolCRC.RoboClawCommandCRC\n'}
+[0.290210] (roboclaw_hardware) StdoutLine: {'line': b'2: [       OK ] ProtocolCRC.RoboClawCommandCRC (0 ms)\n'}
+[0.290306] (roboclaw_hardware) StdoutLine: {'line': b'2: [ RUN      ] ProtocolCRC.BufferInterpretation\n'}
+[0.290488] (roboclaw_hardware) StdoutLine: {'line': b'2: [       OK ] ProtocolCRC.BufferInterpretation (0 ms)\n'}
+[0.290570] (roboclaw_hardware) StdoutLine: {'line': b'2: [----------] 4 tests from ProtocolCRC (0 ms total)\n'}
+[0.290650] (roboclaw_hardware) StdoutLine: {'line': b'2: \n'}
+[0.290738] (roboclaw_hardware) StdoutLine: {'line': b'2: [----------] Global test environment tear-down\n'}
+[0.290817] (roboclaw_hardware) StdoutLine: {'line': b'2: [==========] 4 tests from 1 test suite ran. (0 ms total)\n'}
+[0.290895] (roboclaw_hardware) StdoutLine: {'line': b'2: [  PASSED  ] 4 tests.\n'}
+[0.290985] (roboclaw_hardware) StdoutLine: {'line': b'2: -- run_test.py: return code 0\n'}
+[0.291073] (roboclaw_hardware) StdoutLine: {'line': b"2: -- run_test.py: inject classname prefix into gtest result file '/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_protocol_crc.gtest.xml'\n"}
+[0.298605] (roboclaw_hardware) StdoutLine: {'line': b"2: -- run_test.py: verify result file '/host_ws/build/roboclaw_hardware/test_results/roboclaw_hardware/test_protocol_crc.gtest.xml'\n"}
+[0.299946] (-) TimerEvent: {}
+[0.309325] (roboclaw_hardware) StdoutLine: {'line': b'2/2 Test #2: test_protocol_crc ................   Passed    0.12 sec\n'}
+[0.309867] (roboclaw_hardware) StdoutLine: {'line': b'\n'}
+[0.310025] (roboclaw_hardware) StdoutLine: {'line': b'100% tests passed, 0 tests failed out of 2\n'}
+[0.310121] (roboclaw_hardware) StdoutLine: {'line': b'\n'}
+[0.310208] (roboclaw_hardware) StdoutLine: {'line': b'Label Time Summary:\n'}
+[0.310293] (roboclaw_hardware) StdoutLine: {'line': b'gtest    =   0.24 sec*proc (2 tests)\n'}
+[0.310378] (roboclaw_hardware) StdoutLine: {'line': b'\n'}
+[0.310461] (roboclaw_hardware) StdoutLine: {'line': b'Total Test time (real) =   0.24 sec\n'}
+[0.314576] (roboclaw_hardware) CommandEnded: {'returncode': 0}
+[0.315211] (roboclaw_hardware) JobEnded: {'identifier': 'roboclaw_hardware', 'rc': 0}
+[0.315862] (-) EventReactorShutdown: {}

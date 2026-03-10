@@ -1,0 +1,41 @@
+/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function ‘void roboclaw_hardware::RoboClawHardware::initialize_state_interfaces()’:
+/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:473:13: warning: dangling pointer ‘e1’ to ‘enc’ may be used [-Wdangling-pointer=]
+  473 |     int32_t e1 = enc.enc1;
+      |             ^~
+/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:18: note: ‘enc’ declared here
+  471 |   EncodersResult enc = protocol_->GetEncoders(address_);
+      |                  ^~~
+/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:474:13: warning: dangling pointer ‘e2’ to ‘enc’ may be used [-Wdangling-pointer=]
+  474 |     int32_t e2 = enc.enc2;
+      |             ^~
+/host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:18: note: ‘enc’ declared here
+  471 |   EncodersResult enc = protocol_->GetEncoders(address_);
+      |                  ^~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp: In member function ‘virtual void ProtocolCRC_BufferInterpretation_Test::TestBody()’:
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:153:28: error: ‘RoboClawHardware’ has not been declared in ‘roboclaw_hardware’
+  153 |   using roboclaw_hardware::RoboClawHardware;
+      |                            ^~~~~~~~~~~~~~~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:155:15: error: ‘RoboClawHardware’ has not been declared
+  155 |   auto idle = RoboClawHardware::interpret_buffer_status(0xFF);
+      |               ^~~~~~~~~~~~~~~~
+In file included from /opt/ros/jazzy/src/gtest_vendor/include/gtest/gtest.h:72,
+                 from /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:3:
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:156:44: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+  156 |   EXPECT_EQ(idle.state, roboclaw_hardware::BufferStatus::IDLE);
+      |                                            ^~~~~~~~~~~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:160:15: error: ‘RoboClawHardware’ has not been declared
+  160 |   auto exec = RoboClawHardware::interpret_buffer_status(0x00);
+      |               ^~~~~~~~~~~~~~~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:161:44: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+  161 |   EXPECT_EQ(exec.state, roboclaw_hardware::BufferStatus::EXECUTING);
+      |                                            ^~~~~~~~~~~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:164:19: error: ‘RoboClawHardware’ has not been declared
+  164 |   auto buffered = RoboClawHardware::interpret_buffer_status(5);
+      |                   ^~~~~~~~~~~~~~~~
+/host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:165:48: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+  165 |   EXPECT_EQ(buffered.state, roboclaw_hardware::BufferStatus::BUFFERED);
+      |                                                ^~~~~~~~~~~~
+gmake[2]: *** [CMakeFiles/test_protocol_crc.dir/build.make:76: CMakeFiles/test_protocol_crc.dir/test/test_protocol_crc.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:215: CMakeFiles/test_protocol_crc.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+gmake: *** [Makefile:146: all] Error 2

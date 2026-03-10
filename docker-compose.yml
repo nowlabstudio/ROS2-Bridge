@@ -80,16 +80,10 @@ services:
     command: >
       bash -c "
         apt-get update -qq &&
-        apt-get install -y -qq --no-install-recommends
-          ros-jazzy-ros2-control
-          ros-jazzy-ros2-controllers
-          ros-jazzy-xacro
-          ros-jazzy-robot-state-publisher >/dev/null 2>&1;
+        apt-get install -y -qq --no-install-recommends ros-jazzy-ros2-control ros-jazzy-ros2-controllers ros-jazzy-xacro ros-jazzy-robot-state-publisher >/dev/null 2>&1 &&
         source /opt/ros/jazzy/setup.bash &&
         source /host_ws/install/setup.bash &&
-        ros2 launch roboclaw_hardware roboclaw.launch.py
-          tcp_host:=$$ROBOCLAW_HOST
-          tcp_port:=$$ROBOCLAW_PORT
+        ros2 launch roboclaw_hardware roboclaw.launch.py tcp_host:=$$ROBOCLAW_HOST tcp_port:=$$ROBOCLAW_PORT
       "
 
   # ── Foxglove Bridge (WebSocket :8765) ──────────────────────────────────────

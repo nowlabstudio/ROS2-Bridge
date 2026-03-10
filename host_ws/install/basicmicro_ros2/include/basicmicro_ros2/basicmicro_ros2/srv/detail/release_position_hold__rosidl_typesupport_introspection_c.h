@@ -1,0 +1,1 @@
+/host_ws/build/basicmicro_ros2/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_introspection_c.h

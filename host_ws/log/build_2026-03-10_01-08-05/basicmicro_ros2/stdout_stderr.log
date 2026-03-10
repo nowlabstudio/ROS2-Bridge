@@ -1,0 +1,703 @@
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Override CMake install command with custom implementation using symlinks instead of copying resources
+-- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found rosidl_adapter: 4.6.7 (/opt/ros/jazzy/share/rosidl_adapter/cmake)
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development Development.Module Development.Embed 
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+-- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)
+-- Found PythonExtra: /usr/bin/python3  
+-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed 
+-- Found ament_lint_auto: 0.17.4 (/opt/ros/jazzy/share/ament_lint_auto/cmake)
+-- Added test 'copyright' to check source files copyright and LICENSE
+-- Added test 'flake8' to check Python code syntax and style conventions
+-- Configured 'flake8' exclude dirs and/or files: 
+-- Added test 'lint_cmake' to check CMake code style
+-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257
+-- Added test 'xmllint' to check XML markup files
+-- Configuring done (2.4s)
+-- Generating done (0.1s)
+-- Build files have been written to: /host_ws/build/basicmicro_ros2
+[  1%] Generating type hashes for ROS interfaces
+[  1%] Built target ament_cmake_python_symlink_basicmicro_ros2
+running egg_info
+creating basicmicro_ros2.egg-info
+writing basicmicro_ros2.egg-info/PKG-INFO
+writing dependency_links to basicmicro_ros2.egg-info/dependency_links.txt
+writing top-level names to basicmicro_ros2.egg-info/top_level.txt
+writing manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'
+reading manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'
+writing manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'
+[  1%] Built target ament_cmake_python_build_basicmicro_ros2_egg
+[  1%] Built target basicmicro_ros2__rosidl_generator_type_description
+[  1%] Generating C code for ROS interfaces
+[  1%] Generating C++ code for ROS interfaces
+[  1%] Built target basicmicro_ros2__cpp
+[  2%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__functions.c.o
+[  2%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__functions.c.o
+[  3%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__description.c.o
+[  3%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__functions.c.o
+[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__type_support.c.o
+[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__type_support.c.o
+[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__description.c.o
+[  5%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__description.c.o
+[  6%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__functions.c.o
+[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.c.o
+[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__description.c.o
+[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.c.o
+[  8%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__description.c.o
+[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__type_support.c.o
+[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__functions.c.o
+[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__description.c.o
+[ 10%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__functions.c.o
+[ 10%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__type_support.c.o
+[ 11%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__description.c.o
+[ 11%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__functions.c.o
+[ 12%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__type_support.c.o
+[ 12%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__description.c.o
+[ 13%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__functions.c.o
+[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__description.c.o
+[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support.c.o
+[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__functions.c.o
+[ 15%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.c.o
+[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__description.c.o
+[ 16%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__functions.c.o
+[ 17%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.c.o
+[ 17%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__description.c.o
+[ 18%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__functions.c.o
+[ 18%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__type_support.c.o
+[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__description.c.o
+[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__functions.c.o
+[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__description.c.o
+[ 20%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.c.o
+[ 21%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__functions.c.o
+[ 21%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__type_support.c.o
+[ 22%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__description.c.o
+[ 22%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__functions.c.o
+[ 23%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__type_support.c.o
+[ 23%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__description.c.o
+[ 24%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__functions.c.o
+[ 24%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.c.o
+[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__functions.c.o
+[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__description.c.o
+[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__description.c.o
+[ 26%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.c.o
+[ 27%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__functions.c.o
+[ 27%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.c.o
+[ 28%] Linking C shared library libbasicmicro_ros2__rosidl_generator_c.so
+[ 28%] Built target basicmicro_ros2__rosidl_generator_c
+[ 28%] Generating C type support dispatch for ROS interfaces
+[ 29%] Generating C++ type support for eProsima Fast-RTPS
+[ 29%] Generating C++ introspection for ROS interfaces
+[ 30%] Generating C type support for eProsima Fast-RTPS
+[ 31%] Generating C++ type support dispatch for ROS interfaces
+[ 31%] Generating C introspection for ROS interfaces
+[ 31%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/msg/trajectory_point__type_support.cpp.o
+[ 32%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/msg/position_point__type_support.cpp.o
+[ 33%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_motion_strategy__type_support.cpp.o
+[ 34%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/msg/trajectory_point__type_support.cpp.o
+[ 34%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/msg/position_point__type_support.cpp.o
+[ 35%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_motion_strategy__type_support.cpp.o
+[ 35%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_motion_parameters__type_support.cpp.o
+[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/move_distance__type_support.cpp.o
+[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_motion_parameters__type_support.cpp.o
+[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_position_limits__type_support.cpp.o
+[ 37%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/move_distance__type_support.cpp.o
+[ 37%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_position_limits__type_support.cpp.o
+[ 38%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_position_limits__type_support.cpp.o
+[ 39%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/msg/detail/trajectory_point__type_support.cpp.o
+[ 39%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/execute_trajectory__type_support.cpp.o
+[ 40%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/execute_position_sequence__type_support.cpp.o
+[ 40%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_available_homing_methods__type_support.cpp.o
+[ 41%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_servo_status__type_support.cpp.o
+[ 41%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/move_to_absolute_position__type_support.cpp.o
+[ 42%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/perform_homing__type_support.cpp.o
+[ 43%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/msg/detail/trajectory_point__type_support.c.o
+[ 43%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/release_position_hold__type_support.cpp.o
+[ 43%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/msg/detail/position_point__type_support.c.o
+[ 44%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.c.o
+[ 44%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/msg/detail/position_point__type_support.cpp.o
+[ 45%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.cpp.o
+[ 46%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_duty_cycle__type_support.cpp.o
+[ 47%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_position_limits__type_support.cpp.o
+[ 47%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.c.o
+[ 48%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_homing_configuration__type_support.cpp.o
+[ 48%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_duty_cycle_accel__type_support.cpp.o
+[ 49%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/move_distance__type_support.c.o
+[ 49%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_position_limits__type_support.c.o
+[ 49%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_c.so
+[ 50%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_position_limits__type_support.c.o
+[ 50%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.cpp.o
+[ 50%] Built target basicmicro_ros2__rosidl_typesupport_c
+[ 50%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support.c.o
+[ 50%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/execute_trajectory__type_support.cpp.o
+[ 51%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.c.o
+[ 51%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.c.o
+[ 52%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_servo_status__type_support.c.o
+[ 53%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/move_distance__type_support.cpp.o
+[ 54%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.c.o
+[ 54%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_position_limits__type_support.cpp.o
+[ 55%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_position_limits__type_support.cpp.o
+[ 55%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/perform_homing__type_support.c.o
+[ 56%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/release_position_hold__type_support.c.o
+[ 56%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.c.o
+[ 56%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/msg/detail/dds_fastrtps/trajectory_point__type_support.cpp.o
+[ 57%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.c.o
+[ 58%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/execute_position_sequence__type_support.cpp.o
+[ 58%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.c.o
+[ 59%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/msg/detail/dds_fastrtps/position_point__type_support.cpp.o
+[ 60%] Linking C shared library libbasicmicro_ros2__rosidl_typesupport_introspection_c.so
+[ 60%] Built target basicmicro_ros2__rosidl_typesupport_introspection_c
+[ 60%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_available_homing_methods__type_support.cpp.o
+[ 60%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_motion_strategy__type_support.cpp.o
+[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_servo_status__type_support.cpp.o
+[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/execute_trajectory__type_support.cpp.o
+[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/msg/detail/trajectory_point__type_support_c.cpp.o
+[ 62%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/msg/detail/position_point__type_support_c.cpp.o
+[ 63%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.cpp.o
+[ 63%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.cpp.o
+[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_motion_parameters__type_support.cpp.o
+[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/move_to_absolute_position__type_support.cpp.o
+[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/move_distance__type_support.cpp.o
+[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/perform_homing__type_support.cpp.o
+[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/release_position_hold__type_support.cpp.o
+[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support_c.cpp.o
+[ 66%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support_c.cpp.o
+[ 67%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_servo_status__type_support.cpp.o
+[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_position_limits__type_support.cpp.o
+[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.cpp.o
+[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/move_distance__type_support_c.cpp.o
+[ 69%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_duty_cycle__type_support.cpp.o
+[ 70%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_position_limits__type_support_c.cpp.o
+[ 71%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/perform_homing__type_support.cpp.o
+[ 71%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_duty_cycle_accel__type_support.cpp.o
+[ 72%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_homing_configuration__type_support.cpp.o
+[ 72%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_position_limits__type_support.cpp.o
+[ 73%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/execute_trajectory__type_support.cpp.o
+[ 73%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/release_position_hold__type_support.cpp.o
+[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.cpp.o
+[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/execute_position_sequence__type_support.cpp.o
+[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_position_limits__type_support_c.cpp.o
+[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_available_homing_methods__type_support.cpp.o
+[ 75%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_cpp.so
+[ 75%] Built target basicmicro_ros2__rosidl_typesupport_cpp
+[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_servo_status__type_support.cpp.o
+[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.cpp.o
+[ 76%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support_c.cpp.o
+[ 76%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support_c.cpp.o
+[ 77%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/move_to_absolute_position__type_support.cpp.o
+[ 78%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.cpp.o
+[ 78%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/perform_homing__type_support.cpp.o
+[ 79%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support_c.cpp.o
+[ 79%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_servo_status__type_support_c.cpp.o
+[ 80%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/release_position_hold__type_support.cpp.o
+[ 80%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_duty_cycle__type_support.cpp.o
+[ 81%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_duty_cycle_accel__type_support.cpp.o
+[ 81%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so
+[ 81%] Built target basicmicro_ros2__rosidl_typesupport_introspection_cpp
+[ 81%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_homing_configuration__type_support.cpp.o
+[ 82%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support_c.cpp.o
+[ 82%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/perform_homing__type_support_c.cpp.o
+[ 83%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/release_position_hold__type_support_c.cpp.o
+[ 83%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support_c.cpp.o
+[ 84%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support_c.cpp.o
+[ 85%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support_c.cpp.o
+[ 86%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so
+[ 86%] Built target basicmicro_ros2__rosidl_typesupport_fastrtps_cpp
+[ 86%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so
+[ 86%] Built target basicmicro_ros2__rosidl_typesupport_fastrtps_c
+[ 86%] Built target basicmicro_ros2
+[ 87%] Generating Python code for ROS interfaces
+[ 87%] Built target basicmicro_ros2__py
+[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_motion_strategy_s.c.o
+[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/msg/_position_point_s.c.o
+[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_move_distance_s.c.o
+[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_position_limits_s.c.o
+[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/msg/_trajectory_point_s.c.o
+[ 89%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_motion_parameters_s.c.o
+[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_position_limits_s.c.o
+[ 91%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_execute_trajectory_s.c.o
+[ 91%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_execute_position_sequence_s.c.o
+[ 92%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_available_homing_methods_s.c.o
+[ 93%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_servo_status_s.c.o
+[ 93%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_move_to_absolute_position_s.c.o
+[ 94%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_perform_homing_s.c.o
+[ 94%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_release_position_hold_s.c.o
+[ 95%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_duty_cycle_s.c.o
+[ 95%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_duty_cycle_accel_s.c.o
+[ 96%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_homing_configuration_s.c.o
+[ 96%] Linking C shared library libbasicmicro_ros2__rosidl_generator_py.so
+[ 96%] Built target basicmicro_ros2__rosidl_generator_py
+[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_fastrtps_c.c.o
+[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_introspection_c.c.o
+[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_c.c.o
+[ 99%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so
+[ 99%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so
+[100%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so
+[100%] Built target basicmicro_ros2_s__rosidl_typesupport_c
+[100%] Built target basicmicro_ros2_s__rosidl_typesupport_fastrtps_c
+[100%] Built target basicmicro_ros2_s__rosidl_typesupport_introspection_c
+-- Install configuration: ""
+-- Execute custom install script
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/rosidl_interfaces/basicmicro_ros2
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.json
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/position_point.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_generator_c__visibility_control.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/trajectory_point.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__functions.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__struct.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__type_support.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_position_sequence.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_trajectory.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_available_homing_methods.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_position_limits.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_servo_status.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_distance.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_to_absolute_position.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/perform_homing.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/release_position_hold.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle_accel.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_homing_configuration.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_parameters.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_strategy.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_position_limits.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/library_path.sh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/library_path.dsv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_fastrtps_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_introspection_c__visibility_control.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_introspection_c.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/position_point.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_generator_cpp__visibility_control.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/trajectory_point.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__builder.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__struct.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__traits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__type_support.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_position_sequence.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_trajectory.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_available_homing_methods.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_position_limits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_servo_status.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_distance.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_to_absolute_position.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/perform_homing.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/release_position_hold.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle_accel.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_homing_configuration.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_parameters.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_strategy.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_position_limits.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_fastrtps_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_introspection_cpp.hpp
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/pythonpath.sh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/pythonpath.dsv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/PKG-INFO
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/SOURCES.txt
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/dependency_links.txt
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/top_level.txt
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/__init__.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_c.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_fastrtps_c.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_introspection_c.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/__init__.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/__init__.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits_s.c
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.idl
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.msg
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.msg
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/basicmicro_node.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/motion_config_service.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/distance_movement_service.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/trajectory_service.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/duty_control_service.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/servo_position_service.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/trajectory_monitor.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/performance_monitor.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/arm_control.launch.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/basicmicro_driver.launch.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/basicmicro_simple.launch.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/robot_visualization.launch.py
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/arm_controllers.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/custom_controllers.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/diff_drive_controllers.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/example_robot_parameters.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/industrial_controllers.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/multi_controller_controllers.yaml
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//msg/PositionPoint.msg
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//msg/TrajectoryPoint.msg
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ExecutePositionSequence.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ExecuteTrajectory.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetAvailableHomingMethods.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetPositionLimits.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetServoStatus.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/MoveDistance.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/MoveToAbsolutePosition.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/PerformHoming.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ReleasePositionHold.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetDutyCycle.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetDutyCycleAccel.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetHomingConfiguration.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetMotionParameters.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetMotionStrategy.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetPositionLimits.srv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/package_run_dependencies/basicmicro_ros2
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/parent_prefix_path/basicmicro_ros2
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/ament_prefix_path.sh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/ament_prefix_path.dsv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/path.sh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/path.dsv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.bash
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.sh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.zsh
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.dsv
+-- Symlinking: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/package.dsv
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/packages/basicmicro_ros2
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_include_directories-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_libraries-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_targets-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2Config.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2Config-version.cmake
+-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/package.xml
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_c.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_c.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_c.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_c.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_c.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_c.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_cpp.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_cpp.so" to ""
+Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/__init__.py'...
+Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/__init__.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point.py'...
+Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/__init__.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy.py'...
+Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits.py'...
+-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_py.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_py.so" to ""
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cppExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cppExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cppExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cppExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cppExport-noconfig.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_pyExport.cmake
+-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_pyExport-noconfig.cmake

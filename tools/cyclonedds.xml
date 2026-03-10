@@ -2,7 +2,7 @@
 <CycloneDDS xmlns="https://cdds.io/config"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
-    <Domain id="any">
+    <Domain id="0">
         <General>
             <!-- "auto" selects the active interface regardless of name (eth0, enp3s0, etc.) -->
             <NetworkInterfaceAddress>auto</NetworkInterfaceAddress>
@@ -18,5 +18,10 @@
                 <WhcHigh>500kB</WhcHigh>
             </Watermarks>
         </Internal>
+        <!-- Disable shared memory so all traffic uses UDP; required when publisher and
+             subscriber run in different Docker containers (each has its own /dev/shm). -->
+        <SharedMemory>
+            <Enable>false</Enable>
+        </SharedMemory>
     </Domain>
 </CycloneDDS>

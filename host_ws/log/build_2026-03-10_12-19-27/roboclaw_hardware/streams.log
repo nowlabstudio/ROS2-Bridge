@@ -1,0 +1,52 @@
+[0.013s] Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8
+[0.093s] [ 15%] Built target gtest
+[0.093s] [ 30%] Built target gtest_main
+[0.115s] [ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o
+[8.136s] [ 46%] Linking CXX shared library libroboclaw_hardware.so
+[8.376s] [ 69%] Built target roboclaw_hardware
+[8.410s] [ 76%] Linking CXX executable test_unit_converter
+[8.425s] [ 84%] Linking CXX executable test_protocol_crc
+[8.688s] [ 92%] Built target test_protocol_crc
+[8.699s] [100%] Built target test_unit_converter
+[8.714s] Invoked command in '/host_ws/build/roboclaw_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8
+[8.726s] Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /host_ws/build/roboclaw_hardware
+[8.737s] -- Install configuration: "Release"
+[8.738s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/roboclaw_hardware_plugin.xml
+[8.738s] -- Installing: /host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so
+[8.739s] -- Set non-toolchain portion of runtime path of "/host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so" to ""
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_protocol.hpp
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_tcp.hpp
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/visibility_control.h
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_hardware.hpp
+[8.740s] -- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/unit_converter.hpp
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config/diff_drive_controllers.yaml
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch/roboclaw.launch.py
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf/roboclaw_diff_drive.urdf.xacro
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.sh
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.dsv
+[8.741s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/package_run_dependencies/roboclaw_hardware
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/parent_prefix_path/roboclaw_hardware
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.sh
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.dsv
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.sh
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.dsv
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.bash
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.sh
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.zsh
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.dsv
+[8.742s] -- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.dsv
+[8.742s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/packages/roboclaw_hardware
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/roboclaw_hardware
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport.cmake
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport-release.cmake
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_targets-extras.cmake
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_dependencies-extras.cmake
+[8.743s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig.cmake
+[8.744s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig-version.cmake
+[8.744s] -- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.xml
+[8.744s] Invoked command in '/host_ws/build/roboclaw_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --install /host_ws/build/roboclaw_hardware

@@ -194,10 +194,10 @@ robot-hw-stop:
 robot-hw-logs:
 	docker compose --profile ros2control logs -f roboclaw-hw
 
-# Motor test via ros2_control diff_drive_controller cmd_vel
+# Motor test via ros2_control diff_drive_controller cmd_vel (TwistStamped for Jazzy)
 .PHONY: robot-hw-motor-test
 robot-hw-motor-test:
-	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /diff_drive_controller/cmd_vel_unstamped geometry_msgs/msg/Twist '{linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}' --rate 10" || true
+	docker compose --profile ros2control exec roboclaw-hw bash -c "source /opt/ros/jazzy/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /diff_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped '{header: {stamp: {sec: 0, nanosec: 0}, frame_id: \"\"}, twist: {linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}}' --rate 10" || true
 
 .PHONY: robot-ps
 robot-ps:

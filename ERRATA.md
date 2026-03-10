@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-03-09
+**Utolsó frissítés:** 2026-03-10
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -29,6 +29,9 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-017](#err-017) | RoboClaw Docker: No module named 'basicmicro_driver' | Magas | **Javítva** |
 | [ERR-018](#err-018) | /robot/diagnostics nem érkezik meg ros2-shell / Foxglove felé (Fast DDS SHM) | Kritikus | **Javítva** |
 | [ERR-019](#err-019) | Motor szaggatottan forog ROS2 alatt (safety_bridge watchdog + bus contention) | Kritikus | **Javítva** (C++ ros2_control) |
+| [ERR-020](#err-020) | SetTimeout 4 byte-ot küldött 1 helyett → protokoll korrupció, ERR LED | Kritikus | **Javítva** |
+| [ERR-021](#err-021) | Motor nem állt le cmd_vel timeout után (PID + lebegő encoder) | Kritikus | **Javítva** |
+| [ERR-022](#err-022) | Motor induláskor forgott (cmd_vel_dirty + open_loop: false) | Magas | **Javítva** |
 
 ---
 
@@ -622,9 +625,104 @@ Teljes C++ újraírás ros2_control `SystemInterface` pluginként (`ROS2_RoboCla
 - **Hardveres timeout:** A RoboClaw saját `SetTimeout(500ms)` az utolsó védelmi réteg.
 - **Egyetlen TCP kapcsolat:** Nincs versengés — a read() és write() sorrendben fut egyetlen szálon.
 
-#### Ellenőrzés
+#### Ellenőrzés — **SIKERES** (2026-03-10 session 23b)
 
-1. `make host-build-roboclaw-hw` — C++ csomag buildelése
-2. `make robot-hw-start` — C++ driver indítása (Python driver leáll)
-3. `make robot-hw-motor-test` — cmd_vel teszt a diff_drive_controlleren keresztül
-4. Összehasonlítás: a motor forgása ugyanolyan sima kell legyen, mint a standalone script
+1. ✅ `make host-build-roboclaw-hw` — tiszta build, 20/20 unit teszt zöld
+2. ✅ `make robot-hw-start` — TCP connect OK, `USB Roboclaw 2x60A v4.4.3` azonosítva
+3. ✅ Motor teszt: `cmd_vel 0.05 m/s` → **sima, rángatásmentes forgás** (az eredeti standalone scripttel megegyező minőség)
+4. ✅ Encoder read: mindkét csatorna él, 100Hz-en folyamatos adat
+5. ✅ 100Hz loop: 99% ciklus belefér 10ms-be (write-on-change + velocity delta optimalizálás)
+
+---
+
+## ERR-020
+
+### SetTimeout 4 byte-ot küldött 1 helyett → protokoll korrupció, ERR LED
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus |
+| **Állapot** | **Javítva** |
+| **Felfedezés** | 2026-03-10 (session 23c) |
+| **Javítás** | 2026-03-10 (session 23c) |
+
+#### Tünet
+
+A RoboClaw ERR LED világított a driver futása közben. A motor működött, de a vezérlő hibás állapotban volt.
+
+#### Root cause
+
+A RoboClaw command 14 (SET_TIMEOUT) **egyetlen byte-ot** vár 10ms egységekben (0-255). A C++ implementáció `send_long()` -gal **4 byte-ot** küldött. A RoboClaw az első byte-ot timeout-ként, a maradék 3-at a **következő parancs elejének** értelmezte → protokoll szinkronizáció elveszett → ERR LED.
+
+Összehasonlítás az eredeti Python driver-rel:
+- Python (helyes): `self._write(address, CMD, int(timeout * 10), types=["byte"])` → 1 byte
+- C++ (hibás): `send_long(timeout_ms)` → 4 byte
+
+#### Javítás
+
+```cpp
+uint8_t val = static_cast<uint8_t>(std::min(timeout_ms / 10u, 255u));
+send_byte(val);  // 500ms → byte 50 (= 500ms)
+```
+
+---
+
+## ERR-021
+
+### Motor nem állt le cmd_vel timeout után (PID + lebegő encoder)
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus |
+| **Állapot** | **Javítva** |
+| **Felfedezés** | 2026-03-10 (session 23c) |
+| **Javítás** | 2026-03-10 (session 23c) |
+
+#### Tünet
+
+A motor a `cmd_vel` timeout (500ms) letelte után is folyamatosan forgott. Csak a container leállításával állt meg.
+
+#### Root cause
+
+Két egymást erősítő probléma:
+
+1. **SpeedAccelM1M2(0, 0) nem állította le a motort:** A RoboClaw belső PID-je `Speed` módban az encoder-ből ellenőrzi, hogy elérte-e a cél sebességet. Lebegő (nem motorra rögzített) encoderek elektromos zajt generálnak → a PID "mozgást" lát → korrekciót küld → a motor forog → végtelen kör.
+
+2. **A serial timeout nem lépett működésbe:** A RoboClaw serial timeout (SetTimeout) BÁRMELY parancsra resetelődik, nem csak motor parancsra. A 100Hz-es `GetEncoders` olvasásunk folyamatosan resetelte → a timeout soha nem járt le.
+
+#### Javítás
+
+A `execute_velocity_command()` metódusban: ha a cél sebesség (0, 0), mindig `DutyM1M2(0, 0)`-t használunk `SpeedAccelM1M2(0, 0)` helyett. A `DutyM1M2` közvetlen PWM parancs — megkerüli a PID-et, nem használ encoder visszacsatolást, azonnali leállást garantál.
+
+---
+
+## ERR-022
+
+### Motor induláskor forgott (cmd_vel_dirty + open_loop: false)
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Magas |
+| **Állapot** | **Javítva** |
+| **Felfedezés** | 2026-03-10 (session 23c) |
+| **Javítás** | 2026-03-10 (session 23c) |
+
+#### Tünet
+
+A motor a driver indulásával egyidejűleg elkezdett forogni, anélkül hogy bármilyen cmd_vel-t publikáltunk volna.
+
+#### Root cause
+
+Két probléma együttese:
+
+1. **`open_loop: false`** (diff_drive_controller zárt hurkú módban): A lebegő encoderek elektromos zajt generálnak, amit a controller valós mozgásként értelmez → korrekciós motorparancsokat küld.
+
+2. **`cmd_vel_dirty_ = true`** (kényszerített első write): Az on_activate utáni első write() ciklusban mindenképp küldött motorparancsot, ami a diff_drive_controller transient értékeit (zajos encoder-ből) azonnal végrehajtotta.
+
+#### Javítás
+
+Három módosítás:
+
+1. **`open_loop: true`** a diff_drive_controller-ben (amíg encoderek nincsenek motorra rögzítve)
+2. **Explicit `DutyM1M2(0, 0)`** az `on_activate`-ban, mielőtt a control loop elindul
+3. **`cmd_vel_dirty_ = false`** alapértelmezés — az első write csak akkor megy ki, ha a controller ténylegesen non-zero sebességet kér

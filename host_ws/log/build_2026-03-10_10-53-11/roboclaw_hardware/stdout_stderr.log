@@ -1,0 +1,49 @@
+[ 15%] Built target gtest_main
+[ 30%] Built target gtest
+[ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o
+[ 46%] Linking CXX shared library libroboclaw_hardware.so
+[ 69%] Built target roboclaw_hardware
+[ 76%] Building CXX object CMakeFiles/test_protocol_crc.dir/test/test_protocol_crc.cpp.o
+[ 84%] Linking CXX executable test_unit_converter
+[ 92%] Built target test_unit_converter
+[100%] Linking CXX executable test_protocol_crc
+[100%] Built target test_protocol_crc
+-- Install configuration: "Release"
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/roboclaw_hardware_plugin.xml
+-- Installing: /host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so
+-- Set non-toolchain portion of runtime path of "/host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so" to ""
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_protocol.hpp
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_tcp.hpp
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/visibility_control.h
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_hardware.hpp
+-- Installing: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/unit_converter.hpp
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config/diff_drive_controllers.yaml
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch/roboclaw.launch.py
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf/roboclaw_diff_drive.urdf.xacro
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.sh
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/package_run_dependencies/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/parent_prefix_path/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.sh
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.sh
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.bash
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.sh
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.zsh
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.dsv
+-- Installing: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/packages/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/roboclaw_hardware
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport-release.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_targets-extras.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_dependencies-extras.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig-version.cmake
+-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.xml

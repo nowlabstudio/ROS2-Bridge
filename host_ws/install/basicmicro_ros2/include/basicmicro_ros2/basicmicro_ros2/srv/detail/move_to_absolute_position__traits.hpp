@@ -1,0 +1,1 @@
+/host_ws/build/basicmicro_ros2/rosidl_generator_cpp/basicmicro_ros2/srv/detail/move_to_absolute_position__traits.hpp

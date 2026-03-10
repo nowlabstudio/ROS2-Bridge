@@ -1,0 +1,19 @@
+running develop
+running egg_info
+creating roboclaw_tcp_adapter.egg-info
+writing roboclaw_tcp_adapter.egg-info/PKG-INFO
+writing dependency_links to roboclaw_tcp_adapter.egg-info/dependency_links.txt
+writing entry points to roboclaw_tcp_adapter.egg-info/entry_points.txt
+writing requirements to roboclaw_tcp_adapter.egg-info/requires.txt
+writing top-level names to roboclaw_tcp_adapter.egg-info/top_level.txt
+writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+reading manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'
+running build_ext
+Creating /host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages/roboclaw-tcp-adapter.egg-link (link to .)
+Installing rc_teleop_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+Installing roboclaw_tcp_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+Installing safety_bridge_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter
+
+Installed /host_ws/build/roboclaw_tcp_adapter
+running symlink_data

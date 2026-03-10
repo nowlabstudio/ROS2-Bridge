@@ -1,0 +1,1 @@
+/host_ws/build/basicmicro_ros2/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_fastrtps_cpp.hpp

@@ -1,0 +1,1073 @@
+[0.000000] (-) TimerEvent: {}
+[0.000082] (-) JobUnselected: {'identifier': 'basicmicro'}
+[0.000137] (basicmicro_ros2) JobQueued: {'identifier': 'basicmicro_ros2', 'dependencies': OrderedDict()}
+[0.000178] (roboclaw_tcp_adapter) JobQueued: {'identifier': 'roboclaw_tcp_adapter', 'dependencies': OrderedDict()}
+[0.000449] (basicmicro_ros2) JobStarted: {'identifier': 'basicmicro_ros2'}
+[0.008599] (roboclaw_tcp_adapter) JobStarted: {'identifier': 'roboclaw_tcp_adapter'}
+[0.015105] (basicmicro_ros2) JobProgress: {'identifier': 'basicmicro_ros2', 'progress': 'cmake'}
+[0.015712] (basicmicro_ros2) Command: {'cmd': ['/usr/bin/cmake', '/host_ws/src/basicmicro_ros2', '-DAMENT_CMAKE_SYMLINK_INSTALL=1', '-DCMAKE_INSTALL_PREFIX=/host_ws/install/basicmicro_ros2'], 'cwd': '/host_ws/build/basicmicro_ros2', 'env': OrderedDict({'HOSTNAME': '948c15908adf', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/basicmicro_ros2', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy'}), 'shell': False}
+[0.099534] (-) TimerEvent: {}
+[0.199711] (-) TimerEvent: {}
+[0.279608] (basicmicro_ros2) StdoutLine: {'line': b'-- The C compiler identification is GNU 13.3.0\n'}
+[0.279940] (basicmicro_ros2) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 13.3.0\n'}
+[0.280158] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.298704] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.299773] (-) TimerEvent: {}
+[0.315708] (basicmicro_ros2) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.316096] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.316967] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.327878] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.399864] (-) TimerEvent: {}
+[0.451228] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.466321] (basicmicro_ros2) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.466596] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.467264] (basicmicro_ros2) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.470832] (basicmicro_ros2) StdoutLine: {'line': b'-- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)\n'}
+[0.499954] (-) TimerEvent: {}
+[0.600100] (-) TimerEvent: {}
+[0.613645] (basicmicro_ros2) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[0.700192] (-) TimerEvent: {}
+[0.710738] (basicmicro_ros2) StdoutLine: {'line': b'-- Override CMake install command with custom implementation using symlinks instead of copying resources\n'}
+[0.743408] (basicmicro_ros2) StdoutLine: {'line': b'-- Found rosidl_default_generators: 1.6.0 (/opt/ros/jazzy/share/rosidl_default_generators/cmake)\n'}
+[0.749810] (basicmicro_ros2) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.800284] (-) TimerEvent: {}
+[0.810336] (basicmicro_ros2) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.868136] (roboclaw_tcp_adapter) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/host_ws/build/roboclaw_tcp_adapter/build', '--no-deps', 'symlink_data'], 'cwd': '/host_ws/build/roboclaw_tcp_adapter', 'env': {'HOSTNAME': '948c15908adf', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_tcp_adapter', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/host_ws/build/roboclaw_tcp_adapter/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages:/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1'}, 'shell': False}
+[0.872918] (basicmicro_ros2) StdoutLine: {'line': b'-- Found rosidl_adapter: 4.6.7 (/opt/ros/jazzy/share/rosidl_adapter/cmake)\n'}
+[0.900397] (-) TimerEvent: {}
+[1.000572] (-) TimerEvent: {}
+[1.100720] (-) TimerEvent: {}
+[1.114204] (basicmicro_ros2) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development Development.Module Development.Embed \n'}
+[1.144351] (basicmicro_ros2) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter \n'}
+[1.200816] (-) TimerEvent: {}
+[1.235329] (roboclaw_tcp_adapter) StdoutLine: {'line': b'running develop\n'}
+[1.300899] (-) TimerEvent: {}
+[1.401062] (-) TimerEvent: {}
+[1.414194] (roboclaw_tcp_adapter) StdoutLine: {'line': b'running egg_info\n'}
+[1.414356] (roboclaw_tcp_adapter) StdoutLine: {'line': b'creating roboclaw_tcp_adapter.egg-info\n'}
+[1.431653] (roboclaw_tcp_adapter) StdoutLine: {'line': b'writing roboclaw_tcp_adapter.egg-info/PKG-INFO\n'}
+[1.431946] (roboclaw_tcp_adapter) StdoutLine: {'line': b'writing dependency_links to roboclaw_tcp_adapter.egg-info/dependency_links.txt\n'}
+[1.432237] (roboclaw_tcp_adapter) StdoutLine: {'line': b'writing entry points to roboclaw_tcp_adapter.egg-info/entry_points.txt\n'}
+[1.432337] (roboclaw_tcp_adapter) StdoutLine: {'line': b'writing requirements to roboclaw_tcp_adapter.egg-info/requires.txt\n'}
+[1.432507] (roboclaw_tcp_adapter) StdoutLine: {'line': b'writing top-level names to roboclaw_tcp_adapter.egg-info/top_level.txt\n'}
+[1.432585] (roboclaw_tcp_adapter) StdoutLine: {'line': b"writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'\n"}
+[1.467646] (roboclaw_tcp_adapter) StdoutLine: {'line': b"reading manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'\n"}
+[1.468330] (roboclaw_tcp_adapter) StdoutLine: {'line': b"writing manifest file 'roboclaw_tcp_adapter.egg-info/SOURCES.txt'\n"}
+[1.488858] (roboclaw_tcp_adapter) StdoutLine: {'line': b'running build_ext\n'}
+[1.489047] (roboclaw_tcp_adapter) StdoutLine: {'line': b'Creating /host_ws/install/roboclaw_tcp_adapter/lib/python3.12/site-packages/roboclaw-tcp-adapter.egg-link (link to .)\n'}
+[1.490131] (roboclaw_tcp_adapter) StdoutLine: {'line': b'Installing rc_teleop_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter\n'}
+[1.490501] (roboclaw_tcp_adapter) StdoutLine: {'line': b'Installing roboclaw_tcp_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter\n'}
+[1.490728] (roboclaw_tcp_adapter) StdoutLine: {'line': b'Installing safety_bridge_node script to /host_ws/install/roboclaw_tcp_adapter/lib/roboclaw_tcp_adapter\n'}
+[1.491034] (roboclaw_tcp_adapter) StdoutLine: {'line': b'\n'}
+[1.491205] (roboclaw_tcp_adapter) StdoutLine: {'line': b'Installed /host_ws/build/roboclaw_tcp_adapter\n'}
+[1.491329] (roboclaw_tcp_adapter) StdoutLine: {'line': b'running symlink_data\n'}
+[1.501148] (-) TimerEvent: {}
+[1.540826] (roboclaw_tcp_adapter) CommandEnded: {'returncode': 0}
+[1.556373] (roboclaw_tcp_adapter) JobEnded: {'identifier': 'roboclaw_tcp_adapter', 'rc': 0}
+[1.601247] (-) TimerEvent: {}
+[1.644312] (basicmicro_ros2) StdoutLine: {'line': b'-- Found ament_cmake_ros: 0.12.0 (/opt/ros/jazzy/share/ament_cmake_ros/cmake)\n'}
+[1.701333] (-) TimerEvent: {}
+[1.756060] (basicmicro_ros2) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[1.801444] (-) TimerEvent: {}
+[1.889249] (basicmicro_ros2) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[1.892839] (basicmicro_ros2) StdoutLine: {'line': b'-- Found python_cmake_module: 0.11.1 (/opt/ros/jazzy/share/python_cmake_module/cmake)\n'}
+[1.901568] (-) TimerEvent: {}
+[1.919124] (basicmicro_ros2) StdoutLine: {'line': b'-- Found PythonExtra: /usr/bin/python3  \n'}
+[2.001653] (-) TimerEvent: {}
+[2.101784] (-) TimerEvent: {}
+[2.201924] (-) TimerEvent: {}
+[2.234847] (basicmicro_ros2) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter Development NumPy Development.Module Development.Embed \n'}
+[2.295661] (basicmicro_ros2) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.17.4 (/opt/ros/jazzy/share/ament_lint_auto/cmake)\n'}
+[2.302027] (-) TimerEvent: {}
+[2.348708] (basicmicro_ros2) StdoutLine: {'line': b"-- Added test 'copyright' to check source files copyright and LICENSE\n"}
+[2.369888] (basicmicro_ros2) StdoutLine: {'line': b"-- Added test 'flake8' to check Python code syntax and style conventions\n"}
+[2.370054] (basicmicro_ros2) StdoutLine: {'line': b"-- Configured 'flake8' exclude dirs and/or files: \n"}
+[2.372743] (basicmicro_ros2) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[2.374711] (basicmicro_ros2) StdoutLine: {'line': b"-- Added test 'pep257' to check Python code against some of the docstring style conventions in PEP 257\n"}
+[2.386063] (basicmicro_ros2) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[2.393215] (basicmicro_ros2) StdoutLine: {'line': b'-- Configuring done (2.4s)\n'}
+[2.402145] (-) TimerEvent: {}
+[2.502309] (-) TimerEvent: {}
+[2.522442] (basicmicro_ros2) StdoutLine: {'line': b'-- Generating done (0.1s)\n'}
+[2.549191] (basicmicro_ros2) StdoutLine: {'line': b'-- Build files have been written to: /host_ws/build/basicmicro_ros2\n'}
+[2.561503] (basicmicro_ros2) CommandEnded: {'returncode': 0}
+[2.562040] (basicmicro_ros2) JobProgress: {'identifier': 'basicmicro_ros2', 'progress': 'build'}
+[2.562910] (basicmicro_ros2) Command: {'cmd': ['/usr/bin/cmake', '--build', '/host_ws/build/basicmicro_ros2', '--', '-j8', '-l8'], 'cwd': '/host_ws/build/basicmicro_ros2', 'env': OrderedDict({'HOSTNAME': '948c15908adf', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/basicmicro_ros2', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy'}), 'shell': False}
+[2.602472] (-) TimerEvent: {}
+[2.637304] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Generating type hashes for ROS interfaces\n'}
+[2.647087] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Built target ament_cmake_python_symlink_basicmicro_ros2\n'}
+[2.702567] (-) TimerEvent: {}
+[2.802725] (-) TimerEvent: {}
+[2.902882] (-) TimerEvent: {}
+[2.946814] (basicmicro_ros2) StdoutLine: {'line': b'running egg_info\n'}
+[2.948345] (basicmicro_ros2) StdoutLine: {'line': b'creating basicmicro_ros2.egg-info\n'}
+[2.968471] (basicmicro_ros2) StdoutLine: {'line': b'writing basicmicro_ros2.egg-info/PKG-INFO\n'}
+[2.968741] (basicmicro_ros2) StdoutLine: {'line': b'writing dependency_links to basicmicro_ros2.egg-info/dependency_links.txt\n'}
+[2.968984] (basicmicro_ros2) StdoutLine: {'line': b'writing top-level names to basicmicro_ros2.egg-info/top_level.txt\n'}
+[2.969114] (basicmicro_ros2) StdoutLine: {'line': b"writing manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'\n"}
+[3.002965] (-) TimerEvent: {}
+[3.015046] (basicmicro_ros2) StdoutLine: {'line': b"reading manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'\n"}
+[3.015671] (basicmicro_ros2) StdoutLine: {'line': b"writing manifest file 'basicmicro_ros2.egg-info/SOURCES.txt'\n"}
+[3.049626] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Built target ament_cmake_python_build_basicmicro_ros2_egg\n'}
+[3.103054] (-) TimerEvent: {}
+[3.203203] (-) TimerEvent: {}
+[3.303381] (-) TimerEvent: {}
+[3.403561] (-) TimerEvent: {}
+[3.503712] (-) TimerEvent: {}
+[3.603880] (-) TimerEvent: {}
+[3.704017] (-) TimerEvent: {}
+[3.804217] (-) TimerEvent: {}
+[3.904350] (-) TimerEvent: {}
+[4.004493] (-) TimerEvent: {}
+[4.104661] (-) TimerEvent: {}
+[4.204835] (-) TimerEvent: {}
+[4.305294] (-) TimerEvent: {}
+[4.405510] (-) TimerEvent: {}
+[4.505678] (-) TimerEvent: {}
+[4.605844] (-) TimerEvent: {}
+[4.705992] (-) TimerEvent: {}
+[4.806157] (-) TimerEvent: {}
+[4.865210] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Built target basicmicro_ros2__rosidl_generator_type_description\n'}
+[4.880391] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Generating C code for ROS interfaces\n'}
+[4.893104] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Generating C++ code for ROS interfaces\n'}
+[4.906267] (-) TimerEvent: {}
+[5.006433] (-) TimerEvent: {}
+[5.106583] (-) TimerEvent: {}
+[5.206742] (-) TimerEvent: {}
+[5.306901] (-) TimerEvent: {}
+[5.407056] (-) TimerEvent: {}
+[5.507209] (-) TimerEvent: {}
+[5.607366] (-) TimerEvent: {}
+[5.707530] (-) TimerEvent: {}
+[5.807693] (-) TimerEvent: {}
+[5.907870] (-) TimerEvent: {}
+[6.008029] (-) TimerEvent: {}
+[6.108218] (-) TimerEvent: {}
+[6.208356] (-) TimerEvent: {}
+[6.308470] (-) TimerEvent: {}
+[6.408627] (-) TimerEvent: {}
+[6.508747] (-) TimerEvent: {}
+[6.608875] (-) TimerEvent: {}
+[6.709011] (-) TimerEvent: {}
+[6.809184] (-) TimerEvent: {}
+[6.909339] (-) TimerEvent: {}
+[7.009480] (-) TimerEvent: {}
+[7.109611] (-) TimerEvent: {}
+[7.209748] (-) TimerEvent: {}
+[7.309907] (-) TimerEvent: {}
+[7.410054] (-) TimerEvent: {}
+[7.510200] (-) TimerEvent: {}
+[7.610351] (-) TimerEvent: {}
+[7.710498] (-) TimerEvent: {}
+[7.810636] (-) TimerEvent: {}
+[7.910741] (-) TimerEvent: {}
+[8.010887] (-) TimerEvent: {}
+[8.111036] (-) TimerEvent: {}
+[8.212471] (-) TimerEvent: {}
+[8.230549] (basicmicro_ros2) StdoutLine: {'line': b'[  1%] Built target basicmicro_ros2__cpp\n'}
+[8.312556] (-) TimerEvent: {}
+[8.412741] (-) TimerEvent: {}
+[8.512896] (-) TimerEvent: {}
+[8.616335] (-) TimerEvent: {}
+[8.717757] (-) TimerEvent: {}
+[8.813547] (basicmicro_ros2) StdoutLine: {'line': b'[  2%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__functions.c.o\n'}
+[8.816237] (basicmicro_ros2) StdoutLine: {'line': b'[  2%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__functions.c.o\n'}
+[8.817598] (basicmicro_ros2) StdoutLine: {'line': b'[  3%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__description.c.o\n'}
+[8.817901] (-) TimerEvent: {}
+[8.818342] (basicmicro_ros2) StdoutLine: {'line': b'[  3%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__functions.c.o\n'}
+[8.823689] (basicmicro_ros2) StdoutLine: {'line': b'[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__type_support.c.o\n'}
+[8.824213] (basicmicro_ros2) StdoutLine: {'line': b'[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__type_support.c.o\n'}
+[8.824428] (basicmicro_ros2) StdoutLine: {'line': b'[  4%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/position_point__description.c.o\n'}
+[8.828665] (basicmicro_ros2) StdoutLine: {'line': b'[  5%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/msg/detail/trajectory_point__description.c.o\n'}
+[8.918086] (-) TimerEvent: {}
+[8.923880] (basicmicro_ros2) StdoutLine: {'line': b'[  6%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__functions.c.o\n'}
+[8.929419] (basicmicro_ros2) StdoutLine: {'line': b'[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.c.o\n'}
+[8.929679] (basicmicro_ros2) StdoutLine: {'line': b'[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__description.c.o\n'}
+[8.942771] (basicmicro_ros2) StdoutLine: {'line': b'[  7%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.c.o\n'}
+[8.949978] (basicmicro_ros2) StdoutLine: {'line': b'[  8%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__description.c.o\n'}
+[8.953631] (basicmicro_ros2) StdoutLine: {'line': b'[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__type_support.c.o\n'}
+[8.966120] (basicmicro_ros2) StdoutLine: {'line': b'[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_distance__functions.c.o\n'}
+[9.010757] (basicmicro_ros2) StdoutLine: {'line': b'[  9%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__description.c.o\n'}
+[9.018187] (-) TimerEvent: {}
+[9.028989] (basicmicro_ros2) StdoutLine: {'line': b'[ 10%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__functions.c.o\n'}
+[9.046381] (basicmicro_ros2) StdoutLine: {'line': b'[ 10%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_position_limits__type_support.c.o\n'}
+[9.047901] (basicmicro_ros2) StdoutLine: {'line': b'[ 11%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__description.c.o\n'}
+[9.062799] (basicmicro_ros2) StdoutLine: {'line': b'[ 11%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__functions.c.o\n'}
+[9.087168] (basicmicro_ros2) StdoutLine: {'line': b'[ 12%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_position_limits__type_support.c.o\n'}
+[9.119361] (-) TimerEvent: {}
+[9.125710] (basicmicro_ros2) StdoutLine: {'line': b'[ 12%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__description.c.o\n'}
+[9.156575] (basicmicro_ros2) StdoutLine: {'line': b'[ 13%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__functions.c.o\n'}
+[9.173856] (basicmicro_ros2) StdoutLine: {'line': b'[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__description.c.o\n'}
+[9.178270] (basicmicro_ros2) StdoutLine: {'line': b'[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support.c.o\n'}
+[9.192000] (basicmicro_ros2) StdoutLine: {'line': b'[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__functions.c.o\n'}
+[9.210142] (basicmicro_ros2) StdoutLine: {'line': b'[ 15%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.c.o\n'}
+[9.212013] (basicmicro_ros2) StdoutLine: {'line': b'[ 14%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__description.c.o\n'}
+[9.219543] (-) TimerEvent: {}
+[9.232616] (basicmicro_ros2) StdoutLine: {'line': b'[ 16%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__functions.c.o\n'}
+[9.281135] (basicmicro_ros2) StdoutLine: {'line': b'[ 17%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.c.o\n'}
+[9.281472] (basicmicro_ros2) StdoutLine: {'line': b'[ 17%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__description.c.o\n'}
+[9.319650] (-) TimerEvent: {}
+[9.322165] (basicmicro_ros2) StdoutLine: {'line': b'[ 18%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__functions.c.o\n'}
+[9.352418] (basicmicro_ros2) StdoutLine: {'line': b'[ 18%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/get_servo_status__type_support.c.o\n'}
+[9.368419] (basicmicro_ros2) StdoutLine: {'line': b'[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__description.c.o\n'}
+[9.387960] (basicmicro_ros2) StdoutLine: {'line': b'[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__functions.c.o\n'}
+[9.398755] (basicmicro_ros2) StdoutLine: {'line': b'[ 19%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__description.c.o\n'}
+[9.410760] (basicmicro_ros2) StdoutLine: {'line': b'[ 20%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.c.o\n'}
+[9.415780] (basicmicro_ros2) StdoutLine: {'line': b'[ 21%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__functions.c.o\n'}
+[9.419785] (-) TimerEvent: {}
+[9.467889] (basicmicro_ros2) StdoutLine: {'line': b'[ 21%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/perform_homing__type_support.c.o\n'}
+[9.480026] (basicmicro_ros2) StdoutLine: {'line': b'[ 22%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__description.c.o\n'}
+[9.491751] (basicmicro_ros2) StdoutLine: {'line': b'[ 22%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__functions.c.o\n'}
+[9.519891] (-) TimerEvent: {}
+[9.550470] (basicmicro_ros2) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/release_position_hold__type_support.c.o\n'}
+[9.575104] (basicmicro_ros2) StdoutLine: {'line': b'[ 23%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__description.c.o\n'}
+[9.588872] (basicmicro_ros2) StdoutLine: {'line': b'[ 24%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__functions.c.o\n'}
+[9.613950] (basicmicro_ros2) StdoutLine: {'line': b'[ 24%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.c.o\n'}
+[9.623761] (-) TimerEvent: {}
+[9.631804] (basicmicro_ros2) StdoutLine: {'line': b'[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__functions.c.o\n'}
+[9.632128] (basicmicro_ros2) StdoutLine: {'line': b'[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__description.c.o\n'}
+[9.669895] (basicmicro_ros2) StdoutLine: {'line': b'[ 25%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__description.c.o\n'}
+[9.672104] (basicmicro_ros2) StdoutLine: {'line': b'[ 26%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.c.o\n'}
+[9.722939] (basicmicro_ros2) StdoutLine: {'line': b'[ 27%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__functions.c.o\n'}
+[9.723859] (-) TimerEvent: {}
+[9.742177] (basicmicro_ros2) StdoutLine: {'line': b'[ 27%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_c.dir/rosidl_generator_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.c.o\n'}
+[9.823972] (-) TimerEvent: {}
+[9.901757] (basicmicro_ros2) StdoutLine: {'line': b'[ 28%] Linking C shared library libbasicmicro_ros2__rosidl_generator_c.so\n'}
+[9.927136] (-) TimerEvent: {}
+[10.012664] (basicmicro_ros2) StdoutLine: {'line': b'[ 28%] Built target basicmicro_ros2__rosidl_generator_c\n'}
+[10.028085] (-) TimerEvent: {}
+[10.041958] (basicmicro_ros2) StdoutLine: {'line': b'[ 28%] Generating C type support dispatch for ROS interfaces\n'}
+[10.049019] (basicmicro_ros2) StdoutLine: {'line': b'[ 29%] Generating C++ type support for eProsima Fast-RTPS\n'}
+[10.051278] (basicmicro_ros2) StdoutLine: {'line': b'[ 29%] Generating C++ introspection for ROS interfaces\n'}
+[10.053363] (basicmicro_ros2) StdoutLine: {'line': b'[ 30%] Generating C type support for eProsima Fast-RTPS\n'}
+[10.057771] (basicmicro_ros2) StdoutLine: {'line': b'[ 31%] Generating C++ type support dispatch for ROS interfaces\n'}
+[10.060760] (basicmicro_ros2) StdoutLine: {'line': b'[ 31%] Generating C introspection for ROS interfaces\n'}
+[10.128178] (-) TimerEvent: {}
+[10.228341] (-) TimerEvent: {}
+[10.328501] (-) TimerEvent: {}
+[10.428653] (-) TimerEvent: {}
+[10.528813] (-) TimerEvent: {}
+[10.628967] (-) TimerEvent: {}
+[10.729139] (-) TimerEvent: {}
+[10.829289] (-) TimerEvent: {}
+[10.929437] (-) TimerEvent: {}
+[11.029594] (-) TimerEvent: {}
+[11.129747] (-) TimerEvent: {}
+[11.229899] (-) TimerEvent: {}
+[11.330053] (-) TimerEvent: {}
+[11.432764] (-) TimerEvent: {}
+[11.532956] (-) TimerEvent: {}
+[11.636627] (-) TimerEvent: {}
+[11.736752] (-) TimerEvent: {}
+[11.836916] (-) TimerEvent: {}
+[11.937072] (-) TimerEvent: {}
+[12.037346] (-) TimerEvent: {}
+[12.139086] (-) TimerEvent: {}
+[12.239281] (-) TimerEvent: {}
+[12.340606] (-) TimerEvent: {}
+[12.440751] (-) TimerEvent: {}
+[12.540910] (-) TimerEvent: {}
+[12.641192] (-) TimerEvent: {}
+[12.743802] (-) TimerEvent: {}
+[12.843957] (-) TimerEvent: {}
+[12.944119] (-) TimerEvent: {}
+[13.044277] (-) TimerEvent: {}
+[13.144439] (-) TimerEvent: {}
+[13.244914] (-) TimerEvent: {}
+[13.345073] (-) TimerEvent: {}
+[13.446761] (-) TimerEvent: {}
+[13.546925] (-) TimerEvent: {}
+[13.647081] (-) TimerEvent: {}
+[13.747232] (-) TimerEvent: {}
+[13.847442] (-) TimerEvent: {}
+[13.947720] (-) TimerEvent: {}
+[14.049750] (-) TimerEvent: {}
+[14.149970] (-) TimerEvent: {}
+[14.250529] (-) TimerEvent: {}
+[14.346591] (basicmicro_ros2) StdoutLine: {'line': b'[ 31%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/msg/trajectory_point__type_support.cpp.o\n'}
+[14.349527] (basicmicro_ros2) StdoutLine: {'line': b'[ 32%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/msg/position_point__type_support.cpp.o\n'}
+[14.350885] (basicmicro_ros2) StdoutLine: {'line': b'[ 33%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_motion_strategy__type_support.cpp.o\n'}
+[14.351094] (-) TimerEvent: {}
+[14.452716] (-) TimerEvent: {}
+[14.552864] (-) TimerEvent: {}
+[14.653025] (-) TimerEvent: {}
+[14.753180] (-) TimerEvent: {}
+[14.819634] (basicmicro_ros2) StdoutLine: {'line': b'[ 34%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/msg/trajectory_point__type_support.cpp.o\n'}
+[14.853269] (-) TimerEvent: {}
+[14.913138] (basicmicro_ros2) StdoutLine: {'line': b'[ 34%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/msg/position_point__type_support.cpp.o\n'}
+[14.953360] (-) TimerEvent: {}
+[15.013462] (basicmicro_ros2) StdoutLine: {'line': b'[ 35%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_motion_strategy__type_support.cpp.o\n'}
+[15.053453] (-) TimerEvent: {}
+[15.062246] (basicmicro_ros2) StdoutLine: {'line': b'[ 35%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_motion_parameters__type_support.cpp.o\n'}
+[15.071011] (basicmicro_ros2) StdoutLine: {'line': b'[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/move_distance__type_support.cpp.o\n'}
+[15.106569] (basicmicro_ros2) StdoutLine: {'line': b'[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_motion_parameters__type_support.cpp.o\n'}
+[15.126937] (basicmicro_ros2) StdoutLine: {'line': b'[ 36%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_position_limits__type_support.cpp.o\n'}
+[15.154746] (-) TimerEvent: {}
+[15.159278] (basicmicro_ros2) StdoutLine: {'line': b'[ 37%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/move_distance__type_support.cpp.o\n'}
+[15.189892] (basicmicro_ros2) StdoutLine: {'line': b'[ 37%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_position_limits__type_support.cpp.o\n'}
+[15.230213] (basicmicro_ros2) StdoutLine: {'line': b'[ 38%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_position_limits__type_support.cpp.o\n'}
+[15.257753] (-) TimerEvent: {}
+[15.277927] (basicmicro_ros2) StdoutLine: {'line': b'[ 39%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/msg/detail/trajectory_point__type_support.cpp.o\n'}
+[15.328472] (basicmicro_ros2) StdoutLine: {'line': b'[ 39%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/execute_trajectory__type_support.cpp.o\n'}
+[15.357844] (-) TimerEvent: {}
+[15.426913] (basicmicro_ros2) StdoutLine: {'line': b'[ 40%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/execute_position_sequence__type_support.cpp.o\n'}
+[15.457935] (-) TimerEvent: {}
+[15.522950] (basicmicro_ros2) StdoutLine: {'line': b'[ 40%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_available_homing_methods__type_support.cpp.o\n'}
+[15.558036] (-) TimerEvent: {}
+[15.618963] (basicmicro_ros2) StdoutLine: {'line': b'[ 41%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/get_servo_status__type_support.cpp.o\n'}
+[15.658135] (-) TimerEvent: {}
+[15.714074] (basicmicro_ros2) StdoutLine: {'line': b'[ 41%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/move_to_absolute_position__type_support.cpp.o\n'}
+[15.758228] (-) TimerEvent: {}
+[15.812791] (basicmicro_ros2) StdoutLine: {'line': b'[ 42%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/perform_homing__type_support.cpp.o\n'}
+[15.860571] (-) TimerEvent: {}
+[15.898743] (basicmicro_ros2) StdoutLine: {'line': b'[ 43%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/msg/detail/trajectory_point__type_support.c.o\n'}
+[15.910025] (basicmicro_ros2) StdoutLine: {'line': b'[ 43%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/release_position_hold__type_support.cpp.o\n'}
+[15.929940] (basicmicro_ros2) StdoutLine: {'line': b'[ 43%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/msg/detail/position_point__type_support.c.o\n'}
+[15.960675] (-) TimerEvent: {}
+[15.976740] (basicmicro_ros2) StdoutLine: {'line': b'[ 44%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.c.o\n'}
+[15.982913] (basicmicro_ros2) StdoutLine: {'line': b'[ 44%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/msg/detail/position_point__type_support.cpp.o\n'}
+[16.002127] (basicmicro_ros2) StdoutLine: {'line': b'[ 45%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.cpp.o\n'}
+[16.015656] (basicmicro_ros2) StdoutLine: {'line': b'[ 46%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_duty_cycle__type_support.cpp.o\n'}
+[16.030719] (basicmicro_ros2) StdoutLine: {'line': b'[ 47%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_position_limits__type_support.cpp.o\n'}
+[16.039079] (basicmicro_ros2) StdoutLine: {'line': b'[ 47%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.c.o\n'}
+[16.060747] (-) TimerEvent: {}
+[16.120484] (basicmicro_ros2) StdoutLine: {'line': b'[ 48%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_homing_configuration__type_support.cpp.o\n'}
+[16.137728] (basicmicro_ros2) StdoutLine: {'line': b'[ 48%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_c.dir/rosidl_typesupport_c/basicmicro_ros2/srv/set_duty_cycle_accel__type_support.cpp.o\n'}
+[16.157678] (basicmicro_ros2) StdoutLine: {'line': b'[ 49%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/move_distance__type_support.c.o\n'}
+[16.160856] (-) TimerEvent: {}
+[16.261010] (-) TimerEvent: {}
+[16.302208] (basicmicro_ros2) StdoutLine: {'line': b'[ 49%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_position_limits__type_support.c.o\n'}
+[16.306951] (basicmicro_ros2) StdoutLine: {'line': b'[ 49%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_c.so\n'}
+[16.350551] (basicmicro_ros2) StdoutLine: {'line': b'[ 50%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_position_limits__type_support.c.o\n'}
+[16.361107] (-) TimerEvent: {}
+[16.448893] (basicmicro_ros2) StdoutLine: {'line': b'[ 50%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.cpp.o\n'}
+[16.455974] (basicmicro_ros2) StdoutLine: {'line': b'[ 50%] Built target basicmicro_ros2__rosidl_typesupport_c\n'}
+[16.460239] (basicmicro_ros2) StdoutLine: {'line': b'[ 50%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support.c.o\n'}
+[16.461184] (-) TimerEvent: {}
+[16.471409] (basicmicro_ros2) StdoutLine: {'line': b'[ 50%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/execute_trajectory__type_support.cpp.o\n'}
+[16.561683] (-) TimerEvent: {}
+[16.570748] (basicmicro_ros2) StdoutLine: {'line': b'[ 51%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.c.o\n'}
+[16.661751] (-) TimerEvent: {}
+[16.671566] (basicmicro_ros2) StdoutLine: {'line': b'[ 51%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.c.o\n'}
+[16.751650] (basicmicro_ros2) StdoutLine: {'line': b'[ 52%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/get_servo_status__type_support.c.o\n'}
+[16.761847] (-) TimerEvent: {}
+[16.801947] (basicmicro_ros2) StdoutLine: {'line': b'[ 53%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/move_distance__type_support.cpp.o\n'}
+[16.861257] (basicmicro_ros2) StdoutLine: {'line': b'[ 54%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.c.o\n'}
+[16.861925] (-) TimerEvent: {}
+[16.946904] (basicmicro_ros2) StdoutLine: {'line': b'[ 54%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_position_limits__type_support.cpp.o\n'}
+[16.962021] (-) TimerEvent: {}
+[16.997773] (basicmicro_ros2) StdoutLine: {'line': b'[ 55%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_position_limits__type_support.cpp.o\n'}
+[17.000882] (basicmicro_ros2) StdoutLine: {'line': b'[ 55%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/perform_homing__type_support.c.o\n'}
+[17.065746] (-) TimerEvent: {}
+[17.116995] (basicmicro_ros2) StdoutLine: {'line': b'[ 56%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/release_position_hold__type_support.c.o\n'}
+[17.165838] (-) TimerEvent: {}
+[17.238028] (basicmicro_ros2) StdoutLine: {'line': b'[ 56%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.c.o\n'}
+[17.266876] (-) TimerEvent: {}
+[17.332023] (basicmicro_ros2) StdoutLine: {'line': b'[ 56%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/msg/detail/dds_fastrtps/trajectory_point__type_support.cpp.o\n'}
+[17.365145] (basicmicro_ros2) StdoutLine: {'line': b'[ 57%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.c.o\n'}
+[17.366982] (-) TimerEvent: {}
+[17.413209] (basicmicro_ros2) StdoutLine: {'line': b'[ 58%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/execute_position_sequence__type_support.cpp.o\n'}
+[17.463127] (basicmicro_ros2) StdoutLine: {'line': b'[ 58%] Building C object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.c.o\n'}
+[17.467083] (-) TimerEvent: {}
+[17.476822] (basicmicro_ros2) StdoutLine: {'line': b'[ 59%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/msg/detail/dds_fastrtps/position_point__type_support.cpp.o\n'}
+[17.564143] (basicmicro_ros2) StdoutLine: {'line': b'[ 60%] Linking C shared library libbasicmicro_ros2__rosidl_typesupport_introspection_c.so\n'}
+[17.572766] (-) TimerEvent: {}
+[17.654752] (basicmicro_ros2) StdoutLine: {'line': b'[ 60%] Built target basicmicro_ros2__rosidl_typesupport_introspection_c\n'}
+[17.675761] (-) TimerEvent: {}
+[17.678985] (basicmicro_ros2) StdoutLine: {'line': b'[ 60%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_available_homing_methods__type_support.cpp.o\n'}
+[17.726499] (basicmicro_ros2) StdoutLine: {'line': b'[ 60%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_motion_strategy__type_support.cpp.o\n'}
+[17.775854] (-) TimerEvent: {}
+[17.865136] (basicmicro_ros2) StdoutLine: {'line': b'[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/get_servo_status__type_support.cpp.o\n'}
+[17.875949] (-) TimerEvent: {}
+[17.902014] (basicmicro_ros2) StdoutLine: {'line': b'[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/execute_trajectory__type_support.cpp.o\n'}
+[17.934731] (basicmicro_ros2) StdoutLine: {'line': b'[ 61%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/msg/detail/trajectory_point__type_support_c.cpp.o\n'}
+[17.976044] (-) TimerEvent: {}
+[18.076212] (-) TimerEvent: {}
+[18.176400] (-) TimerEvent: {}
+[18.276574] (-) TimerEvent: {}
+[18.307962] (basicmicro_ros2) StdoutLine: {'line': b'[ 62%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/msg/detail/position_point__type_support_c.cpp.o\n'}
+[18.326751] (basicmicro_ros2) StdoutLine: {'line': b'[ 63%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.cpp.o\n'}
+[18.376675] (-) TimerEvent: {}
+[18.476883] (-) TimerEvent: {}
+[18.577060] (-) TimerEvent: {}
+[18.605018] (basicmicro_ros2) StdoutLine: {'line': b'[ 63%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.cpp.o\n'}
+[18.672020] (basicmicro_ros2) StdoutLine: {'line': b'[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_motion_parameters__type_support.cpp.o\n'}
+[18.677415] (-) TimerEvent: {}
+[18.718723] (basicmicro_ros2) StdoutLine: {'line': b'[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/move_to_absolute_position__type_support.cpp.o\n'}
+[18.777516] (-) TimerEvent: {}
+[18.878762] (-) TimerEvent: {}
+[18.916077] (basicmicro_ros2) StdoutLine: {'line': b'[ 64%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/move_distance__type_support.cpp.o\n'}
+[18.978866] (-) TimerEvent: {}
+[19.079038] (-) TimerEvent: {}
+[19.122585] (basicmicro_ros2) StdoutLine: {'line': b'[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/perform_homing__type_support.cpp.o\n'}
+[19.148528] (basicmicro_ros2) StdoutLine: {'line': b'[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/release_position_hold__type_support.cpp.o\n'}
+[19.179608] (-) TimerEvent: {}
+[19.282761] (-) TimerEvent: {}
+[19.323074] (basicmicro_ros2) StdoutLine: {'line': b'[ 65%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_motion_strategy__type_support_c.cpp.o\n'}
+[19.382868] (-) TimerEvent: {}
+[19.389444] (basicmicro_ros2) StdoutLine: {'line': b'[ 66%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_motion_parameters__type_support_c.cpp.o\n'}
+[19.482978] (-) TimerEvent: {}
+[19.583160] (-) TimerEvent: {}
+[19.661998] (basicmicro_ros2) StdoutLine: {'line': b'[ 67%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/get_servo_status__type_support.cpp.o\n'}
+[19.683269] (-) TimerEvent: {}
+[19.783461] (-) TimerEvent: {}
+[19.864390] (basicmicro_ros2) StdoutLine: {'line': b'[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_position_limits__type_support.cpp.o\n'}
+[19.883573] (-) TimerEvent: {}
+[19.983759] (-) TimerEvent: {}
+[19.986886] (basicmicro_ros2) StdoutLine: {'line': b'[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.cpp.o\n'}
+[19.991611] (basicmicro_ros2) StdoutLine: {'line': b'[ 68%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/move_distance__type_support_c.cpp.o\n'}
+[20.084758] (-) TimerEvent: {}
+[20.085759] (basicmicro_ros2) StdoutLine: {'line': b'[ 69%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_duty_cycle__type_support.cpp.o\n'}
+[20.184860] (-) TimerEvent: {}
+[20.268074] (basicmicro_ros2) StdoutLine: {'line': b'[ 70%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_position_limits__type_support_c.cpp.o\n'}
+[20.284968] (-) TimerEvent: {}
+[20.386970] (-) TimerEvent: {}
+[20.487149] (-) TimerEvent: {}
+[20.494522] (basicmicro_ros2) StdoutLine: {'line': b'[ 71%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/perform_homing__type_support.cpp.o\n'}
+[20.555939] (basicmicro_ros2) StdoutLine: {'line': b'[ 71%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_duty_cycle_accel__type_support.cpp.o\n'}
+[20.587254] (-) TimerEvent: {}
+[20.630223] (basicmicro_ros2) StdoutLine: {'line': b'[ 72%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/basicmicro_ros2/srv/set_homing_configuration__type_support.cpp.o\n'}
+[20.687351] (-) TimerEvent: {}
+[20.787524] (-) TimerEvent: {}
+[20.887716] (-) TimerEvent: {}
+[20.920137] (basicmicro_ros2) StdoutLine: {'line': b'[ 72%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_position_limits__type_support.cpp.o\n'}
+[20.946753] (basicmicro_ros2) StdoutLine: {'line': b'[ 73%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/execute_trajectory__type_support.cpp.o\n'}
+[20.987810] (-) TimerEvent: {}
+[21.088001] (-) TimerEvent: {}
+[21.174920] (basicmicro_ros2) StdoutLine: {'line': b'[ 73%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/release_position_hold__type_support.cpp.o\n'}
+[21.188107] (-) TimerEvent: {}
+[21.192207] (basicmicro_ros2) StdoutLine: {'line': b'[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.cpp.o\n'}
+[21.289764] (-) TimerEvent: {}
+[21.389970] (-) TimerEvent: {}
+[21.454069] (basicmicro_ros2) StdoutLine: {'line': b'[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/execute_position_sequence__type_support.cpp.o\n'}
+[21.489918] (basicmicro_ros2) StdoutLine: {'line': b'[ 74%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_position_limits__type_support_c.cpp.o\n'}
+[21.490216] (-) TimerEvent: {}
+[21.531943] (basicmicro_ros2) StdoutLine: {'line': b'[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_available_homing_methods__type_support.cpp.o\n'}
+[21.592762] (-) TimerEvent: {}
+[21.616755] (basicmicro_ros2) StdoutLine: {'line': b'[ 75%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_cpp.so\n'}
+[21.695752] (-) TimerEvent: {}
+[21.795924] (-) TimerEvent: {}
+[21.898758] (-) TimerEvent: {}
+[21.998941] (-) TimerEvent: {}
+[22.080127] (basicmicro_ros2) StdoutLine: {'line': b'[ 75%] Built target basicmicro_ros2__rosidl_typesupport_cpp\n'}
+[22.097473] (basicmicro_ros2) StdoutLine: {'line': b'[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/get_servo_status__type_support.cpp.o\n'}
+[22.099031] (-) TimerEvent: {}
+[22.199198] (-) TimerEvent: {}
+[22.234042] (basicmicro_ros2) StdoutLine: {'line': b'[ 75%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.cpp.o\n'}
+[22.299302] (-) TimerEvent: {}
+[22.336986] (basicmicro_ros2) StdoutLine: {'line': b'[ 76%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/execute_trajectory__type_support_c.cpp.o\n'}
+[22.399407] (-) TimerEvent: {}
+[22.499586] (-) TimerEvent: {}
+[22.606763] (-) TimerEvent: {}
+[22.673762] (basicmicro_ros2) StdoutLine: {'line': b'[ 76%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/execute_position_sequence__type_support_c.cpp.o\n'}
+[22.707764] (-) TimerEvent: {}
+[22.816766] (-) TimerEvent: {}
+[22.821393] (basicmicro_ros2) StdoutLine: {'line': b'[ 77%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/move_to_absolute_position__type_support.cpp.o\n'}
+[22.916865] (-) TimerEvent: {}
+[23.017035] (-) TimerEvent: {}
+[23.024645] (basicmicro_ros2) StdoutLine: {'line': b'[ 78%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.cpp.o\n'}
+[23.117135] (-) TimerEvent: {}
+[23.217316] (-) TimerEvent: {}
+[23.289617] (basicmicro_ros2) StdoutLine: {'line': b'[ 78%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/perform_homing__type_support.cpp.o\n'}
+[23.317422] (-) TimerEvent: {}
+[23.417601] (-) TimerEvent: {}
+[23.481627] (basicmicro_ros2) StdoutLine: {'line': b'[ 79%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support_c.cpp.o\n'}
+[23.488820] (basicmicro_ros2) StdoutLine: {'line': b'[ 79%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/get_servo_status__type_support_c.cpp.o\n'}
+[23.517713] (-) TimerEvent: {}
+[23.617894] (-) TimerEvent: {}
+[23.684827] (basicmicro_ros2) StdoutLine: {'line': b'[ 80%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/release_position_hold__type_support.cpp.o\n'}
+[23.717994] (-) TimerEvent: {}
+[23.783842] (basicmicro_ros2) StdoutLine: {'line': b'[ 80%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_duty_cycle__type_support.cpp.o\n'}
+[23.818102] (-) TimerEvent: {}
+[23.911755] (basicmicro_ros2) StdoutLine: {'line': b'[ 81%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_duty_cycle_accel__type_support.cpp.o\n'}
+[23.918204] (-) TimerEvent: {}
+[24.008591] (basicmicro_ros2) StdoutLine: {'line': b'[ 81%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so\n'}
+[24.018301] (-) TimerEvent: {}
+[24.118488] (-) TimerEvent: {}
+[24.220793] (-) TimerEvent: {}
+[24.273547] (basicmicro_ros2) StdoutLine: {'line': b'[ 81%] Built target basicmicro_ros2__rosidl_typesupport_introspection_cpp\n'}
+[24.290721] (basicmicro_ros2) StdoutLine: {'line': b'[ 81%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/basicmicro_ros2/srv/detail/dds_fastrtps/set_homing_configuration__type_support.cpp.o\n'}
+[24.322777] (-) TimerEvent: {}
+[24.328661] (basicmicro_ros2) StdoutLine: {'line': b'[ 82%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support_c.cpp.o\n'}
+[24.422890] (-) TimerEvent: {}
+[24.523091] (-) TimerEvent: {}
+[24.623270] (-) TimerEvent: {}
+[24.640980] (basicmicro_ros2) StdoutLine: {'line': b'[ 82%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/perform_homing__type_support_c.cpp.o\n'}
+[24.680456] (basicmicro_ros2) StdoutLine: {'line': b'[ 83%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/release_position_hold__type_support_c.cpp.o\n'}
+[24.684618] (basicmicro_ros2) StdoutLine: {'line': b'[ 83%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_duty_cycle__type_support_c.cpp.o\n'}
+[24.724755] (-) TimerEvent: {}
+[24.824932] (-) TimerEvent: {}
+[24.926458] (-) TimerEvent: {}
+[25.026634] (-) TimerEvent: {}
+[25.095661] (basicmicro_ros2) StdoutLine: {'line': b'[ 84%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support_c.cpp.o\n'}
+[25.105553] (basicmicro_ros2) StdoutLine: {'line': b'[ 85%] Building CXX object CMakeFiles/basicmicro_ros2__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/basicmicro_ros2/srv/detail/set_homing_configuration__type_support_c.cpp.o\n'}
+[25.126752] (-) TimerEvent: {}
+[25.230481] (-) TimerEvent: {}
+[25.330668] (-) TimerEvent: {}
+[25.432491] (-) TimerEvent: {}
+[25.532677] (-) TimerEvent: {}
+[25.632863] (-) TimerEvent: {}
+[25.669024] (basicmicro_ros2) StdoutLine: {'line': b'[ 86%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so\n'}
+[25.732973] (-) TimerEvent: {}
+[25.833160] (-) TimerEvent: {}
+[25.855506] (basicmicro_ros2) StdoutLine: {'line': b'[ 86%] Built target basicmicro_ros2__rosidl_typesupport_fastrtps_cpp\n'}
+[25.933270] (-) TimerEvent: {}
+[26.003651] (basicmicro_ros2) StdoutLine: {'line': b'[ 86%] Linking CXX shared library libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so\n'}
+[26.033407] (-) TimerEvent: {}
+[26.115622] (basicmicro_ros2) StdoutLine: {'line': b'[ 86%] Built target basicmicro_ros2__rosidl_typesupport_fastrtps_c\n'}
+[26.133525] (-) TimerEvent: {}
+[26.140725] (basicmicro_ros2) StdoutLine: {'line': b'[ 86%] Built target basicmicro_ros2\n'}
+[26.166880] (basicmicro_ros2) StdoutLine: {'line': b'[ 87%] Generating Python code for ROS interfaces\n'}
+[26.233642] (-) TimerEvent: {}
+[26.333736] (-) TimerEvent: {}
+[26.433877] (-) TimerEvent: {}
+[26.534025] (-) TimerEvent: {}
+[26.634240] (-) TimerEvent: {}
+[26.734378] (-) TimerEvent: {}
+[26.834560] (-) TimerEvent: {}
+[26.934728] (-) TimerEvent: {}
+[27.034859] (-) TimerEvent: {}
+[27.135018] (-) TimerEvent: {}
+[27.235189] (-) TimerEvent: {}
+[27.335350] (-) TimerEvent: {}
+[27.435518] (-) TimerEvent: {}
+[27.535725] (-) TimerEvent: {}
+[27.635857] (-) TimerEvent: {}
+[27.736017] (-) TimerEvent: {}
+[27.836179] (-) TimerEvent: {}
+[27.936309] (-) TimerEvent: {}
+[28.036459] (-) TimerEvent: {}
+[28.136598] (-) TimerEvent: {}
+[28.236797] (-) TimerEvent: {}
+[28.336932] (-) TimerEvent: {}
+[28.437103] (-) TimerEvent: {}
+[28.537280] (-) TimerEvent: {}
+[28.637462] (-) TimerEvent: {}
+[28.737633] (-) TimerEvent: {}
+[28.837799] (-) TimerEvent: {}
+[28.937947] (-) TimerEvent: {}
+[29.038098] (-) TimerEvent: {}
+[29.138261] (-) TimerEvent: {}
+[29.238425] (-) TimerEvent: {}
+[29.338589] (-) TimerEvent: {}
+[29.438767] (-) TimerEvent: {}
+[29.538928] (-) TimerEvent: {}
+[29.639133] (-) TimerEvent: {}
+[29.739318] (-) TimerEvent: {}
+[29.839500] (-) TimerEvent: {}
+[29.939663] (-) TimerEvent: {}
+[30.039802] (-) TimerEvent: {}
+[30.139968] (-) TimerEvent: {}
+[30.240159] (-) TimerEvent: {}
+[30.340331] (-) TimerEvent: {}
+[30.440465] (-) TimerEvent: {}
+[30.540591] (-) TimerEvent: {}
+[30.640728] (-) TimerEvent: {}
+[30.740878] (-) TimerEvent: {}
+[30.841008] (-) TimerEvent: {}
+[30.941142] (-) TimerEvent: {}
+[31.041318] (-) TimerEvent: {}
+[31.141463] (-) TimerEvent: {}
+[31.241626] (-) TimerEvent: {}
+[31.341793] (-) TimerEvent: {}
+[31.441924] (-) TimerEvent: {}
+[31.542097] (-) TimerEvent: {}
+[31.642246] (-) TimerEvent: {}
+[31.653019] (basicmicro_ros2) StdoutLine: {'line': b'[ 87%] Built target basicmicro_ros2__py\n'}
+[31.683057] (basicmicro_ros2) StdoutLine: {'line': b'[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_motion_strategy_s.c.o\n'}
+[31.683473] (basicmicro_ros2) StdoutLine: {'line': b'[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/msg/_position_point_s.c.o\n'}
+[31.683621] (basicmicro_ros2) StdoutLine: {'line': b'[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_move_distance_s.c.o\n'}
+[31.683897] (basicmicro_ros2) StdoutLine: {'line': b'[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_position_limits_s.c.o\n'}
+[31.684074] (basicmicro_ros2) StdoutLine: {'line': b'[ 88%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/msg/_trajectory_point_s.c.o\n'}
+[31.684228] (basicmicro_ros2) StdoutLine: {'line': b'[ 89%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_motion_parameters_s.c.o\n'}
+[31.684380] (basicmicro_ros2) StdoutLine: {'line': b'[ 90%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_position_limits_s.c.o\n'}
+[31.690090] (basicmicro_ros2) StdoutLine: {'line': b'[ 91%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_execute_trajectory_s.c.o\n'}
+[31.742348] (-) TimerEvent: {}
+[31.844757] (-) TimerEvent: {}
+[31.944931] (-) TimerEvent: {}
+[31.946298] (basicmicro_ros2) StdoutLine: {'line': b'[ 91%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_execute_position_sequence_s.c.o\n'}
+[32.006645] (basicmicro_ros2) StdoutLine: {'line': b'[ 92%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_available_homing_methods_s.c.o\n'}
+[32.010655] (basicmicro_ros2) StdoutLine: {'line': b'[ 93%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_get_servo_status_s.c.o\n'}
+[32.018215] (basicmicro_ros2) StdoutLine: {'line': b'[ 93%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_move_to_absolute_position_s.c.o\n'}
+[32.019656] (basicmicro_ros2) StdoutLine: {'line': b'[ 94%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_perform_homing_s.c.o\n'}
+[32.024960] (basicmicro_ros2) StdoutLine: {'line': b'[ 94%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_release_position_hold_s.c.o\n'}
+[32.038199] (basicmicro_ros2) StdoutLine: {'line': b'[ 95%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_duty_cycle_s.c.o\n'}
+[32.046752] (-) TimerEvent: {}
+[32.104297] (basicmicro_ros2) StdoutLine: {'line': b'[ 95%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_duty_cycle_accel_s.c.o\n'}
+[32.146842] (-) TimerEvent: {}
+[32.246999] (-) TimerEvent: {}
+[32.320965] (basicmicro_ros2) StdoutLine: {'line': b'[ 96%] Building C object CMakeFiles/basicmicro_ros2__rosidl_generator_py.dir/rosidl_generator_py/basicmicro_ros2/srv/_set_homing_configuration_s.c.o\n'}
+[32.347098] (-) TimerEvent: {}
+[32.447260] (-) TimerEvent: {}
+[32.531129] (basicmicro_ros2) StdoutLine: {'line': b'[ 96%] Linking C shared library libbasicmicro_ros2__rosidl_generator_py.so\n'}
+[32.547343] (-) TimerEvent: {}
+[32.593276] (basicmicro_ros2) StdoutLine: {'line': b'[ 96%] Built target basicmicro_ros2__rosidl_generator_py\n'}
+[32.617301] (basicmicro_ros2) StdoutLine: {'line': b'[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_fastrtps_c.c.o\n'}
+[32.617582] (basicmicro_ros2) StdoutLine: {'line': b'[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_introspection_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_introspection_c.c.o\n'}
+[32.617798] (basicmicro_ros2) StdoutLine: {'line': b'[ 99%] Building C object CMakeFiles/basicmicro_ros2_s__rosidl_typesupport_c.dir/rosidl_generator_py/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_c.c.o\n'}
+[32.647467] (-) TimerEvent: {}
+[32.747630] (-) TimerEvent: {}
+[32.847753] (-) TimerEvent: {}
+[32.931260] (basicmicro_ros2) StdoutLine: {'line': b'[ 99%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so\n'}
+[32.931777] (basicmicro_ros2) StdoutLine: {'line': b'[ 99%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so\n'}
+[32.932157] (basicmicro_ros2) StdoutLine: {'line': b'[100%] Linking C shared module rosidl_generator_py/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so\n'}
+[32.947849] (-) TimerEvent: {}
+[32.969170] (basicmicro_ros2) StdoutLine: {'line': b'[100%] Built target basicmicro_ros2_s__rosidl_typesupport_c\n'}
+[32.971149] (basicmicro_ros2) StdoutLine: {'line': b'[100%] Built target basicmicro_ros2_s__rosidl_typesupport_fastrtps_c\n'}
+[32.971457] (basicmicro_ros2) StdoutLine: {'line': b'[100%] Built target basicmicro_ros2_s__rosidl_typesupport_introspection_c\n'}
+[32.986874] (basicmicro_ros2) CommandEnded: {'returncode': 0}
+[32.987533] (basicmicro_ros2) JobProgress: {'identifier': 'basicmicro_ros2', 'progress': 'install'}
+[32.997818] (basicmicro_ros2) Command: {'cmd': ['/usr/bin/cmake', '--install', '/host_ws/build/basicmicro_ros2'], 'cwd': '/host_ws/build/basicmicro_ros2', 'env': OrderedDict({'HOSTNAME': '948c15908adf', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/basicmicro_ros2', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy'}), 'shell': False}
+[33.007617] (basicmicro_ros2) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[33.008439] (basicmicro_ros2) StdoutLine: {'line': b'-- Execute custom install script\n'}
+[33.008678] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/rosidl_interfaces/basicmicro_ros2\n'}
+[33.008959] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.json\n'}
+[33.009229] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.json\n'}
+[33.009488] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.json\n'}
+[33.009578] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.json\n'}
+[33.009739] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.json\n'}
+[33.009901] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.json\n'}
+[33.010093] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.json\n'}
+[33.010286] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.json\n'}
+[33.010513] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.json\n'}
+[33.010676] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.json\n'}
+[33.010967] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.json\n'}
+[33.011214] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.json\n'}
+[33.011484] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.json\n'}
+[33.011771] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.json\n'}
+[33.012092] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.json\n'}
+[33.012423] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.json\n'}
+[33.012726] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.json\n'}
+[33.015350] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__functions.h\n'}
+[33.015575] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__struct.h\n'}
+[33.015790] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__type_support.h\n'}
+[33.016056] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__functions.h\n'}
+[33.016384] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__struct.h\n'}
+[33.016686] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__type_support.h\n'}
+[33.016966] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/position_point.h\n'}
+[33.017128] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_generator_c__visibility_control.h\n'}
+[33.017388] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/trajectory_point.h\n'}
+[33.017579] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__functions.h\n'}
+[33.017787] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__struct.h\n'}
+[33.017924] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.h\n'}
+[33.018147] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__functions.h\n'}
+[33.018274] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__struct.h\n'}
+[33.018539] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__type_support.h\n'}
+[33.018667] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__functions.h\n'}
+[33.018941] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__struct.h\n'}
+[33.019072] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.h\n'}
+[33.019295] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__functions.h\n'}
+[33.019482] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__struct.h\n'}
+[33.019688] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__type_support.h\n'}
+[33.019903] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__functions.h\n'}
+[33.020108] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__struct.h\n'}
+[33.020323] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__type_support.h\n'}
+[33.020505] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__functions.h\n'}
+[33.020737] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__struct.h\n'}
+[33.020929] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__type_support.h\n'}
+[33.021176] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__functions.h\n'}
+[33.021366] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__struct.h\n'}
+[33.021549] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.h\n'}
+[33.021710] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__functions.h\n'}
+[33.022046] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__struct.h\n'}
+[33.022180] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__type_support.h\n'}
+[33.022468] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__functions.h\n'}
+[33.022658] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__struct.h\n'}
+[33.022915] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__type_support.h\n'}
+[33.023178] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__functions.h\n'}
+[33.023366] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__struct.h\n'}
+[33.023613] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.h\n'}
+[33.023820] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__functions.h\n'}
+[33.024053] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__struct.h\n'}
+[33.024230] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.h\n'}
+[33.024417] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__functions.h\n'}
+[33.024628] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__struct.h\n'}
+[33.024821] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.h\n'}
+[33.025006] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__functions.h\n'}
+[33.025263] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__struct.h\n'}
+[33.025495] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.h\n'}
+[33.025636] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__functions.h\n'}
+[33.025898] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__struct.h\n'}
+[33.026065] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.h\n'}
+[33.026214] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__functions.h\n'}
+[33.026362] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__struct.h\n'}
+[33.026510] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__type_support.h\n'}
+[33.026831] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_position_sequence.h\n'}
+[33.027074] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_trajectory.h\n'}
+[33.027219] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_available_homing_methods.h\n'}
+[33.027363] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_position_limits.h\n'}
+[33.027506] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_servo_status.h\n'}
+[33.027649] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_distance.h\n'}
+[33.027943] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_to_absolute_position.h\n'}
+[33.028092] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/perform_homing.h\n'}
+[33.028237] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/release_position_hold.h\n'}
+[33.028360] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle.h\n'}
+[33.028481] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle_accel.h\n'}
+[33.028601] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_homing_configuration.h\n'}
+[33.028800] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_parameters.h\n'}
+[33.028925] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_strategy.h\n'}
+[33.029043] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_position_limits.h\n'}
+[33.029160] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/library_path.sh\n'}
+[33.029277] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/library_path.dsv\n'}
+[33.029452] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_fastrtps_c.h\n'}
+[33.029629] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_fastrtps_c.h\n'}
+[33.029852] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_fastrtps_c__visibility_control.h\n'}
+[33.030029] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_fastrtps_c.h\n'}
+[33.030213] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_fastrtps_c.h\n'}
+[33.030377] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_fastrtps_c.h\n'}
+[33.030520] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_fastrtps_c.h\n'}
+[33.030733] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_fastrtps_c.h\n'}
+[33.030953] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_fastrtps_c.h\n'}
+[33.031145] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_fastrtps_c.h\n'}
+[33.031352] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_fastrtps_c.h\n'}
+[33.031551] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_fastrtps_c.h\n'}
+[33.031763] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_fastrtps_c.h\n'}
+[33.032007] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_fastrtps_c.h\n'}
+[33.032203] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_fastrtps_c.h\n'}
+[33.032398] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_fastrtps_c.h\n'}
+[33.032594] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_fastrtps_c.h\n'}
+[33.032807] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_fastrtps_c.h\n'}
+[33.033886] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_introspection_c.h\n'}
+[33.034090] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_introspection_c.h\n'}
+[33.034296] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_introspection_c__visibility_control.h\n'}
+[33.034536] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_introspection_c.h\n'}
+[33.034798] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_introspection_c.h\n'}
+[33.034965] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_introspection_c.h\n'}
+[33.035168] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_introspection_c.h\n'}
+[33.035369] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_introspection_c.h\n'}
+[33.035577] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_introspection_c.h\n'}
+[33.035798] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_introspection_c.h\n'}
+[33.035999] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_introspection_c.h\n'}
+[33.036196] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_introspection_c.h\n'}
+[33.036393] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_introspection_c.h\n'}
+[33.036572] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_introspection_c.h\n'}
+[33.036775] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_introspection_c.h\n'}
+[33.036973] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_introspection_c.h\n'}
+[33.037169] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_introspection_c.h\n'}
+[33.037370] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_introspection_c.h\n'}
+[33.039590] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__builder.hpp\n'}
+[33.039785] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__struct.hpp\n'}
+[33.040017] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__traits.hpp\n'}
+[33.040213] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__type_support.hpp\n'}
+[33.040381] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__builder.hpp\n'}
+[33.040540] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__struct.hpp\n'}
+[33.040824] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__traits.hpp\n'}
+[33.041122] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__type_support.hpp\n'}
+[33.041298] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/position_point.hpp\n'}
+[33.041451] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_generator_cpp__visibility_control.hpp\n'}
+[33.041572] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/trajectory_point.hpp\n'}
+[33.041727] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__builder.hpp\n'}
+[33.041920] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__struct.hpp\n'}
+[33.042108] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__traits.hpp\n'}
+[33.042323] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__type_support.hpp\n'}
+[33.042513] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__builder.hpp\n'}
+[33.042716] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__struct.hpp\n'}
+[33.042912] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__traits.hpp\n'}
+[33.043093] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__type_support.hpp\n'}
+[33.043254] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__builder.hpp\n'}
+[33.043441] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__struct.hpp\n'}
+[33.043625] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__traits.hpp\n'}
+[33.043810] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__type_support.hpp\n'}
+[33.043976] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__builder.hpp\n'}
+[33.044104] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__struct.hpp\n'}
+[33.044233] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__traits.hpp\n'}
+[33.044361] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__type_support.hpp\n'}
+[33.044469] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__builder.hpp\n'}
+[33.044585] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__struct.hpp\n'}
+[33.044719] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__traits.hpp\n'}
+[33.044847] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__type_support.hpp\n'}
+[33.044999] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__builder.hpp\n'}
+[33.045155] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__struct.hpp\n'}
+[33.045277] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__traits.hpp\n'}
+[33.045526] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__type_support.hpp\n'}
+[33.045718] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__builder.hpp\n'}
+[33.045853] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__struct.hpp\n'}
+[33.045978] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__traits.hpp\n'}
+[33.046088] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__type_support.hpp\n'}
+[33.046189] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__builder.hpp\n'}
+[33.046288] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__struct.hpp\n'}
+[33.046411] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__traits.hpp\n'}
+[33.046537] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__type_support.hpp\n'}
+[33.046659] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__builder.hpp\n'}
+[33.046799] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__struct.hpp\n'}
+[33.046922] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__traits.hpp\n'}
+[33.047046] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__type_support.hpp\n'}
+[33.047172] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__builder.hpp\n'}
+[33.047297] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__struct.hpp\n'}
+[33.047418] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__traits.hpp\n'}
+[33.047543] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__type_support.hpp\n'}
+[33.047671] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__builder.hpp\n'}
+[33.047803] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__struct.hpp\n'}
+[33.047877] (-) TimerEvent: {}
+[33.047924] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__traits.hpp\n'}
+[33.048048] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__type_support.hpp\n'}
+[33.048168] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__builder.hpp\n'}
+[33.048290] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__struct.hpp\n'}
+[33.048413] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__traits.hpp\n'}
+[33.048536] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__type_support.hpp\n'}
+[33.048659] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__builder.hpp\n'}
+[33.048794] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__struct.hpp\n'}
+[33.048949] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__traits.hpp\n'}
+[33.049072] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__type_support.hpp\n'}
+[33.049196] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__builder.hpp\n'}
+[33.049322] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__struct.hpp\n'}
+[33.049447] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__traits.hpp\n'}
+[33.049567] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__type_support.hpp\n'}
+[33.049692] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__builder.hpp\n'}
+[33.049855] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__struct.hpp\n'}
+[33.050044] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__traits.hpp\n'}
+[33.050203] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__type_support.hpp\n'}
+[33.050343] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_position_sequence.hpp\n'}
+[33.050482] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/execute_trajectory.hpp\n'}
+[33.050672] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_available_homing_methods.hpp\n'}
+[33.050909] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_position_limits.hpp\n'}
+[33.051013] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/get_servo_status.hpp\n'}
+[33.051267] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_distance.hpp\n'}
+[33.051415] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/move_to_absolute_position.hpp\n'}
+[33.051634] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/perform_homing.hpp\n'}
+[33.051849] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/release_position_hold.hpp\n'}
+[33.051925] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle.hpp\n'}
+[33.052046] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_duty_cycle_accel.hpp\n'}
+[33.052115] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_homing_configuration.hpp\n'}
+[33.052180] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_parameters.hpp\n'}
+[33.052244] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_motion_strategy.hpp\n'}
+[33.052308] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/set_position_limits.hpp\n'}
+[33.053386] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.053564] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.053783] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h\n'}
+[33.053928] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054035] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054115] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054231] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054386] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054703] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.054940] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.055111] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.055329] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.055550] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.055772] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.055992] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.056209] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.056460] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.056664] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_fastrtps_cpp.hpp\n'}
+[33.057693] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/position_point__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.057960] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/msg/detail/trajectory_point__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.058188] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_position_sequence__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.058422] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/execute_trajectory__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.058653] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_available_homing_methods__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.058895] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_position_limits__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.059123] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/get_servo_status__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.059343] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_distance__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.059560] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/move_to_absolute_position__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.059835] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/perform_homing__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.060096] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/release_position_hold__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.060307] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.060531] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_duty_cycle_accel__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.060742] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_homing_configuration__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.061016] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_parameters__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.061235] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_motion_strategy__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.061403] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/include/basicmicro_ros2/basicmicro_ros2/srv/detail/set_position_limits__rosidl_typesupport_introspection_cpp.hpp\n'}
+[33.061608] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/pythonpath.sh\n'}
+[33.061850] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/pythonpath.dsv\n'}
+[33.062193] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/PKG-INFO\n'}
+[33.062361] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/SOURCES.txt\n'}
+[33.062563] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/dependency_links.txt\n'}
+[33.062674] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2-1.0.0-py3.12.egg-info/top_level.txt\n'}
+[33.064045] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/__init__.py\n'}
+[33.064163] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_c.c\n'}
+[33.064296] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_fastrtps_c.c\n'}
+[33.064427] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/_basicmicro_ros2_s.ep.rosidl_typesupport_introspection_c.c\n'}
+[33.064553] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so\n'}
+[33.064740] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so\n'}
+[33.064918] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so\n'}
+[33.065106] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/__init__.py\n'}
+[33.065288] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point.py\n'}
+[33.065488] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point_s.c\n'}
+[33.065746] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point.py\n'}
+[33.065931] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point_s.c\n'}
+[33.066140] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/__init__.py\n'}
+[33.066310] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence.py\n'}
+[33.066460] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence_s.c\n'}
+[33.066620] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory.py\n'}
+[33.066823] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory_s.c\n'}
+[33.066987] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods.py\n'}
+[33.067165] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods_s.c\n'}
+[33.067337] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits.py\n'}
+[33.067509] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits_s.c\n'}
+[33.067684] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status.py\n'}
+[33.067844] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status_s.c\n'}
+[33.067969] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance.py\n'}
+[33.068087] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance_s.c\n'}
+[33.068231] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position.py\n'}
+[33.068367] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position_s.c\n'}
+[33.068477] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing.py\n'}
+[33.068625] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing_s.c\n'}
+[33.068814] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold.py\n'}
+[33.068994] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold_s.c\n'}
+[33.069214] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle.py\n'}
+[33.069427] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel.py\n'}
+[33.069579] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel_s.c\n'}
+[33.069774] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_s.c\n'}
+[33.069987] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration.py\n'}
+[33.070128] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration_s.c\n'}
+[33.070329] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters.py\n'}
+[33.070501] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters_s.c\n'}
+[33.070665] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy.py\n'}
+[33.070846] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy_s.c\n'}
+[33.071031] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits.py\n'}
+[33.071194] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits_s.c\n'}
+[33.071475] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_fastrtps_c.so\n'}
+[33.071813] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_introspection_c.so\n'}
+[33.072092] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/basicmicro_ros2_s__rosidl_typesupport_c.so\n'}
+[33.072316] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.idl\n'}
+[33.072496] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.idl\n'}
+[33.072640] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.idl\n'}
+[33.072813] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.idl\n'}
+[33.072980] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.idl\n'}
+[33.073149] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.idl\n'}
+[33.073307] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.idl\n'}
+[33.073475] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.idl\n'}
+[33.073638] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.idl\n'}
+[33.073820] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.idl\n'}
+[33.073984] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.idl\n'}
+[33.074150] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.idl\n'}
+[33.074312] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.idl\n'}
+[33.074472] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.idl\n'}
+[33.074638] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.idl\n'}
+[33.074857] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.idl\n'}
+[33.074985] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.idl\n'}
+[33.075194] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/TrajectoryPoint.msg\n'}
+[33.075407] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/msg/PositionPoint.msg\n'}
+[33.075604] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionStrategy.srv\n'}
+[33.075818] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetMotionParameters.srv\n'}
+[33.076033] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveDistance.srv\n'}
+[33.076242] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetPositionLimits.srv\n'}
+[33.076374] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetPositionLimits.srv\n'}
+[33.076579] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecuteTrajectory.srv\n'}
+[33.076722] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ExecutePositionSequence.srv\n'}
+[33.076926] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetAvailableHomingMethods.srv\n'}
+[33.077120] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/GetServoStatus.srv\n'}
+[33.077253] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/MoveToAbsolutePosition.srv\n'}
+[33.077465] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/PerformHoming.srv\n'}
+[33.077595] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/ReleasePositionHold.srv\n'}
+[33.077875] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycle.srv\n'}
+[33.078131] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetDutyCycleAccel.srv\n'}
+[33.078265] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/srv/SetHomingConfiguration.srv\n'}
+[33.078397] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/basicmicro_node.py\n'}
+[33.078528] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/motion_config_service.py\n'}
+[33.078757] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/distance_movement_service.py\n'}
+[33.078954] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/trajectory_service.py\n'}
+[33.079076] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/duty_control_service.py\n'}
+[33.079181] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/servo_position_service.py\n'}
+[33.079286] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/trajectory_monitor.py\n'}
+[33.079406] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/lib/basicmicro_ros2/performance_monitor.py\n'}
+[33.079606] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/arm_control.launch.py\n'}
+[33.079823] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/basicmicro_driver.launch.py\n'}
+[33.079962] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/basicmicro_simple.launch.py\n'}
+[33.080156] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//launch/robot_visualization.launch.py\n'}
+[33.080327] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/arm_controllers.yaml\n'}
+[33.080504] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/custom_controllers.yaml\n'}
+[33.080657] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/diff_drive_controllers.yaml\n'}
+[33.080832] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/example_robot_parameters.yaml\n'}
+[33.080994] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/industrial_controllers.yaml\n'}
+[33.081165] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//config/multi_controller_controllers.yaml\n'}
+[33.081503] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//msg/PositionPoint.msg\n'}
+[33.081661] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//msg/TrajectoryPoint.msg\n'}
+[33.082176] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ExecutePositionSequence.srv\n'}
+[33.082336] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ExecuteTrajectory.srv\n'}
+[33.082549] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetAvailableHomingMethods.srv\n'}
+[33.082665] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetPositionLimits.srv\n'}
+[33.082810] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/GetServoStatus.srv\n'}
+[33.082957] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/MoveDistance.srv\n'}
+[33.083110] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/MoveToAbsolutePosition.srv\n'}
+[33.083261] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/PerformHoming.srv\n'}
+[33.083412] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/ReleasePositionHold.srv\n'}
+[33.083564] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetDutyCycle.srv\n'}
+[33.083721] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetDutyCycleAccel.srv\n'}
+[33.083879] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetHomingConfiguration.srv\n'}
+[33.084046] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetMotionParameters.srv\n'}
+[33.084249] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetMotionStrategy.srv\n'}
+[33.084474] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2//srv/SetPositionLimits.srv\n'}
+[33.084703] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/package_run_dependencies/basicmicro_ros2\n'}
+[33.085006] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/parent_prefix_path/basicmicro_ros2\n'}
+[33.085275] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/ament_prefix_path.sh\n'}
+[33.085535] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/ament_prefix_path.dsv\n'}
+[33.085818] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/path.sh\n'}
+[33.086046] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/environment/path.dsv\n'}
+[33.086355] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.bash\n'}
+[33.086573] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.sh\n'}
+[33.086826] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.zsh\n'}
+[33.087093] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/local_setup.dsv\n'}
+[33.087285] (basicmicro_ros2) StdoutLine: {'line': b'-- Symlinking: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/package.dsv\n'}
+[33.096663] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/ament_index/resource_index/packages/basicmicro_ros2\n'}
+[33.096937] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake-extras.cmake\n'}
+[33.097128] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[33.097411] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[33.097635] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[33.097947] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[33.098216] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake\n'}
+[33.098445] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake\n'}
+[33.098659] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2Config.cmake\n'}
+[33.098861] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2Config-version.cmake\n'}
+[33.099095] (basicmicro_ros2) StdoutLine: {'line': b'-- Up-to-date symlink: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/package.xml\n'}
+[33.099498] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_c.so\n'}
+[33.100872] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_c.so" to ""\n'}
+[33.101177] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so\n'}
+[33.102232] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_c.so" to ""\n'}
+[33.102496] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_c.so\n'}
+[33.103406] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_c.so" to ""\n'}
+[33.103634] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_c.so\n'}
+[33.104317] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_c.so" to ""\n'}
+[33.104691] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so\n'}
+[33.107388] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_fastrtps_cpp.so" to ""\n'}
+[33.107642] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so\n'}
+[33.109810] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_introspection_cpp.so" to ""\n'}
+[33.110040] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_cpp.so\n'}
+[33.111783] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_typesupport_cpp.so" to ""\n'}
+[33.147964] (-) TimerEvent: {}
+[33.224868] (basicmicro_ros2) StdoutLine: {'line': b"Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2'...\n"}
+[33.225063] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/__init__.py'...\n"}
+[33.225194] (basicmicro_ros2) StdoutLine: {'line': b"Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg'...\n"}
+[33.225318] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/__init__.py'...\n"}
+[33.225440] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_position_point.py'...\n"}
+[33.225566] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/msg/_trajectory_point.py'...\n"}
+[33.225693] (basicmicro_ros2) StdoutLine: {'line': b"Listing '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv'...\n"}
+[33.225809] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/__init__.py'...\n"}
+[33.225898] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_position_sequence.py'...\n"}
+[33.226010] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_execute_trajectory.py'...\n"}
+[33.226084] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_available_homing_methods.py'...\n"}
+[33.226178] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_position_limits.py'...\n"}
+[33.226251] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_get_servo_status.py'...\n"}
+[33.226323] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_distance.py'...\n"}
+[33.226394] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_move_to_absolute_position.py'...\n"}
+[33.226465] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_perform_homing.py'...\n"}
+[33.226541] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_release_position_hold.py'...\n"}
+[33.226613] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle.py'...\n"}
+[33.226684] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_duty_cycle_accel.py'...\n"}
+[33.226772] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_homing_configuration.py'...\n"}
+[33.226845] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_parameters.py'...\n"}
+[33.226916] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_motion_strategy.py'...\n"}
+[33.226986] (basicmicro_ros2) StdoutLine: {'line': b"Compiling '/host_ws/install/basicmicro_ros2/lib/python3.12/site-packages/basicmicro_ros2/srv/_set_position_limits.py'...\n"}
+[33.231964] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_py.so\n'}
+[33.232997] (basicmicro_ros2) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/basicmicro_ros2/lib/libbasicmicro_ros2__rosidl_generator_py.so" to ""\n'}
+[33.233243] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cExport.cmake\n'}
+[33.233439] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cExport-noconfig.cmake\n'}
+[33.233654] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cExport.cmake\n'}
+[33.233880] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cExport-noconfig.cmake\n'}
+[33.234195] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cExport.cmake\n'}
+[33.234399] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cExport-noconfig.cmake\n'}
+[33.234667] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cExport.cmake\n'}
+[33.234902] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cExport-noconfig.cmake\n'}
+[33.235246] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_cppExport.cmake\n'}
+[33.235640] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cppExport.cmake\n'}
+[33.235913] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake\n'}
+[33.236265] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cppExport.cmake\n'}
+[33.236483] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_introspection_cppExport-noconfig.cmake\n'}
+[33.236774] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cppExport.cmake\n'}
+[33.236952] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/basicmicro_ros2__rosidl_typesupport_cppExport-noconfig.cmake\n'}
+[33.237299] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_pyExport.cmake\n'}
+[33.237610] (basicmicro_ros2) StdoutLine: {'line': b'-- Installing: /host_ws/install/basicmicro_ros2/share/basicmicro_ros2/cmake/export_basicmicro_ros2__rosidl_generator_pyExport-noconfig.cmake\n'}
+[33.240688] (basicmicro_ros2) CommandEnded: {'returncode': 0}
+[33.248166] (-) TimerEvent: {}
+[33.264986] (basicmicro_ros2) JobEnded: {'identifier': 'basicmicro_ros2', 'rc': 0}
+[33.265801] (-) EventReactorShutdown: {}

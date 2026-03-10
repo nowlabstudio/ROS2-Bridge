@@ -24,6 +24,7 @@ setup(
         "console_scripts": [
             "roboclaw_tcp_node = roboclaw_tcp_adapter.roboclaw_tcp_node:main",
             "safety_bridge_node = roboclaw_tcp_adapter.safety_bridge_node:main",
+            "rc_teleop_node = roboclaw_tcp_adapter.rc_teleop_node:main",
         ],
     },
 )

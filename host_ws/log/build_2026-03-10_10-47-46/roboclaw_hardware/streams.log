@@ -1,0 +1,81 @@
+[0.014s] Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /host_ws/src/roboclaw_hardware -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/host_ws/install/roboclaw_hardware
+[0.197s] -- The CXX compiler identification is GNU 13.3.0
+[0.221s] -- Detecting CXX compiler ABI info
+[0.354s] -- Detecting CXX compiler ABI info - done
+[0.366s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.367s] -- Detecting CXX compile features
+[0.368s] -- Detecting CXX compile features - done
+[0.376s] -- Found ament_cmake: 2.5.5 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[0.522s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[0.668s] -- Found hardware_interface: 4.42.2 (/opt/ros/jazzy/share/hardware_interface/cmake)
+[0.732s] -- Found rosidl_generator_c: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_c/cmake)
+[0.756s] -- Found rosidl_generator_cpp: 4.6.7 (/opt/ros/jazzy/share/rosidl_generator_cpp/cmake)
+[0.782s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.809s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.135s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.199s] -- Found rmw_implementation_cmake: 7.3.3 (/opt/ros/jazzy/share/rmw_implementation_cmake/cmake)
+[1.204s] -- Found rmw_fastrtps_cpp: 8.4.3 (/opt/ros/jazzy/share/rmw_fastrtps_cpp/cmake)
+[1.242s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.303s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.13")  
+[1.309s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.322s] -- Found FastRTPS: /opt/ros/jazzy/include (Required is at least version "2.13") 
+[1.327s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.337s] -- Found TinyXML2 via Config file: /usr/lib/x86_64-linux-gnu/cmake/tinyxml2
+[1.347s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[1.738s] -- Found ament_cmake_gtest: 2.5.5 (/opt/ros/jazzy/share/ament_cmake_gtest/cmake)
+[1.743s] -- Found gtest sources under '/opt/ros/jazzy/src/gtest_vendor': C++ tests using 'Google Test' will be built
+[1.844s] -- The C compiler identification is GNU 13.3.0
+[1.864s] -- Detecting C compiler ABI info
+[1.982s] -- Detecting C compiler ABI info - done
+[1.998s] -- Check for working C compiler: /usr/bin/cc - skipped
+[1.998s] -- Detecting C compile features
+[1.999s] -- Detecting C compile features - done
+[2.003s] -- Found Threads: TRUE  
+[2.113s] -- Configuring done (2.1s)
+[2.199s] -- Generating done (0.1s)
+[2.211s] -- Build files have been written to: /host_ws/build/roboclaw_hardware
+[2.224s] Invoked command in '/host_ws/build/roboclaw_hardware' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake /host_ws/src/roboclaw_hardware -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/host_ws/install/roboclaw_hardware
+[2.225s] Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8
+[2.296s] [  7%] Building CXX object gtest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[2.296s] [ 15%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_protocol.cpp.o
+[2.298s] [ 23%] Building CXX object gtest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[2.299s] [ 30%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o
+[2.299s] [ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_tcp.cpp.o
+[2.300s] [ 46%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o
+[3.014s] /host_ws/src/roboclaw_hardware/src/unit_converter.cpp: In member function ‘int16_t roboclaw_hardware::UnitConverter::rad_per_sec_to_duty(double, double) const’:
+[3.014s] /host_ws/src/roboclaw_hardware/src/unit_converter.cpp:72:16: error: ‘clamp’ is not a member of ‘std’
+[3.014s]    72 |   ratio = std::clamp(ratio, -1.0, 1.0);
+[3.014s]       |                ^~~~~
+[3.135s] gmake[2]: *** [CMakeFiles/roboclaw_hardware.dir/build.make:76: CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o] Error 1
+[3.135s] gmake[2]: *** Waiting for unfinished jobs....
+[3.673s] [ 53%] Linking CXX static library libgtest_main.a
+[3.716s] [ 53%] Built target gtest_main
+[6.198s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function ‘virtual hardware_interface::CallbackReturn roboclaw_hardware::RoboClawHardware::on_init(const hardware_interface::HardwareInfo&)’:
+[6.198s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:133:51: warning: ‘virtual rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn hardware_interface::HardwareComponentInterface::on_init(const hardware_interface::HardwareInfo&)’ is deprecated: Use on_init(const HardwareComponentInterfaceParams & params) instead. [-Wdeprecated-declarations]
+[6.198s]   133 |   if (hardware_interface::SystemInterface::on_init(info) !=
+[6.198s]       |       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~
+[6.199s] In file included from /opt/ros/jazzy/include/hardware_interface/hardware_interface/system_interface.hpp:18,
+[6.199s]                  from /host_ws/src/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware.hpp:9,
+[6.199s]                  from /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:1:
+[6.199s] /opt/ros/jazzy/include/hardware_interface/hardware_interface/hardware_component_interface.hpp:140:26: note: declared here
+[6.199s]   140 |   virtual CallbackReturn on_init(const HardwareInfo & hardware_info);
+[6.199s]       |                          ^~~~~~~
+[8.747s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function ‘void roboclaw_hardware::RoboClawHardware::initialize_state_interfaces()’:
+[8.747s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:470:58: warning: dangling pointer to ‘enc’ may be used [-Wdangling-pointer=]
+[8.747s]   470 |     hw_state_pos_[0] = unit_converter_->counts_to_radians(enc.enc1);
+[8.747s]       |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+[8.748s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:468:8: note: ‘enc’ declared here
+[8.748s]   468 |   auto enc = protocol_->GetEncoders(address_);
+[8.748s]       |        ^~~
+[8.748s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:58: warning: dangling pointer to ‘enc’ may be used [-Wdangling-pointer=]
+[8.748s]   471 |     hw_state_pos_[1] = unit_converter_->counts_to_radians(enc.enc2);
+[8.748s]       |                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+[8.748s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:468:8: note: ‘enc’ declared here
+[8.749s]   468 |   auto enc = protocol_->GetEncoders(address_);
+[8.749s]       |        ^~~
+[9.826s] gmake[1]: *** [CMakeFiles/Makefile2:159: CMakeFiles/roboclaw_hardware.dir/all] Error 2
+[9.826s] gmake[1]: *** Waiting for unfinished jobs....
+[13.500s] [ 61%] Linking CXX static library libgtest.a
+[13.557s] [ 61%] Built target gtest
+[13.558s] gmake: *** [Makefile:146: all] Error 2
+[13.561s] Invoked command in '/host_ws/build/roboclaw_hardware' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8

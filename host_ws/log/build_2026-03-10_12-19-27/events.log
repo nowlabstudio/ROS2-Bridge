@@ -1,0 +1,150 @@
+[0.000000] (-) TimerEvent: {}
+[0.000081] (-) JobUnselected: {'identifier': 'basicmicro'}
+[0.000147] (-) JobUnselected: {'identifier': 'basicmicro_ros2'}
+[0.000207] (-) JobUnselected: {'identifier': 'roboclaw_tcp_adapter'}
+[0.000271] (roboclaw_hardware) JobQueued: {'identifier': 'roboclaw_hardware', 'dependencies': OrderedDict()}
+[0.000324] (roboclaw_hardware) JobStarted: {'identifier': 'roboclaw_hardware'}
+[0.010777] (roboclaw_hardware) JobProgress: {'identifier': 'roboclaw_hardware', 'progress': 'cmake'}
+[0.011636] (roboclaw_hardware) JobProgress: {'identifier': 'roboclaw_hardware', 'progress': 'build'}
+[0.012431] (roboclaw_hardware) Command: {'cmd': ['/usr/bin/cmake', '--build', '/host_ws/build/roboclaw_hardware', '--', '-j8', '-l8'], 'cwd': '/host_ws/build/roboclaw_hardware', 'env': OrderedDict({'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/share/gz', 'HOSTNAME': '87e575266d12', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_hardware', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy'}), 'shell': False}
+[0.093082] (roboclaw_hardware) StdoutLine: {'line': b'[ 15%] Built target gtest\n'}
+[0.093428] (roboclaw_hardware) StdoutLine: {'line': b'[ 30%] Built target gtest_main\n'}
+[0.099106] (-) TimerEvent: {}
+[0.115460] (roboclaw_hardware) StdoutLine: {'line': b'[ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o\n'}
+[0.199246] (-) TimerEvent: {}
+[0.299440] (-) TimerEvent: {}
+[0.399610] (-) TimerEvent: {}
+[0.499772] (-) TimerEvent: {}
+[0.599930] (-) TimerEvent: {}
+[0.700127] (-) TimerEvent: {}
+[0.800314] (-) TimerEvent: {}
+[0.900481] (-) TimerEvent: {}
+[1.000680] (-) TimerEvent: {}
+[1.100881] (-) TimerEvent: {}
+[1.201084] (-) TimerEvent: {}
+[1.301295] (-) TimerEvent: {}
+[1.401478] (-) TimerEvent: {}
+[1.501662] (-) TimerEvent: {}
+[1.601869] (-) TimerEvent: {}
+[1.702043] (-) TimerEvent: {}
+[1.802252] (-) TimerEvent: {}
+[1.902409] (-) TimerEvent: {}
+[2.002566] (-) TimerEvent: {}
+[2.102759] (-) TimerEvent: {}
+[2.202960] (-) TimerEvent: {}
+[2.303153] (-) TimerEvent: {}
+[2.403318] (-) TimerEvent: {}
+[2.503477] (-) TimerEvent: {}
+[2.603673] (-) TimerEvent: {}
+[2.703836] (-) TimerEvent: {}
+[2.804033] (-) TimerEvent: {}
+[2.904211] (-) TimerEvent: {}
+[3.004390] (-) TimerEvent: {}
+[3.104575] (-) TimerEvent: {}
+[3.204766] (-) TimerEvent: {}
+[3.304964] (-) TimerEvent: {}
+[3.405159] (-) TimerEvent: {}
+[3.505314] (-) TimerEvent: {}
+[3.605470] (-) TimerEvent: {}
+[3.705666] (-) TimerEvent: {}
+[3.805860] (-) TimerEvent: {}
+[3.906055] (-) TimerEvent: {}
+[4.006278] (-) TimerEvent: {}
+[4.106438] (-) TimerEvent: {}
+[4.206630] (-) TimerEvent: {}
+[4.306823] (-) TimerEvent: {}
+[4.407021] (-) TimerEvent: {}
+[4.507213] (-) TimerEvent: {}
+[4.607399] (-) TimerEvent: {}
+[4.707596] (-) TimerEvent: {}
+[4.807792] (-) TimerEvent: {}
+[4.907996] (-) TimerEvent: {}
+[5.008184] (-) TimerEvent: {}
+[5.108307] (-) TimerEvent: {}
+[5.208477] (-) TimerEvent: {}
+[5.308669] (-) TimerEvent: {}
+[5.408878] (-) TimerEvent: {}
+[5.509095] (-) TimerEvent: {}
+[5.609308] (-) TimerEvent: {}
+[5.709479] (-) TimerEvent: {}
+[5.809700] (-) TimerEvent: {}
+[5.909903] (-) TimerEvent: {}
+[6.010081] (-) TimerEvent: {}
+[6.110287] (-) TimerEvent: {}
+[6.210442] (-) TimerEvent: {}
+[6.310641] (-) TimerEvent: {}
+[6.410829] (-) TimerEvent: {}
+[6.511020] (-) TimerEvent: {}
+[6.611197] (-) TimerEvent: {}
+[6.711366] (-) TimerEvent: {}
+[6.811557] (-) TimerEvent: {}
+[6.911758] (-) TimerEvent: {}
+[7.011965] (-) TimerEvent: {}
+[7.112164] (-) TimerEvent: {}
+[7.212353] (-) TimerEvent: {}
+[7.312539] (-) TimerEvent: {}
+[7.412707] (-) TimerEvent: {}
+[7.512874] (-) TimerEvent: {}
+[7.613048] (-) TimerEvent: {}
+[7.713222] (-) TimerEvent: {}
+[7.813479] (-) TimerEvent: {}
+[7.913702] (-) TimerEvent: {}
+[8.013917] (-) TimerEvent: {}
+[8.114146] (-) TimerEvent: {}
+[8.136399] (roboclaw_hardware) StdoutLine: {'line': b'[ 46%] Linking CXX shared library libroboclaw_hardware.so\n'}
+[8.214290] (-) TimerEvent: {}
+[8.314484] (-) TimerEvent: {}
+[8.376144] (roboclaw_hardware) StdoutLine: {'line': b'[ 69%] Built target roboclaw_hardware\n'}
+[8.410424] (roboclaw_hardware) StdoutLine: {'line': b'[ 76%] Linking CXX executable test_unit_converter\n'}
+[8.414588] (-) TimerEvent: {}
+[8.425077] (roboclaw_hardware) StdoutLine: {'line': b'[ 84%] Linking CXX executable test_protocol_crc\n'}
+[8.514692] (-) TimerEvent: {}
+[8.614878] (-) TimerEvent: {}
+[8.688122] (roboclaw_hardware) StdoutLine: {'line': b'[ 92%] Built target test_protocol_crc\n'}
+[8.699112] (roboclaw_hardware) StdoutLine: {'line': b'[100%] Built target test_unit_converter\n'}
+[8.713906] (roboclaw_hardware) CommandEnded: {'returncode': 0}
+[8.714851] (roboclaw_hardware) JobProgress: {'identifier': 'roboclaw_hardware', 'progress': 'install'}
+[8.714909] (-) TimerEvent: {}
+[8.726229] (roboclaw_hardware) Command: {'cmd': ['/usr/bin/cmake', '--install', '/host_ws/build/roboclaw_hardware'], 'cwd': '/host_ws/build/roboclaw_hardware', 'env': OrderedDict({'GZ_CONFIG_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/share/gz', 'HOSTNAME': '87e575266d12', 'SHLVL': '0', 'LD_LIBRARY_PATH': '/opt/ros/jazzy/opt/sdformat_vendor/lib:/opt/ros/jazzy/opt/gz_math_vendor/lib:/opt/ros/jazzy/opt/gz_utils_vendor/lib:/opt/ros/jazzy/opt/gz_tools_vendor/lib:/opt/ros/jazzy/opt/gz_cmake_vendor/lib:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib', 'HOME': '/root', 'ROS_PYTHON_VERSION': '3', 'ROS_DISTRO': 'jazzy', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'PATH': '/opt/ros/jazzy/opt/gz_tools_vendor/bin:/opt/ros/jazzy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'AMENT_PREFIX_PATH': '/opt/ros/jazzy', 'ROS_AUTOMATIC_DISCOVERY_RANGE': 'SUBNET', 'PWD': '/host_ws/build/roboclaw_hardware', 'LC_ALL': 'C.UTF-8', 'PYTHONPATH': '/opt/ros/jazzy/lib/python3.12/site-packages', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/opt/ros/jazzy/opt/sdformat_vendor:/opt/ros/jazzy/opt/gz_math_vendor:/opt/ros/jazzy/opt/gz_utils_vendor:/opt/ros/jazzy/opt/gz_tools_vendor:/opt/ros/jazzy/opt/gz_cmake_vendor:/opt/ros/jazzy'}), 'shell': False}
+[8.737731] (roboclaw_hardware) StdoutLine: {'line': b'-- Install configuration: "Release"\n'}
+[8.737933] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/roboclaw_hardware_plugin.xml\n'}
+[8.738143] (roboclaw_hardware) StdoutLine: {'line': b'-- Installing: /host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so\n'}
+[8.739310] (roboclaw_hardware) StdoutLine: {'line': b'-- Set non-toolchain portion of runtime path of "/host_ws/install/roboclaw_hardware/lib/libroboclaw_hardware.so" to ""\n'}
+[8.739855] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware\n'}
+[8.739959] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware\n'}
+[8.740055] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_protocol.hpp\n'}
+[8.740149] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_tcp.hpp\n'}
+[8.740406] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/visibility_control.h\n'}
+[8.740740] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/roboclaw_hardware.hpp\n'}
+[8.740826] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/include/roboclaw_hardware/roboclaw_hardware/unit_converter.hpp\n'}
+[8.740917] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config\n'}
+[8.741009] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/config/diff_drive_controllers.yaml\n'}
+[8.741100] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch\n'}
+[8.741192] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/launch/roboclaw.launch.py\n'}
+[8.741493] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf\n'}
+[8.741583] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/urdf/roboclaw_diff_drive.urdf.xacro\n'}
+[8.741667] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.sh\n'}
+[8.741750] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/library_path.dsv\n'}
+[8.741833] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/package_run_dependencies/roboclaw_hardware\n'}
+[8.741917] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/parent_prefix_path/roboclaw_hardware\n'}
+[8.742001] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.sh\n'}
+[8.742083] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/ament_prefix_path.dsv\n'}
+[8.742169] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.sh\n'}
+[8.742271] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/environment/path.dsv\n'}
+[8.742360] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.bash\n'}
+[8.742442] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.sh\n'}
+[8.742525] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.zsh\n'}
+[8.742606] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/local_setup.dsv\n'}
+[8.742696] (roboclaw_hardware) StdoutLine: {'line': b'-- Installing: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.dsv\n'}
+[8.742785] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/packages/roboclaw_hardware\n'}
+[8.742877] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/ament_index/resource_index/hardware_interface__pluginlib__plugin/roboclaw_hardware\n'}
+[8.742968] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport.cmake\n'}
+[8.743060] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/export_roboclaw_hardwareExport-release.cmake\n'}
+[8.743151] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[8.743403] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[8.743571] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig.cmake\n'}
+[8.743810] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/cmake/roboclaw_hardwareConfig-version.cmake\n'}
+[8.743982] (roboclaw_hardware) StdoutLine: {'line': b'-- Up-to-date: /host_ws/install/roboclaw_hardware/share/roboclaw_hardware/package.xml\n'}
+[8.744421] (roboclaw_hardware) CommandEnded: {'returncode': 0}
+[8.770204] (roboclaw_hardware) JobEnded: {'identifier': 'roboclaw_hardware', 'rc': 0}
+[8.771098] (-) EventReactorShutdown: {}

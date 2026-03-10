@@ -1,0 +1,53 @@
+[0.013s] Invoking command in '/host_ws/build/roboclaw_hardware': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8
+[0.091s] [ 30%] Built target gtest
+[0.091s] [ 30%] Built target gtest_main
+[0.102s] [ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o
+[0.104s] [ 46%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o
+[5.751s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp: In member function ‘void roboclaw_hardware::RoboClawHardware::initialize_state_interfaces()’:
+[5.751s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:473:13: warning: dangling pointer ‘e1’ to ‘enc’ may be used [-Wdangling-pointer=]
+[5.751s]   473 |     int32_t e1 = enc.enc1;
+[5.751s]       |             ^~
+[5.751s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:18: note: ‘enc’ declared here
+[5.751s]   471 |   EncodersResult enc = protocol_->GetEncoders(address_);
+[5.751s]       |                  ^~~
+[5.751s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:474:13: warning: dangling pointer ‘e2’ to ‘enc’ may be used [-Wdangling-pointer=]
+[5.751s]   474 |     int32_t e2 = enc.enc2;
+[5.751s]       |             ^~
+[5.751s] /host_ws/src/roboclaw_hardware/src/roboclaw_hardware.cpp:471:18: note: ‘enc’ declared here
+[5.752s]   471 |   EncodersResult enc = protocol_->GetEncoders(address_);
+[5.752s]       |                  ^~~
+[6.719s] [ 53%] Linking CXX shared library libroboclaw_hardware.so
+[6.934s] [ 69%] Built target roboclaw_hardware
+[6.961s] [ 84%] Building CXX object CMakeFiles/test_unit_converter.dir/test/test_unit_converter.cpp.o
+[6.961s] [ 84%] Building CXX object CMakeFiles/test_protocol_crc.dir/test/test_protocol_crc.cpp.o
+[7.967s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp: In member function ‘virtual void ProtocolCRC_BufferInterpretation_Test::TestBody()’:
+[7.968s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:153:28: error: ‘RoboClawHardware’ has not been declared in ‘roboclaw_hardware’
+[7.968s]   153 |   using roboclaw_hardware::RoboClawHardware;
+[7.968s]       |                            ^~~~~~~~~~~~~~~~
+[7.968s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:155:15: error: ‘RoboClawHardware’ has not been declared
+[7.968s]   155 |   auto idle = RoboClawHardware::interpret_buffer_status(0xFF);
+[7.968s]       |               ^~~~~~~~~~~~~~~~
+[7.968s] In file included from /opt/ros/jazzy/src/gtest_vendor/include/gtest/gtest.h:72,
+[7.969s]                  from /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:3:
+[7.969s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:156:44: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+[7.969s]   156 |   EXPECT_EQ(idle.state, roboclaw_hardware::BufferStatus::IDLE);
+[7.969s]       |                                            ^~~~~~~~~~~~
+[7.969s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:160:15: error: ‘RoboClawHardware’ has not been declared
+[7.969s]   160 |   auto exec = RoboClawHardware::interpret_buffer_status(0x00);
+[7.969s]       |               ^~~~~~~~~~~~~~~~
+[7.969s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:161:44: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+[7.969s]   161 |   EXPECT_EQ(exec.state, roboclaw_hardware::BufferStatus::EXECUTING);
+[7.969s]       |                                            ^~~~~~~~~~~~
+[7.969s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:164:19: error: ‘RoboClawHardware’ has not been declared
+[7.969s]   164 |   auto buffered = RoboClawHardware::interpret_buffer_status(5);
+[7.970s]       |                   ^~~~~~~~~~~~~~~~
+[7.970s] /host_ws/src/roboclaw_hardware/test/test_protocol_crc.cpp:165:48: error: ‘roboclaw_hardware::BufferStatus’ has not been declared
+[7.970s]   165 |   EXPECT_EQ(buffered.state, roboclaw_hardware::BufferStatus::BUFFERED);
+[7.970s]       |                                                ^~~~~~~~~~~~
+[8.256s] gmake[2]: *** [CMakeFiles/test_protocol_crc.dir/build.make:76: CMakeFiles/test_protocol_crc.dir/test/test_protocol_crc.cpp.o] Error 1
+[8.256s] gmake[1]: *** [CMakeFiles/Makefile2:215: CMakeFiles/test_protocol_crc.dir/all] Error 2
+[8.256s] gmake[1]: *** Waiting for unfinished jobs....
+[9.042s] [ 92%] Linking CXX executable test_unit_converter
+[9.255s] [ 92%] Built target test_unit_converter
+[9.256s] gmake: *** [Makefile:146: all] Error 2
+[9.259s] Invoked command in '/host_ws/build/roboclaw_hardware' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy /usr/bin/cmake --build /host_ws/build/roboclaw_hardware -- -j8 -l8

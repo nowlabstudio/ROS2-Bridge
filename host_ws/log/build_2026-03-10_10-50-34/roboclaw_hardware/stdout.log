@@ -1,0 +1,10 @@
+[ 30%] Built target gtest
+[ 30%] Built target gtest_main
+[ 38%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/unit_converter.cpp.o
+[ 46%] Building CXX object CMakeFiles/roboclaw_hardware.dir/src/roboclaw_hardware.cpp.o
+[ 53%] Linking CXX shared library libroboclaw_hardware.so
+[ 69%] Built target roboclaw_hardware
+[ 84%] Building CXX object CMakeFiles/test_unit_converter.dir/test/test_unit_converter.cpp.o
+[ 84%] Building CXX object CMakeFiles/test_protocol_crc.dir/test/test_protocol_crc.cpp.o
+[ 92%] Linking CXX executable test_unit_converter
+[ 92%] Built target test_unit_converter

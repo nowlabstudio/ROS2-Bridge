@@ -74,7 +74,7 @@ class RoboClawTCP(Basicmicro):
         self,
         comport: str,
         rate: int = 0,
-        timeout: float = 0.05,
+        timeout: float = 0.5,
         retries: int = 2,
         verbose: bool = False,
     ):
