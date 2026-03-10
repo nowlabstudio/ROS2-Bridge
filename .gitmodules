@@ -4,3 +4,6 @@
 [submodule "host_ws/src/basicmicro_ros2"]
 	path = host_ws/src/basicmicro_ros2
 	url = https://github.com/basicmicro/basicmicro_ros2.git
+[submodule "host_ws/src/roboclaw_hardware"]
+	path = host_ws/src/roboclaw_hardware
+	url = /home/eduard/Dev/ROS2_RoboClaw

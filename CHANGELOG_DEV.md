@@ -4,6 +4,192 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23) — C++ ros2_control RoboClaw hardware interface (ROS2_RoboClaw)
+
+### Döntés
+A Python driver javítása helyett teljes C++ újraírás ros2_control pluginként.
+A régi Python rendszer (monkey-patch + safety_bridge) hibái (ERR-019 szaggatott motor)
+strukturálisak — a ros2_control determinisztikus 100Hz loopja megoldja.
+
+### Új repo
+- **ROS2_RoboClaw** — önálló git repo, submodule-ként `host_ws/src/roboclaw_hardware`
+- Négyrétegű architektúra:
+  1. `RoboClawTcp` — POSIX TCP socket (TCP_NODELAY, 50ms timeout, flush, reconnect)
+  2. `RoboClawProtocol` — CRC16 lookup table, 20 parancs, 3x retry
+  3. `UnitConverter` — encoder counts <-> radians/m/s, overflow védelem
+  4. `RoboClawHardware` — ros2_control SystemInterface, lifecycle management
+
+### Funkciók (21 + 2 stub)
+- **Lifecycle:** on_init (URDF param extraction), on_configure (TCP connect, controller detect), on_activate (state init, SetTimeout), on_deactivate (motor stop)
+- **read/write:** GetEncoders + GetSpeeds @ 100Hz, 4 motion stratégia (duty, duty_accel, speed, speed_accel)
+- **Diagnostics:** comprehensive (voltage, current, temp, errors, buffers), health monitor, error limits
+- **Position:** absolute position, distance command, servo errors
+- **Stubs:** configure_servo_parameters, perform_auto_homing
+
+### Konfiguráció
+- `diff_drive_controllers.yaml`: 100Hz, 4.5 m/s max (~16 km/h), cmd_vel_timeout=0.5s
+- URDF xacro: TCP host/port paraméterek, wheel_radius=0.2, gear_ratio=16.0
+- Launch: controller_manager + diff_drive_controller + joint_state_broadcaster
+
+### Monorepo integráció
+- Submodule: `host_ws/src/roboclaw_hardware`
+- docker-compose: `roboclaw-hw` service (ros2control profile)
+- Makefile: `host-build-roboclaw-hw`, `robot-hw-start`, `robot-hw-stop`, `robot-hw-logs`, `robot-hw-motor-test`
+
+### Tesztek
+- `test_unit_converter.cpp` — matek, overflow, gear ratio
+- `test_protocol_crc.cpp` — CRC16 table vs reference, buffer interpretation
+
+### Nyitott pontok
+- [ ] `make host-build-roboclaw-hw` — első build, fordítási hibák javítása
+- [ ] Hardware teszt: TCP connect, ReadVersion, encoder read
+- [ ] Motor teszt: cmd_vel -> diff_drive_controller -> RoboClawHardware -> motor
+- [ ] Összehasonlítás: C++ driver vs standalone Python script simaság
+- [ ] GitHub remote beállítása az ROS2_RoboClaw repohoz
+- [ ] GPIO diagnostics state interfaces (URDF deklarációval)
+
+---
+
+## 2026-03-10 (22) — DDS domain rögzítés: ROS_DOMAIN_ID=0, cyclonedds Domain id=0
+
+### Probléma
+A `/robot/diagnostics` topic metaadata látszott (`ros2 topic info` mutat 1 publisher-t), de az üzenetek **nem érkeztek meg** sem a ros2-shell-ben, sem a Foxglove-ban — valószínű DDS discovery / partíció különbség a konténerek között.
+
+### Változtatások
+- **docker-compose.yml:** Minden ROS2 konténerhez (roboclaw, foxglove, ros2-shell) **ROS_DOMAIN_ID=0** környezeti változó.
+- **tools/cyclonedds.xml:** `<Domain id="any">` → `<Domain id="0">`, hogy minden folyamat ugyanazon a domainen legyen.
+- **Makefile:** Új cél `make robot-diagnostics-echo` — a roboclaw konténeren belül 8 másodpercig echo-olja a `/robot/diagnostics`-t (ha itt érkeznek az üzenetek, a publish működik; ha csak itt érkeznek, a gond a konténerek közötti DDS).
+
+### Teszt
+1. Stack újraindítás: `docker compose down && docker compose up -d`.
+2. `make robot-diagnostics-echo` — ha üzenetek jönnek, a driver publish rendben; ha a ros2-shell-ben is jönnek, a domain fix segített.
+3. Ros2-shell-ben: `ros2 topic echo /robot/diagnostics diagnostic_msgs/msg/DiagnosticArray`.
+
+### 22e — Motor Duty teszt (encoderek nélkül)
+- **robot-motor-test-standalone:** Működik, sima forgás. Közvetlen TCP, roboclaw stop.
+- **robot-motor-test-m1/m2 (ROS2):** A driver futó TCP kapcsolata miatt a motor rángat, nem forog simán. Encoderek nélkül a standalone-ot használd.
+- **motor_duty_m1, motor_duty_m2** topicok: közvetlen PWM (DutyM1/DutyM2), encoderek nélkül működnek.
+- **robot-motor-test-m1, robot-motor-test-m2:** 100% duty, 3s. INFO log: "DutyM1: duty=1.0 raw=32767 ok" vagy "FAILED".
+- **robot-motor-test-standalone:** Közvetlen TCP teszt (roboclaw stop) — tools/test_motor_duty.py, M1 majd M2 50% 2s. Ha ez sem mozgat, a gond a RoboClaw/hardware oldalon van.
+
+### 22d — Motor teszt (cmd_vel)
+- **robot-motor-test-m2:** Csak M2 (bal kerék) teszt, 50% sebesség (0.5 m/s), 3 s. Diff drive: linear=0.25, angular=-1.67 → jobb kerék 0, bal 0.5 m/s.
+- **Makefile:** `make robot-motor-test` — publish cmd_vel (linear.x=0.05 m/s) 3 másodpercig, 10 Hz. Paraméterek: `LINEAR=0.05 DURATION=3`. E-Stopnak released-nek kell lennie (Pico publikálja).
+
+### 22c — 50Hz szenzor stream + teljes diagnostics visszakapcsolás
+- **Szenzor timer visszakapcsolva:** 50 Hz (0.02s) — GetEncoders + GetSpeeds → `joint_states` (50 Hz) + `odom` (50 Hz). TCP round-trip ~15ms, stabil.
+- **Diagnostics teljes:** GetVolts + GetTemps + ReadCurrents + ReadError mind visszakapcsolva (1 Hz).
+- **Error flag kódok bővítve:** `_ERROR_FLAG_NAMES` dict kiegészítve a 16–28 bitekkel (OverCurrent/Bat/Temp warnings, S4/S5, Speed/Pos error limit). Új `_ERROR_MASK = 0x0000FFFF` — csak alsó 16 bit (hard error) triggerel WARN szintet. A `0x20000000` (firmware status) mostantól nem generál hamis riasztást.
+
+### 22b — Root cause: Fast DDS shared memory transport konténerek között nem működik
+- Mindkét konténer `rmw_fastrtps_cpp`-t használ (NEM CycloneDDS-t) — a `CYCLONEDDS_URI` ignorálva volt.
+- A `ros2 topic list -v` a ros2-shell-ben látta a publishert (discovery működött), de `ros2 topic echo` nem kapott adatot.
+- `/robot/estop` (agent konténerből) **megérkezett** a ros2-shell-be, de a roboclaw konténerből semmi.
+- **Root cause:** Fast DDS alapértelmezetten **SHM (shared memory) transport**-ot használ, ha a participantek azonos hoston vannak. Docker `network_mode: host`-tal a hálózat közös, de az **IPC namespace** konténerenként külön van → az SHM csendben elbukik, az adat nem jut át, és nincs fallback UDP-re.
+- **Javítás:** `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` env var minden ROS2 konténerhez (roboclaw, foxglove, ros2-shell) → SHM kikapcsolva, csak UDP, az üzenetek megérkeznek.
+- Teszt: `ros2 topic pub /test_cross2` roboclaw-ból + `ros2 topic echo` ros2-shell-ből → **üzenetek jönnek**.
+
+---
+
+## 2026-03-10 (21) — Read timeout után flush + terhelés csökkentés (diagnostics)
+
+### Probléma
+A driver csatlakozott, de GetSpeeds (cmd 0x6c) timeout után nem jött joint_states/diagnostics; a motor nem mozdult. Timeout már 0.5 s volt, paraméterek rendben.
+
+### 1. lépés — Timeout után port flush
+- **basicmicro_node.py:** `_flush_controller_input()` helper — ha a controllernek van `_port`-ja, meghívja a `flushInput()`-ot.
+- Minden controller read utáni `except Exception` ágban meghívva: read_sensors (encoder, speed), perform_health_check, publish_diagnostics (voltage, temps, currents, error). Így sikertelen read után a buffer ürül, a következő parancs szinkronban marad.
+
+### 2. lépés — Terhelés csökkentés (teszt)
+- Szenzor timer: 50 Hz → **25 Hz** (0.02 → 0.04 s).
+- Diagnostics: **ReadCurrents** és **ReadError** hívások kikommentezve (volt, temp marad). Ha a link stabil, később vissza lehet kapcsolni.
+
+### 3. lépés (21b) — Read timeout 0.5 s + csatlakozás után 0.2 s delay
+- **basicmicro_tcp.py:** RoboClawTCP alapértelmezett timeout 0.05 → **0.5 s** (TCP round-triphez).
+- **basicmicro_node.py:** Új paraméter `read_timeout` (default 0.5), átadva a Basicmicro(port, baud, read_timeout) konstruktornak. Sikeres connect + ResetEncoders után **time.sleep(0.2)** mielőtt return — a vezérlő legyen kész a következő parancsra.
+- **config/roboclaw_params.yaml:** `read_timeout: 0.5` a roboclaw_driver alatt.
+
+### Teszt
+1. `make host-build-docker`, majd `docker compose restart roboclaw`.
+2. flush + csökkentett terhelés + **0.5 s timeout + 0.2 s delay** — `ros2 topic echo /robot/diagnostics`, `ros2 topic echo /robot/joint_states`, majd `ros2 topic pub --rate 10 /robot/cmd_vel ...`.
+
+---
+
+## 2026-03-09 (20) — make robot-shell: ROS2 környezet betöltése
+
+- **Makefile:** `robot-shell` cél most a belépéskor betölti a ROS2-öt: `source /opt/ros/jazzy/setup.bash` + opcionálisan `source /host_ws/install/setup.bash`, majd `exec bash`. Így a `ros2` parancs és a workspace azonnal elérhető a shellben.
+
+---
+
+## 2026-03-09 (19) — Driver telemetria bővítés: áram, error kód, odometria
+
+### Változtatások
+
+- **basicmicro_ros2/basicmicro_driver/basicmicro_node.py:**
+  - **Motoráram** (`ReadCurrents`) hozzáadva a diagnostics-hoz — `current_m1`, `current_m2` (Amper)
+  - **Error/warning kód** (`ReadError`) hozzáadva — `error_code` (hex), `error_flags` (emberi olvasható flag dekódolás: E-Stop, Temp, BatHigh/Low, M1/M2Current stb.)
+  - **Odometria** (`odom` topic) implementálva — diff drive forward kinematics: encoder delta → x, y, theta, linear/angular velocity. Frame: odom → base_link.
+  - **JSON status** (`basicmicro/status`) most 1 Hz-en publikál (connected, firmware, connection_state, error_count)
+  - Firmware verzió mentése csatlakozáskor, megjelenik a diagnostics-ban
+  - `_to_signed32` helper, `_yaw_to_quaternion`, `_decode_error_flags`, `_ERROR_FLAG_NAMES` dict
+
+### Diagnostics topic tartalma (1 Hz)
+
+| Mező | Forrás |
+|------|--------|
+| main_battery_voltage | GetVolts |
+| logic_battery_voltage | GetVolts |
+| temperature_1, temperature_2 | GetTemps |
+| current_m1, current_m2 | ReadCurrents |
+| error_code, error_flags | ReadError |
+| firmware, port, address | Induláskor |
+| connection_state, error_count, consecutive_errors | Health monitor |
+
+---
+
+## 2026-03-09 (18) — RC Teleop node (arcade), motor_left/right revert
+
+### Döntés
+
+A teljes driver refactor (DRIVER_REFACTOR_PLAN.md) elhalasztva. Helyette: **monkey-patch marad** + önálló `rc_teleop_node` fordítja az RC jeleket `cmd_vel` Twist-re (arcade stílusú: throttle + steering). A driver `basicmicro_node.py` kizárólag `cmd_vel`-t fogad.
+
+### Változtatások
+
+- **basicmicro_ros2/basicmicro_driver/basicmicro_node.py:** Revert — eltávolítva: `use_direct_wheel_inputs`, `estop_topic` paraméterek, `motor_left`/`motor_right`/`estop` subscription-ök, `_motor_left_cb`, `_motor_right_cb`, `_estop_cb`, `_send_direct_wheel_speeds` metódusok. A driver ismét csak `cmd_vel` (Twist) bemenetet fogad.
+- **roboclaw_tcp_adapter/rc_teleop_node.py:** Új node — arcade RC → cmd_vel fordító. Paraméterezhető topic nevek (`throttle_topic`, `steering_topic`), deadzone (5%), PWM normalizálás opció (`is_pwm_input`), E-Stop gating, 20 Hz biztonsági timer.
+- **launch/roboclaw.launch.py:** 3 node: roboclaw_tcp_node + safety_bridge + rc_teleop.
+- **setup.py:** `rc_teleop_node` entry point hozzáadva.
+- **config/roboclaw_params.yaml:** `rc_teleop` szekció (max speed, deadzone, topic nevek, publish rate). `use_direct_wheel_inputs`/`estop_topic` eltávolítva.
+- **ONBOARDING.md:** „Mi fut és hol" táblázat frissítve (roboclaw: driver + safety_bridge + rc_teleop).
+
+### Architektúra
+
+```
+Pico rc_ch1/ch2 (Float32) → rc_teleop_node (normalize, deadzone, E-Stop) → cmd_vel (Twist) → basicmicro_node (diff drive) → SpeedM1M2 → RoboClaw
+```
+
+---
+
+## 2026-03-09 (17) — Driver refactor terv (DRIVER_REFACTOR_PLAN.md) — elhalasztva
+
+### Új
+
+- **host_ws/src/roboclaw_tcp_adapter/DRIVER_REFACTOR_PLAN.md:** Teljes refaktor terv — saját motorvezérlő ROS2 node (roboclaw_driver_node.py), monkey-patch és basicmicro_ros2 futásidejű függőség nélkül. Funkciólista (Core A: 10, Services B: 7, Későbbi C: 6), célarchitektúra, fájl struktúra, migráció lépései. **Állapot: elhalasztva — a jelenlegi monkey-patch + rc_teleop architektúra elegendő.**
+
+---
+
+## 2026-03-09 (16) — Motorvezérlő: motor_left/right a driverben, rc_to_cmd_vel eltávolítva — visszavonva
+
+### (Visszavonva a (18)-as sessionben — a motor_left/right kód eltávolítva, rc_teleop_node váltja ki.)
+
+---
+
+## 2026-03-09 (15) — RC ch2 → M2: rc_to_cmd_vel bridge
+
+### (Elavult — a (18)-as session rc_teleop_node-ja váltja ki.)
+
+---
+
 ## 2026-03-09 (14) — Foxglove: build lépés, hibaelhárítás
 
 ### Probléma

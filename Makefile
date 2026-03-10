@@ -96,6 +96,20 @@ host-build-docker:
 		source /opt/ros/jazzy/setup.bash && \
 		colcon build --packages-select basicmicro_ros2 roboclaw_tcp_adapter --symlink-install"
 
+# Build C++ roboclaw_hardware package in Docker (needs ros2-control deps)
+.PHONY: host-build-roboclaw-hw
+host-build-roboclaw-hw:
+	docker run --rm \
+		-v $(PROJECT_DIR)/host_ws:/host_ws -w /host_ws \
+		ros:jazzy \
+		bash -c " \
+		apt-get update -qq && \
+		apt-get install -y -qq --no-install-recommends \
+			ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
+			ros-jazzy-xacro ros-jazzy-robot-state-publisher >/dev/null 2>&1 && \
+		source /opt/ros/jazzy/setup.bash && \
+		colcon build --packages-select roboclaw_hardware --cmake-args -DCMAKE_BUILD_TYPE=Release"
+
 .PHONY: host-shell
 host-shell:
 	bash -c "source $(HOST_WS)/install/setup.bash && exec bash"
@@ -118,7 +132,72 @@ robot-logs-roboclaw:
 
 .PHONY: robot-shell
 robot-shell:
-	docker compose exec ros2-shell bash
+	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && [ -f /host_ws/install/setup.bash ] && source /host_ws/install/setup.bash; exec bash"
+
+# Echo /robot/diagnostics from inside roboclaw container (proves publish works if messages appear)
+.PHONY: robot-diagnostics-echo
+robot-diagnostics-echo:
+	docker compose exec roboclaw bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && timeout 8 ros2 topic echo /robot/diagnostics diagnostic_msgs/msg/DiagnosticArray"
+
+# Motor test: publish cmd_vel for 3s (E-Stop must be released!)
+# Usage: make robot-motor-test [LINEAR=0.05] [DURATION=3]
+LINEAR ?= 0.05
+DURATION ?= 3
+.PHONY: robot-motor-test
+robot-motor-test:
+	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /robot/cmd_vel geometry_msgs/msg/Twist '{linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}' --rate 10" || true
+
+# M1 DutyM1 (PWM), 50%%, 3s — standalone mintájára (50% = 16384)
+.PHONY: robot-motor-test-m1
+robot-motor-test-m1:
+	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && echo 'M1 DutyM1 50%% 3s...' && ros2 topic pub /robot/motor_duty_m1 std_msgs/msg/Float32 '{data: 0.5}' --once && sleep 3 && ros2 topic pub /robot/motor_duty_m1 std_msgs/msg/Float32 '{data: 0.0}' --once" || true
+
+# Standalone teszt (roboclaw STOPPED): közvetlen TCP, DutyM1 majd DutyM2
+.PHONY: robot-motor-test-standalone
+robot-motor-test-standalone:
+	docker compose stop roboclaw && \
+	docker compose run --rm --no-deps -v $$(pwd):/workspace:ro \
+		-e ROBOCLAW_HOST=$${ROBOCLAW_HOST:-192.168.68.60} \
+		-e ROBOCLAW_PORT=$${ROBOCLAW_PORT:-8234} \
+		roboclaw bash -c "apt-get update -qq && apt-get install -y -qq python3-serial >/dev/null && PYTHONPATH=/workspace/host_ws/src/roboclaw_tcp_adapter:/workspace/host_ws/src/basicmicro_python python3 /workspace/tools/test_motor_duty.py" ; \
+	docker compose start roboclaw
+
+# M2 DutyM2 ROS2-ból: 5 Hz keepalive (watchdog?), 50%%, M2_DURATION s
+.PHONY: robot-motor-test-m2
+M2_DURATION ?= 10
+robot-motor-test-m2:
+	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && echo 'M2 DutyM2 50%% $(M2_DURATION)s @5Hz...' && (timeout $(M2_DURATION) ros2 topic pub /robot/motor_duty_m2 std_msgs/msg/Float32 '{data: 0.5}' --rate 5 & sleep $$(($(M2_DURATION) + 1)) && ros2 topic pub /robot/motor_duty_m2 std_msgs/msg/Float32 '{data: 0.0}' --once)" || true
+
+# Csak M2 standalone (roboclaw stop) — ha ROS2 path nem működik
+.PHONY: robot-motor-test-standalone-m2
+M2_DURATION ?= 10
+robot-motor-test-standalone-m2:
+	docker compose stop roboclaw && \
+	docker compose run --rm --no-deps -v $$(pwd):/workspace:ro \
+		-e ROBOCLAW_HOST=$${ROBOCLAW_HOST:-192.168.68.60} \
+		-e ROBOCLAW_PORT=$${ROBOCLAW_PORT:-8234} \
+		-e M2_DURATION=$(M2_DURATION) \
+		roboclaw bash -c "apt-get update -qq && apt-get install -y -qq python3-serial >/dev/null && PYTHONPATH=/workspace/host_ws/src/roboclaw_tcp_adapter:/workspace/host_ws/src/basicmicro_python python3 /workspace/tools/test_motor_duty.py m2" ; \
+	docker compose start roboclaw
+
+# Start ros2_control C++ driver (stop Python driver first!)
+.PHONY: robot-hw-start
+robot-hw-start:
+	docker compose stop roboclaw 2>/dev/null || true
+	docker compose --profile ros2control up -d roboclaw-hw
+
+.PHONY: robot-hw-stop
+robot-hw-stop:
+	docker compose --profile ros2control stop roboclaw-hw
+
+.PHONY: robot-hw-logs
+robot-hw-logs:
+	docker compose --profile ros2control logs -f roboclaw-hw
+
+# Motor test via ros2_control diff_drive_controller cmd_vel
+.PHONY: robot-hw-motor-test
+robot-hw-motor-test:
+	docker compose exec ros2-shell bash -c "source /opt/ros/jazzy/setup.bash && source /host_ws/install/setup.bash && echo 'Publishing cmd_vel linear.x=$(LINEAR) for $(DURATION)s...' && timeout $(DURATION) ros2 topic pub /diff_drive_controller/cmd_vel_unstamped geometry_msgs/msg/Twist '{linear: {x: $(LINEAR), y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}' --rate 10" || true
 
 .PHONY: robot-ps
 robot-ps:
@@ -161,7 +240,22 @@ help:
 	@echo "  make robot-logs          - Follow all container logs"
 	@echo "  make robot-logs-roboclaw - Follow roboclaw logs only"
 	@echo "  make robot-shell         - Open ROS2 shell (exec into container)"
+	@echo "  make robot-diagnostics-echo - Echo /robot/diagnostics from roboclaw container (8s)"
+	@echo "  make robot-motor-test    - Publish cmd_vel forward 3s (LINEAR=0.05, DURATION=3)"
+	@echo "  make robot-motor-test-m1 - M1 DutyM1 100%% 3s"
+	@echo "  make robot-motor-test-m2 - M2 DutyM2 50%% (M2_DURATION=10 pl. 10s)"
+	@echo "  make robot-motor-test-standalone - Közvetlen TCP (M1+M2)"
+	@echo "  make robot-motor-test-standalone-m2 - Csak M2, 50%%, 3s"
 	@echo "  make robot-ps            - Show container status"
+	@echo ""
+	@echo "  ── C++ ros2_control Driver ──"
+	@echo "  make host-build-roboclaw-hw - Build C++ roboclaw_hardware in Docker"
+	@echo "  make robot-hw-start      - Start C++ driver (stops Python driver)"
+	@echo "  make robot-hw-stop       - Stop C++ driver"
+	@echo "  make robot-hw-logs       - Follow C++ driver logs"
+	@echo "  make robot-hw-motor-test - cmd_vel test via diff_drive_controller"
+	@echo ""
+	@echo "  ── Management ──"
 	@echo "  make foxglove-build      - Build Foxglove bridge image (once; then stack can start it)"
 	@echo "  make portainer-start    - Start Portainer UI (https://localhost:9443)"
 	@echo "  make portainer-stop      - Stop Portainer"

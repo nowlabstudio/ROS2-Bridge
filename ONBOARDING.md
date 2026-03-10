@@ -96,7 +96,7 @@ make robot-shell           # belépés a ROS2 konténerbe (Ctrl+P Ctrl+Q = detac
 ros2 node list
 ros2 topic list
 ros2 topic echo /robot/estop std_msgs/msg/Bool
-ros2 topic echo /robot/motor_left std_msgs/msg/Float32
+ros2 topic echo /robot/rc_ch2 std_msgs/msg/Float32
 ```
 
 ### Portainer (opcionális, ha van internet)
@@ -131,7 +131,8 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 | Szolgáltatás | Konténer | Kép | Mit csinál |
 |--------------|----------|-----|------------|
 | agent | w6100_bridge_agent_udp | microros/micro-ros-agent:jazzy | UDP :8888, micro-ROS → DDS |
-| roboclaw | w6100_bridge_roboclaw | ros:jazzy | roboclaw_tcp_adapter launch (driver + safety_bridge) |
+| roboclaw | w6100_bridge_roboclaw | ros:jazzy | roboclaw_tcp_adapter launch (driver + safety_bridge + rc_teleop) — **régi Python driver** |
+| roboclaw-hw | w6100_bridge_roboclaw_hw | ros:jazzy | **C++ ros2_control** driver (controller_manager + diff_drive_controller) — profile: ros2control |
 | foxglove | w6100_foxglove_bridge | w6100-foxglove (build) | WebSocket :8765 → Foxglove Studio |
 | ros2-shell | w6100_bridge_ros2 | ros:jazzy | Interaktív bash, ROS2 + host_ws be van töltve |
 | portainer | portainer | portainer/portainer-ce | Web UI (profile: management) |
@@ -162,6 +163,11 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 | `make robot-logs-roboclaw` | Csak roboclaw log |
 | `make robot-shell` | ROS2 shell (detach: Ctrl+P, Ctrl+Q) |
 | `make host-build-docker` | host_ws újraépítése Dockerben |
+| `make host-build-roboclaw-hw` | C++ roboclaw_hardware csomag buildelése |
+| `make robot-hw-start` | C++ ros2_control driver indítása (Python leáll) |
+| `make robot-hw-stop` | C++ driver leállítása |
+| `make robot-hw-logs` | C++ driver logok |
+| `make robot-hw-motor-test` | Motor teszt diff_drive_controlleren keresztül |
 | `make portainer-start` | Portainer indítása |
 | `make portainer-stop` | Portainer leállítása |
 
@@ -185,6 +191,8 @@ A rendszer szintű felügyelethez (konténerek, logok, restart) a **Portainer** 
 
 ## 11. Gyors hibaelhárítás
 
+- **C++ driver nem indul:** `make host-build-roboclaw-hw` lefutott? A ros2-control és ros2-controllers csomagok telepítve a konténerben?
+- **Motor szaggatott (Python driver):** Ismert hiba (ERR-019). Használd a C++ drivert: `make robot-hw-start`.
 - **RoboClaw "timed out":** USR-K6 + RoboClaw elérhető? `ROBOCLAW_HOST`/`ROBOCLAW_PORT` és a hálózat rendben?
 - **"No module named 'basicmicro_driver'":** `make host-build-docker` lefutott? PYTHONPATH a compose-ban a forrásra mutat (`host_ws/src/basicmicro_ros2`).
 - **Pico-k nem látszanak:** Agent fut? `make robot-ps`. Pico-k `agent_ip`/`agent_port` a config.json-ban = host IP és 8888?

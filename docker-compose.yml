@@ -40,6 +40,8 @@ services:
       - ./host_ws:/host_ws:rw
       - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
     environment:
+      - ROS_DOMAIN_ID=0
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
       - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
       - ROBOCLAW_HOST=${ROBOCLAW_HOST:-192.168.68.60}
       - ROBOCLAW_PORT=${ROBOCLAW_PORT:-8234}
@@ -52,6 +54,42 @@ services:
         ros2 launch roboclaw_tcp_adapter roboclaw.launch.py
           roboclaw_host:=$$ROBOCLAW_HOST
           roboclaw_port:=$$ROBOCLAW_PORT
+      "
+
+  # ── RoboClaw C++ ros2_control driver ──────────────────────────────────────
+  # Replaces the Python driver above.  Use: docker compose up roboclaw-hw
+  # (stop the python driver first: docker compose stop roboclaw)
+  roboclaw-hw:
+    image: ros:jazzy
+    container_name: w6100_bridge_roboclaw_hw
+    network_mode: host
+    restart: "no"
+    profiles: ["ros2control"]
+    depends_on:
+      agent:
+        condition: service_started
+    volumes:
+      - ./host_ws:/host_ws:rw
+      - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
+    environment:
+      - ROS_DOMAIN_ID=0
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
+      - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
+      - ROBOCLAW_HOST=${ROBOCLAW_HOST:-192.168.68.60}
+      - ROBOCLAW_PORT=${ROBOCLAW_PORT:-8234}
+    command: >
+      bash -c "
+        apt-get update -qq &&
+        apt-get install -y -qq --no-install-recommends
+          ros-jazzy-ros2-control
+          ros-jazzy-ros2-controllers
+          ros-jazzy-xacro
+          ros-jazzy-robot-state-publisher >/dev/null 2>&1;
+        source /opt/ros/jazzy/setup.bash &&
+        source /host_ws/install/setup.bash &&
+        ros2 launch roboclaw_hardware roboclaw.launch.py
+          tcp_host:=$$ROBOCLAW_HOST
+          tcp_port:=$$ROBOCLAW_PORT
       "
 
   # ── Foxglove Bridge (WebSocket :8765) ──────────────────────────────────────
@@ -70,6 +108,8 @@ services:
     volumes:
       - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
     environment:
+      - ROS_DOMAIN_ID=0
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
       - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
     command: >
       bash -c "source /opt/ros/jazzy/setup.bash &&
@@ -87,6 +127,8 @@ services:
       - ./host_ws:/host_ws:rw
       - ./tools/cyclonedds.xml:/tmp/cyclonedds.xml:ro
     environment:
+      - ROS_DOMAIN_ID=0
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4
       - CYCLONEDDS_URI=file:///tmp/cyclonedds.xml
       - PYTHONPATH=/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python
     stdin_open: true

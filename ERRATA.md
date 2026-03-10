@@ -27,6 +27,21 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-015](#err-015) | RoboClaw Docker: `ModuleNotFoundError: No module named 'serial'` | Magas | **Javítva** |
 | [ERR-016](#err-016) | safety_bridge_node: `RcutilsLogger.info()` több argumentum → TypeError | Közepes | **Javítva** |
 | [ERR-017](#err-017) | RoboClaw Docker: No module named 'basicmicro_driver' | Magas | **Javítva** |
+| [ERR-018](#err-018) | /robot/diagnostics nem érkezik meg ros2-shell / Foxglove felé (Fast DDS SHM) | Kritikus | **Javítva** |
+| [ERR-019](#err-019) | Motor szaggatottan forog ROS2 alatt (safety_bridge watchdog + bus contention) | Kritikus | **Javítva** (C++ ros2_control) |
+
+---
+
+## ERR-018
+
+### /robot/diagnostics nem érkezik meg ros2-shell / Foxglove felé
+
+**Dátum:** 2026-03-10  
+**Állapot:** **Javítva**
+
+A roboclaw konténer logja szerint a node fut és publikálja a diagnostics-t; a discovery működött, de `ros2 topic echo` nem kapott adatot. **Root cause:** Fast DDS SHM transport Docker konténerek között nem működik (külön IPC namespace). **Javítás:** `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` env var minden ROS2 konténerhez.
+
+_(Részletes debug történet: a roboclaw konténer logja szerint a node fut és másodpercenként lefut a `publish_diagnostics`; a `ros2 topic info /robot/diagnostics -v` 1 publishernél és 1 subscribernél mutatja a topicot (típus, QoS rendben). Azonban `ros2 topic echo /robot/diagnostics` (ros2-shell-ben vagy hoston) és a Foxglove **nem kap üzenetet** — a topic „létezik”, de a payload nem jön át. Feltételezés: DDS discovery / partíció különbség a konténerek között (roboclaw vs ros2-shell / Foxglove). **Kísérleti javítás (22):** minden ROS2 konténerhez `ROS_DOMAIN_ID=0`, cyclonedds.xml-ben `<Domain id="0">`; teszt: `make robot-diagnostics-echo` (echo a roboclaw konténeren belül — ha itt jönnek az üzenetek, a publish működik). **Eredmény:** roboclaw konténerben az echo kapta az üzeneteket, ros2-shell-ben nem → a publish rendben, a gond a két konténer közötti adatátvitel. **Kísérleti javítás (22b):** CycloneDDS shared memory kikapcsolva (`<SharedMemory><Enable>false</Enable></SharedMemory>`), mert konténerekenként külön `/dev/shm` van, így a shm forgalom nem jut át; kényszerítve az UDP használatát.)_
 
 ---
 
@@ -570,3 +585,46 @@ A monkey-patch lényege, hogy az eredeti osztályt **transparensen** helyettesí
 - **ERR-010 (topic collision) root cause-a az architektúra**, nem bug: ugyanaz a firmware fut minden boardon. A megoldás a config-driven channel enable/disable — ez tisztán és skálázhatóan kezeli a problémát.
 - **ERR-001 (param server)** és az összes többi hiba egymástól független. Az ERR-001 a micro-XRCE-DDS rétegben van, a többi firmware vagy tool szintű hiba volt.
 - **ERR-011..014 (host_ws bugok)** mind a pre-deployment validáció során derültek ki. A négy hiba együttesen megakadályozta volna a `roboclaw_tcp_adapter` működését. Mindegyik a kód review fázisban javítva, hardveres teszt előtt.
+
+---
+
+## ERR-019
+
+### Motor szaggatottan forog ROS2 alatt (safety_bridge watchdog + bus contention)
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus |
+| **Állapot** | **Javítva** (C++ ros2_control) |
+| **Felfedezés** | 2026-03-09 (session 22) |
+| **Javítás** | 2026-03-10 (session 23) |
+
+#### Tünet
+
+A motor ROS2-n keresztül szaggatottan, rángatva forgott, miközben a standalone Python teszt (`tools/test_motor_duty.py`) simán futott. A log tele volt `EMERGENCY STOP: E-Stop topic SILENT for >2.0s` üzenetekkel.
+
+#### Root cause
+
+Három egymást erősítő hiba:
+
+1. **safety_bridge watchdog:** A `safety_bridge_node` 2 másodpercenként zero `cmd_vel`-t küldött, mert a `/robot/estop` topicra senki nem publisholt (a Pico E-Stop board nem volt aktív). Ez felülírta a tényleges motor parancsokat.
+
+2. **Bus contention:** Az eredeti Python driver egyszálú rclpy executorral futott, ahol a 50Hz sensor read timer, a diagnostic burst, és a cmd_vel callback mind ugyanazon a TCP kapcsolaton versengett. A soros jellegű kommunikáció (RoboClaw response timeout) blokkolta az egész rendszert.
+
+3. **Strukturális probléma:** A Python monkey-patch megoldás nem volt determinisztikus — nem volt garantált sorrendje a read/write ciklusnak, és a safety_bridge egy külön node-ként a ROS2 topic szinten avatkozott be (nem a hardware szinten).
+
+#### Javítás
+
+Teljes C++ újraírás ros2_control `SystemInterface` pluginként (`ROS2_RoboClaw` repo, `roboclaw_hardware` package):
+
+- **Determinisztikus loop:** A `controller_manager` 100Hz-es ciklusban hívja a `read()` és `write()` függvényeket — nincs bus contention.
+- **Beépített timeout:** A `diff_drive_controller` `cmd_vel_timeout: 0.5s` paramétere pótolja a safety_bridge watchdogot.
+- **Hardveres timeout:** A RoboClaw saját `SetTimeout(500ms)` az utolsó védelmi réteg.
+- **Egyetlen TCP kapcsolat:** Nincs versengés — a read() és write() sorrendben fut egyetlen szálon.
+
+#### Ellenőrzés
+
+1. `make host-build-roboclaw-hw` — C++ csomag buildelése
+2. `make robot-hw-start` — C++ driver indítása (Python driver leáll)
+3. `make robot-hw-motor-test` — cmd_vel teszt a diff_drive_controlleren keresztül
+4. Összehasonlítás: a motor forgása ugyanolyan sima kell legyen, mint a standalone script
