@@ -4,6 +4,51 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-03-10 (23e) — RC → Motor összekötés terv dokumentálása
+
+### RC csatorna kiosztás (végleges)
+
+| Csatorna | Funkció |
+|----------|---------|
+| CH1 | Jobb motor (tank) |
+| CH2 | Bal motor (tank) |
+| CH3 | Nincs bekötve |
+| CH4 | Nincs bekötve |
+| CH5 | ROS/RC mode switch — azonnali átváltás, safety funkció |
+| CH6 | Winch (később) |
+
+### Döntés: tank RC → cmd_vel konverzió
+
+A távirányító tank módban ad jelet (CH1 = jobb motor, CH2 = bal motor). Az RC jeleket
+a `rc_teleop_node` konvertálja arcade formátumra (`cmd_vel`), így:
+
+- **RC mód (CH5 > 0):** rc_teleop_node → `/diff_drive_controller/cmd_vel`
+- **ROS mód (CH5 ≤ 0):** Nav2 → `/diff_drive_controller/cmd_vel`, rc_teleop_node hallgat
+
+CH5 RC módra váltás **azonnal** leválasztja a ROS-t és átveszi az irányítást (safety).
+
+### Tank → Arcade formula
+
+```
+linear.x  = (ch2 + ch1) / 2.0 * max_speed      # ch2=bal, ch1=jobb
+angular.z = (ch2 - ch1) / 2.0 * max_angular     # ch2>ch1 → balra fordul
+```
+
+### Dokumentáció frissítés
+
+- **ONBOARDING.md** 2. szekció: teljes architektúra diagram (csatorna táblázat, adatfolyam,
+  ROS/RC mode switch leírás, Nav2 autonóm mód)
+- **ONBOARDING.md** 7b. szekció: RC→Motor összekötés terv (topic huzalozás, paraméterek,
+  5 szintű safety réteg, Foxglove debug panelek)
+
+### Implementáció TODO
+
+- [ ] `rc_teleop_node.py` — `mixing_mode=tank` + CH5 mode switch + TwistStamped kimenet
+- [ ] `roboclaw.launch.py` — rc_teleop_node spawner hozzáadása
+- [ ] Foxglove layout mentése az ajánlott panelekkel
+
+---
+
 ## 2026-03-10 (23d) — Architektúra refaktor: 100Hz→50Hz, thread→rotating diag, WiFi latencia azonosítás
 
 ### Probléma: folyamatos overrun 100Hz-en

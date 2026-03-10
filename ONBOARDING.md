@@ -16,17 +16,93 @@ Minden **Etherneten** megy; a hoston nincs USB/serial függőség. A ROS2 gráfb
 
 ---
 
-## 2. Architektúra (egy mondatban)
+## 2. Architektúra
+
+### RC csatorna kiosztás
+
+| Csatorna | Pico GPIO | Topic | Funkció |
+|----------|-----------|-------|---------|
+| CH1 | GP2 | `/robot/rc_ch1` | **Jobb motor** [-1..+1] |
+| CH2 | GP3 | `/robot/rc_ch2` | **Bal motor** [-1..+1] |
+| CH3 | GP4 | `/robot/rc_ch3` | Nincs bekötve |
+| CH4 | GP5 | `/robot/rc_ch4` | Nincs bekötve |
+| CH5 | GP6 | `/robot/rc_ch5` | **ROS/RC mode switch** — azonnali átváltás (safety!) |
+| CH6 | GP7 | `/robot/rc_ch6` | **Winch** (később) |
+
+### Adatfolyam diagram
 
 ```
-[Pico E-Stop, RC, pedal] --UDP:8888--> [Agent] --DDS--> [RoboClaw driver + safety bridge]
-                                              \__ [ROS2 shell, Foxglove, Portainer]
-[RoboClaw] --TCP:8234--> [USR-K6] ----------> RoboClaw driver (Docker)
+┌───────────────────┐
+│  TÁVIRÁNYÍTÓ       │  Tank mix: CH1=jobb, CH2=bal motor
+│  (PWM 1000-2000µs)│  CH5=ROS/RC switch, CH6=winch
+└────────┬──────────┘
+         │ PWM jelvezeték (6 csatorna)
+         ▼
+┌───────────────────┐
+│  W6100 PICO       │  rc_ch1..ch6 → normalize [-1..+1]
+│  (Zephyr+µROS)    │  → Float32 topic-ok (50Hz stick / 20Hz switch)
+└────────┬──────────┘
+         │ UDP :8888
+         ▼
+┌───────────────────┐
+│  micro-ROS Agent  │  UDP → DDS/ROS2 topic-ok
+└────────┬──────────┘
+         │ /robot/rc_ch1..ch6, /robot/estop
+         ▼
+┌───────────────────┐
+│  rc_teleop_node   │  CH5 figyeli → RC/ROS mód váltás
+│  (roboclaw-hw)    │  RC módban: tank→arcade konverzió:
+│                   │    linear.x  = (ch2+ch1)/2 * max_speed
+│                   │    angular.z = (ch2-ch1)/2 * max_angular
+│                   │  ROS módban: nem publikál (Nav2 veszi át)
+│                   │  E-Stop → mindig zero, bármelyik módban
+└────────┬──────────┘
+         │ /diff_drive_controller/cmd_vel (TwistStamped, 20Hz)
+         ▼
+┌───────────────────┐
+│  diff_drive_      │  ros2_control: cmd_vel → bal/jobb rad/s
+│  controller       │  cmd_vel_timeout: 0.5s (safety)
+└────────┬──────────┘
+         │ velocity command
+         ▼
+┌───────────────────┐
+│  RoboClawHardware │  C++ SystemInterface, 100Hz RT loop
+│  (ros2_control)   │  TCP → USR-K6 → UART → RoboClaw
+└────────┬──────────┘
+         │ TCP :8234 (Ethernet)
+         ▼
+┌───────────────────┐
+│  RoboClaw 2x60A   │  M1 = bal motor, M2 = jobb motor
+│  + USR-K6 bridge  │  Encoder feedback → position/velocity
+└───────────────────┘
 ```
 
-- **docker-compose** indítja: `agent`, `roboclaw`, `ros2-shell`. Opcionálisan: `portainer` (management UI).
+- **docker-compose** indítja: `agent`, `roboclaw-hw` (C++ driver), `foxglove`, `ros2-shell`. Opcionálisan: `portainer`.
 - **Foxglove** = ROS2 vizualizáció (topicok, robot működés).
 - **Portainer** = konténerek, logok, restart, shell (rendszer szint).
+
+### ROS/RC mode switch (CH5)
+
+A CH5 kapcsoló **azonnali** átváltást biztosít ROS (autonóm) és RC (kézi) üzemmód között.
+RC módra váltás safety funkcióként is szolgál: azonnal átveszi az irányítást a ROS-tól.
+
+| CH5 állapot | Mód | Ki publikál cmd_vel-t? | Viselkedés |
+|-------------|------|------------------------|------------|
+| < 0 (vagy center) | **ROS** | Nav2 / teleop | rc_teleop_node nem publikál |
+| > 0 | **RC** | rc_teleop_node | Nav2 cmd_vel figyelmen kívül (rc_teleop felülírja) |
+
+Átváltáskor az `rc_teleop_node` **azonnal** zero cmd_vel-t küld (pillanatnyi megállás),
+majd az RC botok aktuális pozícióját kezdi konvertálni.
+
+### Autonóm üzemmód (Nav2)
+
+CH5 ROS módban Nav2 publikálja a `cmd_vel`-t:
+
+```
+Nav2 → /diff_drive_controller/cmd_vel → diff_drive_controller → RoboClawHardware → motorok
+```
+
+Egyetlen interface (`cmd_vel`) — az RC/ROS mode switch (CH5) választ köztük.
 
 ---
 
@@ -138,6 +214,74 @@ A repóban a **W6100 Robot Stack** egyéni template van: `tools/portainer-templa
 | portainer | portainer | portainer/portainer-ce | Web UI (profile: management) |
 
 Mindegyik `network_mode: host`, így ugyanaz a DDS látótér (CycloneDDS, `tools/cyclonedds.xml`).
+
+---
+
+## 7b. RC → Motor összekötés (teljes adatfolyam)
+
+A távirányító **tank módban** ad jelet (CH1 = jobb motor, CH2 = bal motor).
+A robot oldalán ez `cmd_vel`-re konvertálódik, így az RC és az autonóm navigáció
+egyetlen interface-en (`/diff_drive_controller/cmd_vel`) osztozik.
+A **CH5** kapcsoló azonnal átválthat RC és ROS mód között (safety funkció).
+
+### Topic huzalozás
+
+| # | Topic | Típus | Forrás | Cél | Frekvencia |
+|---|-------|-------|--------|-----|------------|
+| 1 | `/robot/rc_ch1` | Float32 | Pico (µROS) | rc_teleop_node | 50 Hz |
+| 2 | `/robot/rc_ch2` | Float32 | Pico (µROS) | rc_teleop_node | 50 Hz |
+| 3 | `/robot/rc_ch5` | Float32 | Pico (µROS) | rc_teleop_node | 20 Hz |
+| 4 | `/robot/rc_ch6` | Float32 | Pico (µROS) | (winch — később) | 20 Hz |
+| 5 | `/robot/estop` | Bool | Pico (µROS) | rc_teleop_node | 10 Hz |
+| 6 | `/diff_drive_controller/cmd_vel` | TwistStamped | rc_teleop_node / Nav2 | diff_drive_controller | 20 Hz |
+| 7 | `/diff_drive_controller/odom` | Odometry | diff_drive_controller | Nav2 / Foxglove | 50 Hz |
+| 8 | `/dynamic_joint_states` | DynamicJointState | diagnostics_broadcaster | Foxglove | 100 Hz |
+
+### Tank → Arcade konverzió (rc_teleop_node)
+
+A Pico normalizált jeleket küld: `rc_ch1` = jobb motor [-1..+1], `rc_ch2` = bal motor [-1..+1].
+Az `rc_teleop_node` visszakonvertálja arcade formátumra a `diff_drive_controller` számára:
+
+```
+linear.x  = (ch2 + ch1) / 2.0 * max_linear_speed     # előre/hátra
+angular.z = (ch2 - ch1) / 2.0 * max_angular_speed     # fordulás
+```
+
+(ch2 = bal, ch1 = jobb → ha ch2 > ch1: robot balra fordul → pozitív angular.z)
+
+### Paraméterek (`rc_teleop_node`)
+
+| Paraméter | Alapértelmezett | Leírás |
+|-----------|----------------|--------|
+| `mixing_mode` | `tank` | `tank` vagy `arcade` (jövőben váltható) |
+| `left_topic` | `/robot/rc_ch2` | Bal motor csatorna (CH2) |
+| `right_topic` | `/robot/rc_ch1` | Jobb motor csatorna (CH1) |
+| `mode_switch_topic` | `/robot/rc_ch5` | ROS/RC mode switch (CH5) |
+| `max_linear_speed` | 4.5 m/s | Robot max sebesség (~16 km/h) |
+| `max_angular_speed` | 3.0 rad/s | Robot max fordulási sebesség |
+| `deadzone` | 0.05 | 5% — joystick/trim holtjáték |
+| `publish_rate` | 20.0 Hz | cmd_vel publikálási frekvencia |
+| `estop_topic` | `/robot/estop` | E-Stop gating: aktív → zero output |
+
+### Safety rétegek (5 szint)
+
+1. **CH5 mode switch** → RC módra váltás azonnal leválasztja a ROS-t, rc_teleop átveszi
+2. **E-Stop (Pico hardver)** → `rc_teleop_node` zero output, bármelyik módban
+3. **cmd_vel_timeout (0.5s)** → `diff_drive_controller` leállítja a motorokat ha nincs cmd_vel
+4. **RoboClaw serial timeout** → motorvezérlő leáll ha nincs parancs
+5. **Encoder health monitoring** → emergency stop stuck/runaway/comm failure esetén
+
+### Foxglove debug panelek
+
+| Panel típus | Topic | Mit mutat |
+|-------------|-------|-----------|
+| Plot | `/robot/rc_ch1`, `/robot/rc_ch2` | RC motor jelek (jobb/bal) |
+| Plot | `/robot/rc_ch5` | ROS/RC mode switch állapot |
+| Plot | `/diff_drive_controller/cmd_vel` | linear.x, angular.z (konvertált parancs) |
+| Plot | `/diff_drive_controller/odom` | Tényleges odometria |
+| Gauge | `/dynamic_joint_states` → `main_battery_v` | Akkufeszültség |
+| Gauge | `/dynamic_joint_states` → `current_left_a/right_a` | Motoráram |
+| Indicator | `/robot/estop` | E-Stop állapot |
 
 ---
 
