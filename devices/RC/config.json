@@ -2,11 +2,11 @@
   "_comment": "python3 tools/upload_config.py --config devices/RC/config.json --port /dev/tty.usbmodem23401",
   "network": {
     "mac": "0C:2F:94:30:58:22",
-    "ip": "192.168.68.202",
+    "ip": "10.0.10.22",
     "netmask": "255.255.255.0",
-    "gateway": "192.168.68.1",
+    "gateway": "10.0.10.1",
     "dhcp": true,
-    "agent_ip": "192.168.68.125",
+    "agent_ip": "10.0.10.1",
     "agent_port": 8888
   },
 
