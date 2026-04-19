@@ -71,7 +71,10 @@ docker run -it --rm --init \
     --name "$CONTAINER_NAME" \
     --net=host \
     -v "$HOST_WS":/host_ws:rw \
+    -v "$SCRIPT_DIR":/tools:ro \
+    -v "$PROJECT_DIR/logs":/logs:rw \
     -v "$SCRIPT_DIR/cyclonedds.xml":/tmp/cyclonedds.xml:ro \
     -e CYCLONEDDS_URI=file:///tmp/cyclonedds.xml \
+    -w /logs \
     "$IMAGE" \
     bash -c "apt-get update -qq && apt-get install -y -qq --no-install-recommends python3-serial >/dev/null 2>&1; export PYTHONPATH=/host_ws/src/basicmicro_ros2:/host_ws/src/basicmicro_python:\${PYTHONPATH:-}; source /opt/ros/jazzy/setup.bash && [ -f /host_ws/install/setup.bash ] && source /host_ws/install/setup.bash; exec bash"

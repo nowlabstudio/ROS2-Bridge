@@ -23,3 +23,6 @@ __pycache__/
 # Editor
 .vscode/
 *.swp
+
+# Measurement logs (rc_measure.py CSVs)
+logs/

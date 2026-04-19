@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-19 (BL-003, BL-004 lezárva; BL-009 PR-anyag előkészítve)
+> Utolsó frissítés: 2026-04-20 (BL-011 RC EMA tuning lezárva; BL-012 GPIO placeholders, BL-013 RC subnet restore nyitva)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -67,7 +67,57 @@ _(BL-007, BL-008 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
-_(BL-010 lezárva — lásd a „Lezárt tételek" szekciót.)_
+_(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
+
+---
+
+## BL-012 — RC bridge jövőbeni GPIO csatornák (GP07–GP11 + A0)
+
+- **Kontextus:** A W6100 EVB Pico RC bridge-en a GP07, GP08, GP09, GP10, GP11
+  digitális és az A0 (ADC0) analóg lábak ki vannak vezetve, de jelenleg nincs
+  használatban. A user jelezte, hogy később kerülnek bekötésre — addig is
+  legyenek a configban placeholder-ként, és a firmware publikáljon rájuk
+  topic-okat a `/robot` namespace alatt (konzisztens a meglévő csatornákkal).
+- **Ok:** Ha előre rögzítjük a topic-neveket és a config schema-t, a későbbi
+  bekötéskor nem kell újra firmware-t flashelni — `bridge config set`-tel
+  engedélyezhető lesz. Jelenleg a munka a szűrésre lett fókuszálva (BL-011),
+  ezért a GPIO bővítés deferred.
+- **Scope:**
+  - `devices/RC/config.json` — új `gpio` blokk: `gp07..gp11` digitális
+    (enabled bool + topic string), `a0` analóg (enabled + topic).
+  - `app/src/config/config.{c,h}` — `gpio_ch_t` struct + parser (a
+    `channels` mintájára), defaultolva `enabled=false`.
+  - `app/src/user/` — új modul (pl. `gpio_publish.c`): GP07–GP11 input-pull-up
+    publikáció `std_msgs/Bool`-ként; A0 ADC1 channel read → `std_msgs/Float32`
+    normalizálva (0.0–1.0 vagy -1.0..+1.0, tisztázandó).
+  - `app/boards/w5500_evb_pico.overlay` — GP07–GP11 GPIO aliases + ADC node.
+  - Publikációs ráta: ~20–50 Hz (mint az rc_mode/winch), CPU budget vizsgálandó.
+- **Javasolt topic-nevek:** `/robot/gp07`..`/robot/gp11` (Bool), `/robot/a0` (Float32).
+  Final nevek a config-remap-elhetők (mint a meglévő CH-k).
+- **Érintett fájlok:** `devices/RC/config.json`, `app/src/config/config.{c,h}`,
+  `app/src/user/gpio_publish.{c,h}` (új), `app/boards/w5500_evb_pico.overlay`,
+  `app/CMakeLists.txt`, `app/prj.conf` (ADC / GPIO konfig), `README.md` §RC config.
+
+---
+
+## BL-013 — RC config: prod subnet visszaállítása teszt után
+
+- **Kontextus:** `devices/RC/config.json` jelenleg dev subneten van
+  (`ip=192.168.68.202`, `dhcp=true`, `agent_ip=192.168.68.125`), hogy a
+  laptop-hoz közvetlenül elérhető legyen — a 2026-04-19/20 zaj-mérés ezt
+  követelte meg. A többi bridge (PEDAL, E_STOP) már prod subneten van
+  (`10.0.10.0/24`, `dhcp=false`).
+- **Ok:** Éles üzemben az RC-nek a robot 10.0.10.0/24 subnetén kell lennie
+  (agent a roboton belül), különben nem párosul a többi bridge-dzsel és a
+  ROS2 Jazzy agenttel.
+- **Visszaállítandó értékek** (lásd memory: `project_network_subnets.md`):
+  - `network.ip` = `10.0.10.22`
+  - `network.gateway` = `10.0.10.1`
+  - `network.agent_ip` = `10.0.10.1`
+  - `network.dhcp` = `false`
+- **Művelet:** JSON szerkesztés + `python3 tools/upload_config.py --config devices/RC/config.json --port /dev/ttyACM0`
+  (a board reboot-ol, új subneten jön fel).
+- **Érintett fájlok:** `devices/RC/config.json`.
 
 ---
 
@@ -104,6 +154,30 @@ A `config_set()` mostantól ROS2 identifier szabály szerint validálja a `ros.n
 ### BL-004 — ERR-001 diagnosztika mélyebbre — LEZÁRVA 2026-04-19
 
 `CONFIG_SYS_HEAP_RUNTIME_STATS=y` + `param_server.c:117–137` logolja a heap állapotot az `rclc_parameter_server_init_with_option` **előtt és után** (`Heap before/after param_server: free=... alloc=... max=...`). Ezzel a következő `error: 11` reprodukciónál egy pillantásból eldönthető, hogy `RCL_RET_BAD_ALLOC` (heap szűkösség) vagy `RCL_RET_INVALID_ARGUMENT` a gyökérok — lásd `ERRATA.md` §ERR-001. A diagnosztikai infrastruktúra kész, a feladat az első reprodukciónál vált élesbe.
+
+### BL-011 — RC bridge zajmérés + EMA filter tuning — LEZÁRVA 2026-04-20
+
+A user zajos kimenetet jelzett az RC bridge csatornáin. A diagnosztikához létrehozott `tools/rc_measure.py` (3 subcommand: `measure` fázisos, `stream` folyamatos, `compare` CSV delta) rclpy-alapú mérőeszközzel 12 s folyamatos felvétel készült három alpha értékre, a stickek folyamatos full-sweep mozgatása mellett. A konstans csatornák (CH3 = `rc_ch3`, CH5 = `rc_mode`) szolgáltatják a tiszta zajfloor-t, a mozgatott CH1/CH2 (`motor_right`/`motor_left`) a dinamikai ellenőrzést.
+
+**Eredmények (std a konstans CH3/CH5-ön):**
+
+| α     | CH3 std | CH5 std | zaj vs. floor | lag (≈1/α · 24 ms) |
+| ----- | ------- | ------- | ------------- | ------------------ |
+| 1.0   | 0.0436  | 0.0468  | **100%**      | ~24 ms (nincs)     |
+| 0.30  | 0.0181  | 0.0217  | **~44%**      | ~80 ms             |
+| 0.25  | 0.0207  | 0.0203  | **~45%**      | ~95 ms             |
+
+A mozgatott CH1/CH2 mindhárom értéknél megtartja a ±1 full range-et (p2p ≈ 1.95–2.00), a 42 Hz publikációs ráta változatlan. Alpha 0.25 és 0.30 közti zajcsökkenés különbség a mérési varianciát nem lépi át (~5%), de a 0.30 **~15 ms-mal gyorsabb válaszidőt ad** ugyanazért a zajcsökkenésért.
+
+**Választott érték:** `rc_trim.ema_alpha = 0.30` (gyorsabb response, azonos zajjavítás).
+
+**Firmware-oldali megerősítés** (korábbi commit): az EMA kód (`app/src/user/rc.c`) `alpha >= 1.0f` esetén passthrough (filter off), `alpha < 1.0f` esetén `ema_state = α · norm + (1-α) · ema_state` első híváskor önmagát inicializálja. A `bridge config set rc_trim.ema_alpha <val>` reboot nélkül hat (live read a `g_config.rc_trim.ema_alpha`-ból minden normalizálási körben), így a tuning interaktív volt.
+
+**Érintett fájlok:**
+- `tools/rc_measure.py` (új) — mérőeszköz rclpy subscription + per-channel stat + summary/raw CSV export, compare tool pairwise std/p2p delta+ratio.
+- `tools/docker-run-ros2.sh` — új mount pontok (`$SCRIPT_DIR:/tools:ro`, `logs:/logs:rw`) és `-w /logs` workdir, hogy a konténerből közvetlen legyen futtatható.
+- `.gitignore` — `logs/` kizárva (CSV mérési output nem kerül verziókezelés alá).
+- `devices/RC/config.json` — `rc_trim.ema_alpha: 0.30` commit + `upload_config.py` → flash save.
 
 ### BL-010 — W6100 chip Ethernet nem működik — LEZÁRVA 2026-04-19
 

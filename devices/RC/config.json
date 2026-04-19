@@ -1,12 +1,12 @@
 {
-  "_comment": "python3 tools/upload_config.py --config devices/RC/config.json --port /dev/tty.usbmodem23401",
+  "_comment": "python3 tools/upload_config.py --config devices/RC/config.json --port /dev/ttyACM0",
   "network": {
     "mac": "0C:2F:94:30:58:22",
-    "ip": "10.0.10.22",
+    "ip": "192.168.68.202",
     "netmask": "255.255.255.0",
-    "gateway": "10.0.10.1",
+    "gateway": "192.168.68.1",
     "dhcp": true,
-    "agent_ip": "10.0.10.1",
+    "agent_ip": "192.168.68.125",
     "agent_port": 8888
   },
 
@@ -36,6 +36,6 @@
     "ch5_min": 1000, "ch5_center": 1500, "ch5_max": 2000,
     "ch6_min": 1000, "ch6_center": 1500, "ch6_max": 2000,
     "deadzone": 20,
-    "ema_alpha": 0.3
+    "ema_alpha": 0.30
   }
 }
