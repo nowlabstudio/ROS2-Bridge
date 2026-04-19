@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 list(APPEND ZEPHYR_EXTRA_MODULES
-    $ENV{ZEPHYR_BASE}/../modules/lib/micro_ros_zephyr_module/modules/libmicroros)
+    $ENV{ZEPHYR_BASE}/../modules/lib/micro_ros_zephyr_module/modules/libmicroros
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/w6100_driver)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(w6100_pico_bridge)

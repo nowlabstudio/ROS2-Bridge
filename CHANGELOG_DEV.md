@@ -4,6 +4,34 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-04-19 (session: BL-010) — W6100 natív driver beüzemelve (out-of-tree backport)
+
+### BL-010 — W6100 Ethernet chip SPI-n kommunikál, link up
+
+A W6100 EVB Pico Ethernet-je eddig nem működött: a W5500 driver — bármilyen fejlécű register-map patchel — sem tudta felhozni a chipet (`CIDR=0x00`, minden common-block olvasás 0x00). A gyökérok **nem** az SPI protokoll, hanem az init szekvencia: hiányzó reset pulzus + hiányzó `CHPLCKR=0xCE` / `NETLCKR=0x3A` unlock. A korábbi BL-010 hipotézis téves volt.
+
+**Megoldás:** Zephyr upstream W6100 driver (PR #101753) backportolva v4.2.2 alá out-of-tree Zephyr modulként az app fa alatt — nem patcheljük többé a W5500 drivert.
+
+| Fájl | Változás |
+|------|---------|
+| `app/modules/w6100_driver/` | új modul (7 fájl): `zephyr/module.yml`, `zephyr/CMakeLists.txt`, `zephyr/Kconfig`, DT binding, `drivers/ethernet/eth_w6100.{c,h}`, `Kconfig.w6100` |
+| `app/CMakeLists.txt` | `ZEPHYR_EXTRA_MODULES` kiegészítés |
+| `app/boards/w5500_evb_pico.overlay` | `&ethernet { compatible = "wiznet,w6100"; };` override |
+| `app/prj.conf` | `CONFIG_ETH_W5500=n`, `CONFIG_ETH_W6100=y` |
+| `tools/patches/apply.sh` | Patch 3/4/5 törölve (W5500 driver érintetlen marad) |
+| `ERRATA.md` | ERR-030 lezárva (root cause + javítás); ERR-029 elavult |
+| `docs/backlog.md` | BL-010 áthelyezve Lezárt tételek közé |
+| `memory.md` | §0 munkamenet frissítés + pin-mátrix (W6100 driver path) |
+
+**v4.2.2 API adaptációk** (upstream Zephyr main → v4.2.2):
+- `net_eth_mac_load()` + `NET_ETH_MAC_DT_INST_CONFIG_INIT()` → kivéve; W5500-mintás `COND_CODE_1(DT_NODE_HAS_PROP(..., local_mac_address), ..., ())`.
+- `NET_AF_UNSPEC` → `AF_UNSPEC`.
+- `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8))` → `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8), 0)`.
+
+**Verifikáció (EVB Pico, soros log):** `W6100 Initialized`, MAC set OK, `Link up` @ 10 Mb half duplex, UDP agent search elindult. Build méret: +1.5 KB UF2 (864768 B), RAM 97.45%.
+
+---
+
 ## 2026-04-19 (session: BL-007 + BL-008) — Flash tooling Linux adaptáció + config.json subnet migráció
 
 ### BL-007 — `tools/flash.sh` és `Makefile` cross-platform javítás

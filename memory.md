@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-19
+> Utolsó frissítés: 2026-04-19 (BL-010 lezárva — W6100 natív driver beüzemelve)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -14,11 +14,17 @@
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
 
-### Munkamenet: 2026-04-19 — BL-007 + BL-008 lezárva, PEDAL flash következik
+### Munkamenet: 2026-04-19 — BL-010 lezárva (W6100 natív driver), PEDAL end-to-end teszt következik
 
-**Phase B LEZÁRVA** (commit `b988627`). Linux build ZÖLD.
-**BL-007 LEZÁRVA:** `tools/flash.sh` és `Makefile` cross-platform (Linux `/dev/ttyACM0`, `/media/$USER/RPI-RP2`).
-**BL-008 LEZÁRVA:** `app/config.json` migrálva `10.0.10.x` subnetre (ip: 10.0.10.20, agent: 10.0.10.1).
+**BL-010 LEZÁRVA** (W6100 Ethernet chip nem válaszolt SPI-n).
+Root cause: a stock W5500 driver hiányolta a W6100 reset-pulzusát és a CHPLCKR/NETLCKR unlock szekvenciát, ezért a chip soha nem bootolt.
+Javítás: Zephyr upstream W6100 driver (PR #101753) backportolva v4.2.2 alá, **out-of-tree modulként az app fa alatt** (`app/modules/w6100_driver/`). A W5500 driver patch-ei (korábbi Patch 3/4/5) eltávolítva `apply.sh`-ból.
+Verifikáció: eth_w6100 init OK, MAC beírva SHAR-ba, link up @ 10 Mb half duplex, Ethernet UDP stack él (`Searching for agent: 192.168.68.125:8888`).
+
+**Előző milestonok (2026-04-19):**
+- Phase B LEZÁRVA (commit `b988627`) — Linux build ZÖLD.
+- BL-007 LEZÁRVA — `tools/flash.sh` + `Makefile` cross-platform.
+- BL-008 LEZÁRVA — `app/config.json` migrálva `10.0.10.x` subnetre.
 
 ---
 
@@ -27,10 +33,8 @@
 Tiszta pristine flow (`rm -rf workspace` → `make workspace-init` → `make build`) **ZÖLD**:
 
 ```
-BOOT_FLASH:  256 B / 256 B (100%)
-FLASH:    431292 B / 16776960 B (2.57%)
-RAM:      263432 B / 264 KB (97.45%)
-Wrote 863232 bytes to zephyr.uf2
+RAM:      263440 B / 264 KB (97.45%)
+Wrote 864768 bytes to zephyr.uf2   # W6100 driver beépítve (+1.5 KB)
 ```
 
 Artifacts helye: `workspace/build/zephyr/zephyr.uf2` és `workspace/build/zephyr/zephyr.elf`
@@ -44,10 +48,10 @@ Artifacts helye: `workspace/build/zephyr/zephyr.uf2` és `workspace/build/zephyr
 | Docker base | `zephyrprojectrtos/ci:v0.28.8` (Zephyr SDK 0.17.4) |
 | Zephyr | tag `v4.2.2` (SHA `dbb536326e611dc8e97cc6a322d379ba9cac1ab7`) |
 | micro_ros_zephyr_module | SHA `87dbe3a9b9d0fa347772e971d58d123e2296281a` (jazzy branch pinelt HEAD) |
-| Ethernet driver | `CONFIG_ETH_W5500` (W6100 ↔ W5500 backward compat, csak IPv4 UDP) |
+| Ethernet driver | `CONFIG_ETH_W6100` — **out-of-tree backport** (Zephyr main PR #101753 → v4.2.2); forrás `app/modules/w6100_driver/` |
 
 Miért v4.2.2 és nem v4.3.0: `zephyr/posix/time.h` eltűnt v4.3.0-ban (micro-ROS jazzy igényli).
-Miért W5500 driver: `CONFIG_ETH_W6100` csak v4.3.0-tól létezik Kconfig-ban.
+Miért out-of-tree W6100: a stock v4.2.2 nem tartalmaz W6100 drivert; a W5500 driver W6100-at hack-kel sem tudott felhozni (hiányzó reset pulzus + CHPLCKR/NETLCKR unlock). ERR-030 részletes root cause.
 
 ---
 
@@ -107,9 +111,10 @@ Script: `tools/patches/apply.sh` — idempotens, Makefile `apply-patches` target
 | ERR | Gyökérok | Megoldás |
 |-----|----------|---------|
 | ERR-025 | `west.yml revision: main` → Zephyr v4.4.99 → SDK 1.0 required | `zephyr.revision: v4.2.2` pin |
-| ERR-026 | `CONFIG_ETH_W6100` nincs v4.2.2 Kconfig-ban | `CONFIG_ETH_W5500=y`, overlay compat override törlése |
+| ERR-026 | `CONFIG_ETH_W6100` nincs v4.2.2 Kconfig-ban | Eredetileg W5500 driverrel workaround; ERR-030 után out-of-tree W6100 backport (lásd alább) |
 | ERR-027 | `microros_transports.h` bare `<posix/sys/socket.h>` | Patch 1: ZEPHYR_VERSION_CODE conditional |
 | ERR-028 | `libmicroros.mk:103` `touch std_srvs/COLCON_IGNORE` | Patch 2: `touch` → `rm -f` |
+| ERR-030 | W6100 chip nem válaszolt SPI-n (hiányzó reset pulzus + CHPLCKR/NETLCKR unlock) | Out-of-tree W6100 driver backport: `app/modules/w6100_driver/` (PR #101753 v4.2.2-re adaptálva) |
 ---
 
 ## 1. Projekt állapot röviden

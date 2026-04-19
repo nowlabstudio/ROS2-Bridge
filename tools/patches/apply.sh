@@ -15,8 +15,12 @@
 #     csomagot. A mi firmware-ünk SetBool/Trigger szolgáltatásokat használ,
 #     így kell. (ERRATA ERR-028)
 #
+# A korábbi Patch 3/4/5 (W5500 driver W6100-kompatibilitási hack) megszűnt:
+# a W6100-at natív out-of-tree driverrel hajtjuk (app/modules/w6100_driver/),
+# a W5500 driver érintetlen marad. (ERRATA ERR-030 lezárva)
+#
 # Mindkét patch a west update után alkalmazandó a `make build` előtt.
-# A Makefile `build` target automatikusan függ a `apply-patches`-től.
+# A Makefile `build` target automatikusan függ az `apply-patches`-től.
 #
 # Használat:
 #   bash tools/patches/apply.sh <workspace-dir>

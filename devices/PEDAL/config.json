@@ -4,9 +4,9 @@
     "mac": "0C:2F:94:30:58:11",
     "ip": "10.0.10.21",
     "netmask": "255.255.255.0",
-    "gateway": "10.0.10.1",
+    "gateway": "192.168.68.1",
     "dhcp": true,
-    "agent_ip": "10.0.10.1",
+    "agent_ip": "192.168.68.125",
     "agent_port": 8888
   },
 
@@ -18,7 +18,7 @@
   "channels": {
     "estop": false,
     "test_counter": false,
-    "test_heartbeat": false,
+    "test_heartbeat": true,
     "test_echo": false,
     "rc_ch1": false,
     "rc_ch2": false,

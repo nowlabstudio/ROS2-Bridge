@@ -213,13 +213,23 @@ static void apply_network_config(void)
 		LOG_INF("Hostname: %s", net_hostname_get());
 	}
 
-	/* Wait for Ethernet link UP */
+	/* Wait for Ethernet link UP — feed WDT in 500ms slices to avoid 8s timeout */
 	if (!net_if_is_up(iface)) {
 		LOG_INF("Waiting for Ethernet link (max %ds)...", NET_LINK_TIMEOUT_S);
 		net_mgmt_init_event_callback(&net_mgmt_cb, net_event_handler,
 					     NET_EVENT_IF_UP);
 		net_mgmt_add_event_callback(&net_mgmt_cb);
-		if (k_sem_take(&net_event_sem, K_SECONDS(NET_LINK_TIMEOUT_S)) == 0) {
+		bool link_up = false;
+		int64_t link_deadline = k_uptime_get() + NET_LINK_TIMEOUT_S * 1000;
+
+		while (k_uptime_get() < link_deadline) {
+			watchdog_feed();
+			if (k_sem_take(&net_event_sem, K_MSEC(500)) == 0) {
+				link_up = true;
+				break;
+			}
+		}
+		if (link_up) {
 			LOG_INF("Ethernet link UP");
 		} else {
 			LOG_WRN("Ethernet link timeout — continuing without cable");
@@ -233,7 +243,17 @@ static void apply_network_config(void)
 					     NET_EVENT_IPV4_DHCP_BOUND);
 		net_mgmt_add_event_callback(&net_mgmt_cb);
 		net_dhcpv4_start(iface);
-		if (k_sem_take(&net_event_sem, K_SECONDS(DHCP_TIMEOUT_S)) == 0) {
+		bool dhcp_ok = false;
+		int64_t dhcp_deadline = k_uptime_get() + DHCP_TIMEOUT_S * 1000;
+
+		while (k_uptime_get() < dhcp_deadline) {
+			watchdog_feed();
+			if (k_sem_take(&net_event_sem, K_MSEC(500)) == 0) {
+				dhcp_ok = true;
+				break;
+			}
+		}
+		if (dhcp_ok) {
 			LOG_INF("DHCP: IP address assigned");
 		} else {
 			LOG_WRN("DHCP timeout — continuing without IP address");

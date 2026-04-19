@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-19
+> Utolsó frissítés: 2026-04-19 (BL-010 lezárva)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -145,6 +145,10 @@ Logika: ez a firmware-be égetett fallback default; az `upload_config.py` futtat
 
 ---
 
+_(BL-010 lezárva — lásd a „Lezárt tételek" szekciót.)_
+
+---
+
 ## Lezárt tételek
 
 ### BL-001 — `west.yml` pinelése — LEZÁRVA 2026-04-19
@@ -159,3 +163,40 @@ hogy a west update ne driftelje az ismert-jó HEAD-et. Részletek: ERR-025.
 Egy tiszta `rm -rf workspace && make workspace-init && make build` flow
 zöld, mert a `workspace-init` automatikusan hívja a `apply-patches`
 targetet, a `build` szintén függ tőle. Lásd memory.md §0 és ERR-025..028.
+
+### BL-010 — W6100 chip Ethernet nem működik — LEZÁRVA 2026-04-19
+
+**Eredeti hipotézis (téves):** a W6100 SPI protokoll nem kompatibilis a W5500-zal, ezért a common block olvasások mind 0x00-t adnak.
+
+**Tényleges gyökérok (ERR-030 részletesen):** az SPI keretformátum (3-byte header, BSB<<3, R/W bit) teljesen megegyezik — a probléma az init szekvenciában volt:
+
+1. **Hiányzó reset pulzus.** A W5500 driver csak elengedi a reset vonalat; a W6100-nak aktív pulzus kell (T_RST ≥ 2 µs + T_STA ≤ 100 ms).
+2. **Hiányzó CHPLCKR/NETLCKR unlock.** A W6100 common és network blokkjai reset után zártak; írás/olvasás mindenhol 0x00-át eredményez, amíg `CHPLCKR=0xCE` és `NETLCKR=0x3A` unlock nem történik.
+
+**Javítás:** Zephyr upstream W6100 driver (PR #101753) backportolva v4.2.2 alá **out-of-tree Zephyr modulként** az alkalmazás fa alatt. Nem patcheljük többé a W5500 drivert (Patch 3/4/5 eltávolítva `apply.sh`-ból — ezek az eredeti téves hipotézis kompenzációi voltak).
+
+**Szükséges v4.2.2 API adaptációk** az upstream (Zephyr main) driverhez képest:
+- `net_eth_mac_load()` + `NET_ETH_MAC_DT_INST_CONFIG_INIT()` → kivéve (v4.3.0 API); helyette W5500-mintás `.mac_addr = DT_INST_PROP(0, local_mac_address)` `COND_CODE_1(DT_NODE_HAS_PROP(..., local_mac_address), ..., ())`.
+- `NET_AF_UNSPEC` → `AF_UNSPEC`.
+- `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8))` → `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8), 0)` (3-argumentumos v4.2.2 API).
+
+**Érintett fájlok:**
+- Új: `app/modules/w6100_driver/` (7 fájl — `zephyr/module.yml`, `zephyr/CMakeLists.txt`, `zephyr/Kconfig`, `zephyr/dts/bindings/ethernet/wiznet,w6100.yaml`, `drivers/ethernet/eth_w6100.{c,h}`, `drivers/ethernet/Kconfig.w6100`).
+- `app/CMakeLists.txt` — `ZEPHYR_EXTRA_MODULES` kiegészítve a modul útjával.
+- `app/boards/w5500_evb_pico.overlay` — `&ethernet { compatible = "wiznet,w6100"; };` override.
+- `app/prj.conf` — `CONFIG_ETH_W5500=n` + `CONFIG_ETH_W6100=y`.
+- `tools/patches/apply.sh` — Patch 3/4/5 törölve (marad Patch 1 + 2).
+
+**Verifikáció (EVB-Pico, 2026-04-19):**
+
+```
+<inf> eth_w6100: W6100 Initialized
+<inf> eth_w6100: w5500@0 MAC set to 0c:2f:94:30:58:11
+<inf> eth_w6100: w5500@0: Link up
+<inf> eth_w6100: w5500@0: Link speed 10 Mb, half duplex
+<inf> main: Ethernet link UP
+<inf> main: Network: static IP 192.168.68.200
+<inf> main: Searching for agent: 192.168.68.125:8888 ...
+```
+
+Build méret hatás: `zephyr.uf2` 863232 B → 864768 B (+1.5 KB), RAM 97.45% (változatlan).

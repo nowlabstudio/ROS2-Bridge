@@ -109,64 +109,122 @@ for k, v in KNOWN_KEYS.items():
 #  Serial connection and upload                                        #
 # ------------------------------------------------------------------ #
 
-def send_cmd(ser, cmd, wait=0.3):
-    """Send a command and return the response."""
+def open_serial(port, baud):
+    ser = serial.Serial(port, baud, timeout=2)
+    ser.dtr = False   # DTR=True can glitch the USB CDC connection on Linux
+    time.sleep(1.0)
+    ser.reset_input_buffer()
+    time.sleep(0.3)
+    return ser
+
+
+def send_cmd(ser, cmd, wait=1.5):
+    """Send a command and return the response. Raises OSError on disconnect."""
     ser.write((cmd + "\n").encode())
     time.sleep(wait)
     response = ""
-    while ser.in_waiting:
-        response += ser.read(ser.in_waiting).decode(errors="replace")
-        time.sleep(0.05)
+    deadline = time.time() + 1.0
+    while time.time() < deadline:
+        n = ser.in_waiting   # may raise OSError if device disconnected
+        if n:
+            response += ser.read(n).decode(errors="replace")
+            time.sleep(0.05)
+        else:
+            break
     return response.strip()
+
+
+def try_save_and_reboot(port, baud):
+    """Reconnect (board may have rebooted) and send save + reboot."""
+    print("\n  [reconnecting for save...]")
+    for attempt in range(8):
+        time.sleep(2.0)
+        try:
+            ser2 = open_serial(port, baud)
+            resp = send_cmd(ser2, "bridge config save", wait=1.5)
+            if "saved" in resp.lower() or "save" in resp.lower() or "OK" in resp:
+                print("  ✓ Saved")
+            else:
+                print(f"  ? save response: {resp!r}")
+            time.sleep(0.3)
+            send_cmd(ser2, "bridge reboot", wait=0.5)
+            ser2.close()
+            return True
+        except (serial.SerialException, OSError):
+            print(f"  [attempt {attempt+1}/8 — waiting for board...]")
+    print("  ✗ Could not reconnect for save. Run manually: bridge config save")
+    return False
 
 
 print(f"\nConnecting: {port} @ {args.baud}...")
 try:
-    ser = serial.Serial(port, args.baud, timeout=2)
-    ser.dtr = True
-    time.sleep(1.0)
+    ser = open_serial(port, args.baud)
 except serial.SerialException as e:
     print(f"ERROR: Could not connect: {e}")
     sys.exit(1)
 
-# Flush input buffer
-ser.reset_input_buffer()
-time.sleep(0.5)
-
 print("Setting config values...")
 errors = 0
+disconnected = False
 
 for key, value in KNOWN_KEYS.items():
     if not value:
         continue
     cmd = f"bridge config set {key} {value}"
-    resp = send_cmd(ser, cmd)
-    if "OK" in resp:
-        print(f"  ✓ {key} = {value}")
-    else:
-        print(f"  ✗ {key} = {value}  (response: {resp!r})")
-        errors += 1
+    try:
+        resp = send_cmd(ser, cmd)
+        if "OK" in resp:
+            print(f"  ✓ {key} = {value}")
+        else:
+            print(f"  ✗ {key} = {value}  (response: {resp!r})")
+            errors += 1
+    except OSError:
+        print(f"  ! {key} — board disconnected mid-upload")
+        disconnected = True
+        break
+
+if disconnected:
+    try:
+        ser.close()
+    except Exception:
+        pass
+    try_save_and_reboot(port, args.baud)
+    if errors:
+        print(f"\n{errors} error(s) before disconnect.")
+    sys.exit(0 if not errors else 1)
 
 # Save to flash
 print("\nSaving to flash...")
-resp = send_cmd(ser, "bridge config save", wait=1.0)
-if "saved" in resp.lower() or "save" in resp.lower():
-    print("  ✓ Saved")
-else:
-    print(f"  ? Response: {resp!r}")
+try:
+    resp = send_cmd(ser, "bridge config save", wait=1.5)
+    if "saved" in resp.lower() or "save" in resp.lower() or "OK" in resp:
+        print("  ✓ Saved")
+    else:
+        print(f"  ? Response: {resp!r}")
+except OSError:
+    print("  ! Disconnected during save — retrying...")
+    ser.close()
+    try_save_and_reboot(port, args.baud)
+    sys.exit(0)
 
 # Verify
 print("\nVerification:")
-resp = send_cmd(ser, "bridge config show", wait=0.5)
-print(resp)
+try:
+    resp = send_cmd(ser, "bridge config show", wait=0.5)
+    print(resp)
+except OSError:
+    print("  (board disconnected before verify — likely rebooting)")
 
 if errors:
-    print(f"\n{errors} error(s) occurred. Check the output above.")
+    print(f"\n{errors} error(s) occurred.")
     ser.close()
     sys.exit(1)
 
 # Reboot
 print("\nRebooting bridge...")
-send_cmd(ser, "bridge reboot", wait=0.5)
+try:
+    send_cmd(ser, "bridge reboot", wait=0.5)
+except OSError:
+    pass
 ser.close()
 print("✓ Config uploaded and bridge rebooted!")

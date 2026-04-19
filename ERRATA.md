@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-04-19
+**Utolsó frissítés:** 2026-04-19 (ERR-030 lezárva)
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -38,6 +38,8 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-022](#err-022) | Motor induláskor forgott (cmd_vel_dirty + open_loop: false) | Magas | **Javítva** |
 | [ERR-023](#err-023) | Folyamatos overrun 100Hz-en — WiFi latencia, nem szoftver hiba | Közepes | **Megoldva** (Ethernet-en 100Hz OK) |
 | [ERR-024](#err-024) | SEGFAULT: RCLCPP_WARN_THROTTLE temporális Clock shared_ptr lifetime | Kritikus | **Javítva** |
+| [ERR-029](#err-029) | W5500 driver RTR register check -ENODEV a W6100 chipen — superseded by ERR-030 | Kritikus | **Elavult** (W5500 driver nincs használatban) |
+| [ERR-030](#err-030) | W6100 chip nem válaszolt SPI-n: CIDR=0x00, minden regiszter olvasás 0x00 (hiányzó reset pulzus + CHPLCKR/NETLCKR lock) | Kritikus | **Javítva** (out-of-tree W6100 driver) |
 
 ---
 
@@ -1108,3 +1110,98 @@ Három módosítás:
 1. **`open_loop: true`** a diff_drive_controller-ben (amíg encoderek nincsenek motorra rögzítve)
 2. **Explicit `DutyM1M2(0, 0)`** az `on_activate`-ban, mielőtt a control loop elindul
 3. **`cmd_vel_dirty_ = false`** alapértelmezés — az első write csak akkor megy ki, ha a controller ténylegesen non-zero sebességet kér
+
+---
+
+## ERR-030
+
+### W6100 chip nem válaszolt SPI-n (CIDR=0x00, minden regiszter 0x00)
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus (Ethernet nem elérhető → nincs micro-ROS kapcsolat) |
+| **Állapot** | **Javítva** (out-of-tree W6100 driver: `app/modules/w6100_driver/`) |
+| **Felfedezés** | 2026-04-18 (BL-010) |
+| **Javítás** | 2026-04-19 |
+| **Komponens** | Zephyr v4.2.2 W5500 driver használata W6100 EVB Pico-n |
+
+#### Tünet
+
+```
+<inf> eth_w5500: Chip probe: [0x00]=0x00 [0x02]=0x00 [0x03]=0x00
+<err> eth_w5500: Unable to read RTR register
+<err> eth_w5500: Reset failed
+```
+
+A W5500 driver — próba patch-ekkel (Patch 3/4/5) W6100-detektáló logikával kiegészítve — sem volt képes a W6100 chipet kommunikációra bírni: minden regiszter olvasás 0x00-át adott vissza (CIDR, VER, RTR), pedig az SPI-fizika és a DT (GPIO 17 CS, GPIO 20 RESET, GPIO 21 INT, 8 MHz) helyesen volt bekötve.
+
+#### Root cause
+
+Két kritikus protokoll-eltérés a W6100 és a W5500 init szekvenciájában, amit a W5500 driver nem tartalmaz:
+
+1. **Hiányzó reset pulzus.** A W6100 datasheet szerint a chip bootoláshoz aktív reset-pulzus kell (`T_RST ≥ 2 µs` aktív, majd `T_STA ≤ 100 ms` stable). A W5500 driver csak _elengedi_ a reset vonalat (GPIO inaktív állapotra), nem pulzál. A W6100 így soha nem lép ki a power-on állapotból, és a BSP-je nem inicializálódik.
+2. **Hiányzó CHPLCKR/NETLCKR unlock.** A W6100 védelme: a Common Block (SYCR0, RTR stb.) és a Network Block (SHAR, GAR stb.) írása csak `CHPLCKR=0xCE` / `NETLCKR=0x3A` unlock után lehetséges. Reset után mindkét zár zárt, így **minden írás eldobódik**, olvasáskor pedig a chip 0x00-t ad (a W5500-zal ellentétben, ahol ilyen lock mechanizmus nincs).
+
+A BL-010-ben felírt eredeti hipotézis (**„W6100 SPI protokoll nem kompatibilis a W5500-zal"**) **téves** volt — az SPI keret (3-byte header, BSB<<3, R/W bit) teljesen megegyezik. Az eltérés kizárólag a regiszter-térképben (SHAR, PHYSR, RTR címek) és a bekapcsolási szekvenciában van.
+
+#### Javítás — out-of-tree W6100 driver backport
+
+A Zephyr upstream PR #101753 (W6100 natív driver) backportolva v4.2.2-re, az alkalmazásfa alatt, out-of-tree Zephyr modulként.
+
+| Fájl | Funkció |
+|------|--------|
+| `app/modules/w6100_driver/zephyr/module.yml` | modul regisztráció (cmake + kconfig path) |
+| `app/modules/w6100_driver/zephyr/CMakeLists.txt` | source fordítási szabály |
+| `app/modules/w6100_driver/zephyr/Kconfig` | `rsource "../drivers/ethernet/Kconfig.w6100"` |
+| `app/modules/w6100_driver/zephyr/dts/bindings/ethernet/wiznet,w6100.yaml` | DT binding (`compatible: "wiznet,w6100"`) |
+| `app/modules/w6100_driver/drivers/ethernet/eth_w6100.c` | driver (reset pulzus + CHPLCKR/NETLCKR unlock + natív register map) |
+| `app/modules/w6100_driver/drivers/ethernet/eth_w6100_priv.h` | register címek, config/runtime struct |
+| `app/modules/w6100_driver/drivers/ethernet/Kconfig.w6100` | `CONFIG_ETH_W6100` + thread paraméterek |
+
+A v4.2.2 adaptáció három minimál változtatást igényelt az upstream (Zephyr main) forráshoz képest:
+
+- `net_eth_mac_load()` + `NET_ETH_MAC_DT_INST_CONFIG_INIT()` → eltávolítva (v4.3.0-ban bevezetett API); helyettük W5500-mintás runtime `.mac_addr = DT_INST_PROP(0, local_mac_address)` inicializálás `COND_CODE_1(DT_NODE_HAS_PROP(…, local_mac_address), …, ())` őrzéssel
+- `NET_AF_UNSPEC` → `AF_UNSPEC` (v4.3.0 alias)
+- `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8))` → `SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8), 0)` (v4.2.2 3-argumentumos API)
+
+A board overlay (`app/boards/w5500_evb_pico.overlay`) `&ethernet { compatible = "wiznet,w6100"; };` hozzáfűzéssel átírja a stock board def `wiznet,w5500` compatible-ját. `prj.conf`: `CONFIG_ETH_W5500=n` + `CONFIG_ETH_W6100=y`. A korábbi Patch 3/4/5 (W5500 driver W6100-kompatibilitási hack) eltávolítva `tools/patches/apply.sh`-ból.
+
+#### Érintett fájlok
+
+| Fájl | Megjegyzés |
+|------|-----------|
+| `app/modules/w6100_driver/…` | új modul (7 fájl) |
+| `app/boards/w5500_evb_pico.overlay` | `compatible = "wiznet,w6100"` override |
+| `app/prj.conf` | W5500 → W6100 config váltás |
+| `app/CMakeLists.txt` | `ZEPHYR_EXTRA_MODULES` kiegészítése a modul útjával |
+| `tools/patches/apply.sh` | Patch 3/4/5 eltávolítása |
+
+#### Verifikáció
+
+```
+<inf> eth_w6100: W6100 Initialized
+<inf> eth_w6100: w5500@0 MAC set to 0c:2f:94:30:58:11
+<inf> eth_w6100: w5500@0: Link up
+<inf> eth_w6100: w5500@0: Link speed 10 Mb, half duplex
+<inf> main: Ethernet link UP
+<inf> main: Network: static IP 192.168.68.200
+```
+
+Fizikai link, MAC konfiguráció, PHY státusz, IP stack mind zöld. BL-010 lezárva.
+
+---
+
+## ERR-029
+
+### W5500 driver RTR register check -ENODEV a W6100 chipen — superseded
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Elavult (nincs kitéve production-ban) |
+| **Állapot** | **Elavult — ERR-030 superseded** (W5500 driver nincs használatban) |
+| **Felfedezés** | 2026-04-18 |
+| **Elavulás** | 2026-04-19 (ERR-030 javítással) |
+
+#### Történelem
+
+Az ERR-029 a `tools/patches/apply.sh` Patch 3-ához tartozott: a W5500 driver init során az RTR regiszter (0x0019) eltérő default értékét a W6100 compat-ban `return -ENODEV`-val kezelte. A fix warning-ot adott és az elvárt 2000-t visszaírta. Ez a patch ERR-030 javítás miatt elveszítette értelmét (a W5500 driver CONFIG_ETH_W5500=n miatt nem fordul le), és a Patch 3-at eltávolítottuk `apply.sh`-ból.
