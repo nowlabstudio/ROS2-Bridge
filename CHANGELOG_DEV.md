@@ -4,6 +4,35 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-04-19 (session: BL-010 follow-up) — ERR-031 lezárva, end-to-end micro-ROS zöld
+
+### ERR-031 — W6100 `set_config(MAC)` nem frissíti az iface link_addr-t
+
+Az ERR-030 javítás után a board Ethernet-en fel-jött, de a session handshake nem zárult le: agent látta a PEDAL CREATE_CLIENT csomagjait, de host→Pico ping 100% loss, STATUS reply soha nem jutott vissza. Az ARP tábla a chip *default* MAC-jét mutatta (`00:00:00:01:02:03`), nem a hwinfo-alapú `0c:2f:94:30:58:11`-et.
+
+**Root cause:** a W6100 **MACRAW módban** fut → a Zephyr szoftveresen építi a teljes Ethernet keretet, és a src MAC-et az `iface->link_addr`-ból olvassa. A `w6100_set_config(MAC_ADDRESS)` frissítette a chip SHAR-t, **de nem** az iface link_addr-t — a kimenő keret src MAC ezért a `w6100_iface_init`-ben beragadt kezdő értéken maradt. A host ARP cache ezzel a régi MAC-kel asszociálta az IP-t, és onnantól minden visszairányú csomag egy nem-létező L2 címre ment.
+
+**Javítás:** `app/modules/w6100_driver/drivers/ethernet/eth_w6100.c` — a SHAR write után `net_if_set_link_addr(ctx->iface, ctx->mac_addr, 6, NET_LINK_ETHERNET)` hívás hozzáadva. Az iface ebben a pontban még `carrier_off` állapotban van (main.c `apply_mac_address()` a link_up várakozás előtt hívódik), így a `net_if_set_link_addr` nem ad `-EPERM`-et.
+
+**End-to-end verifikáció (PEDAL, 2026-04-19):**
+- `ip neigh show 192.168.68.200` → `lladdr 0c:2f:94:30:58:11 REACHABLE`
+- `ping -c 3 192.168.68.200` → 0% loss, ~4.3 ms RTT
+- Agent log: `client_key: 0x5496464D` (valid session), CREATE/STATUS cserék után DDS writer aktív
+- `ros2 node list` → `/robot/pedal` jelen
+- `ros2 topic hz /robot/heartbeat` → 1.00 Hz stabil (`std_msgs/msg/Bool`, `data: false`)
+
+| Fájl | Változás |
+|------|---------|
+| `app/modules/w6100_driver/drivers/ethernet/eth_w6100.c` | `w6100_set_config(MAC_ADDRESS)` hívja `net_if_set_link_addr`-et |
+| `ERRATA.md` | új ERR-031 bejegyzés + index frissítés |
+| `docs/backlog.md` | BL-010 lezárt blokkhoz follow-up szekció + verifikáció |
+| `CHANGELOG_DEV.md` | ez a bejegyzés |
+| `memory.md` | §0 end-to-end zöld állapot |
+
+Megjegyzés: a hiba az upstream Zephyr main PR #101753-ban is megvan (a backportolás forrása), mert MACRAW módban a set_config nem hívja `net_if_set_link_addr`-et. Upstream javítás opcionális.
+
+---
+
 ## 2026-04-19 (session: BL-010) — W6100 natív driver beüzemelve (out-of-tree backport)
 
 ### BL-010 — W6100 Ethernet chip SPI-n kommunikál, link up

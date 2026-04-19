@@ -402,6 +402,19 @@ static int w6100_set_config(const struct device *dev,
 		w6100_spi_write(dev, W6100_SHAR, ctx->mac_addr, sizeof(ctx->mac_addr));
 		netlckrStatus = NETLCKR_LOCK;
 		w6100_spi_write(dev, W6100_NETLCKR, &netlckrStatus, 1);
+
+		/*
+		 * W6100 runs in MACRAW mode — Zephyr builds the outgoing Ethernet
+		 * frame in software using iface->link_addr, so update it too,
+		 * otherwise the L2 src MAC stays at the value captured during
+		 * iface_init (ERR-031).
+		 */
+		if (ctx->iface != NULL) {
+			net_if_set_link_addr(ctx->iface, ctx->mac_addr,
+					     sizeof(ctx->mac_addr),
+					     NET_LINK_ETHERNET);
+		}
+
 		LOG_INF("%s MAC set to %02x:%02x:%02x:%02x:%02x:%02x",
 			dev->name,
 			ctx->mac_addr[0], ctx->mac_addr[1],

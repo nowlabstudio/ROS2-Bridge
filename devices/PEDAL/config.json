@@ -1,5 +1,5 @@
 {
-    "_comment": "python3 tools/upload_config.py --config devices/PEDAL/config.json --port /dev/tty.usbmodem23201",
+    "_comment": "python3 tools/upload_config.py --config devices/PEDAL/config.json --port /dev/ttyACM0",
   "network": {
     "mac": "0C:2F:94:30:58:11",
     "ip": "10.0.10.21",

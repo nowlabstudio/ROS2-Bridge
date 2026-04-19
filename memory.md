@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-19 (BL-010 lezárva — W6100 natív driver beüzemelve)
+> Utolsó frissítés: 2026-04-19 (BL-010 end-to-end zöld, ERR-031 lezárva)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -14,12 +14,20 @@
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
 
-### Munkamenet: 2026-04-19 — BL-010 lezárva (W6100 natív driver), PEDAL end-to-end teszt következik
+### Munkamenet: 2026-04-19 — BL-010 + ERR-031 lezárva, micro-ROS end-to-end zöld
 
-**BL-010 LEZÁRVA** (W6100 Ethernet chip nem válaszolt SPI-n).
-Root cause: a stock W5500 driver hiányolta a W6100 reset-pulzusát és a CHPLCKR/NETLCKR unlock szekvenciát, ezért a chip soha nem bootolt.
-Javítás: Zephyr upstream W6100 driver (PR #101753) backportolva v4.2.2 alá, **out-of-tree modulként az app fa alatt** (`app/modules/w6100_driver/`). A W5500 driver patch-ei (korábbi Patch 3/4/5) eltávolítva `apply.sh`-ból.
-Verifikáció: eth_w6100 init OK, MAC beírva SHAR-ba, link up @ 10 Mb half duplex, Ethernet UDP stack él (`Searching for agent: 192.168.68.125:8888`).
+**BL-010 LEZÁRVA end-to-end** — a PEDAL Ethernet-en kommunikál, micro-ROS session felépül, `/robot/heartbeat` 1 Hz-en publikál ROS2 Jazzy alá.
+
+Root cause lánc (időrendi):
+1. **ERR-030** — W6100 chip nem válaszolt SPI-n (hiányzó reset pulzus + CHPLCKR/NETLCKR unlock). Javítás: Zephyr upstream W6100 driver (PR #101753) backport v4.2.2 alá, out-of-tree modulként: `app/modules/w6100_driver/`. A régi W5500 patch-ek (Patch 3/4/5) törölve `apply.sh`-ból.
+2. **ERR-031** — MACRAW módban a Zephyr szoftveresen építi a kimenő keretet `iface->link_addr`-ból, de `w6100_set_config(MAC_ADDRESS)` csak a chip SHAR-t frissítette. Javítás: a SHAR write után `net_if_set_link_addr(ctx->iface, ctx->mac_addr, 6, NET_LINK_ETHERNET)` hívás (carrier_off állapotban hívódik, így `NET_IF_RUNNING` még nincs, nincs `-EPERM`).
+
+Verifikáció (PEDAL, 2026-04-19):
+- `ip neigh show 192.168.68.200` → `lladdr 0c:2f:94:30:58:11 REACHABLE`
+- `ping -c 3 192.168.68.200` → 0% loss, ~4.3 ms RTT
+- Agent log: `client_key: 0x5496464D` valid session, CREATE/STATUS cserék után DDS writer él
+- `ros2 node list` → `/robot/pedal` (publisher: `/robot/heartbeat`, `/diagnostics`)
+- `ros2 topic hz /robot/heartbeat` → 1.00 Hz stabil (`std_msgs/msg/Bool`)
 
 **Előző milestonok (2026-04-19):**
 - Phase B LEZÁRVA (commit `b988627`) — Linux build ZÖLD.
@@ -115,6 +123,7 @@ Script: `tools/patches/apply.sh` — idempotens, Makefile `apply-patches` target
 | ERR-027 | `microros_transports.h` bare `<posix/sys/socket.h>` | Patch 1: ZEPHYR_VERSION_CODE conditional |
 | ERR-028 | `libmicroros.mk:103` `touch std_srvs/COLCON_IGNORE` | Patch 2: `touch` → `rm -f` |
 | ERR-030 | W6100 chip nem válaszolt SPI-n (hiányzó reset pulzus + CHPLCKR/NETLCKR unlock) | Out-of-tree W6100 driver backport: `app/modules/w6100_driver/` (PR #101753 v4.2.2-re adaptálva) |
+| ERR-031 | W6100 `set_config(MAC)` csak SHAR-t frissíti, iface link_addr beragad → MACRAW src MAC rossz, host→Pico return path blokkolt | `net_if_set_link_addr` hívás hozzáadva a `w6100_set_config` MAC ágához |
 ---
 
 ## 1. Projekt állapot röviden
