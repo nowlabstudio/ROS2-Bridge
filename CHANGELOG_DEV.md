@@ -4,6 +4,36 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-04-19 (session: BL-007 + BL-008) — Flash tooling Linux adaptáció + config.json subnet migráció
+
+### BL-007 — `tools/flash.sh` és `Makefile` cross-platform javítás
+
+A flash szkript és a Makefile eddig macOS-specifikus konvenciókat használt.
+Linuxon a Pico soros portja `/dev/ttyACM*`, a BOOTSEL mód után felcsatolt
+kötet `/media/$USER/RPI-RP2` (vagy `/run/media/$USER/RPI-RP2` systemd-mountal).
+
+| Fájl | Változás |
+|------|---------|
+| `tools/flash.sh` | `uname -s` alapú OS-detektálás; külön `PORT_GLOB` és `VOLUME` ágak; Linux mindkét mount path-ot ellenőrzi |
+| `Makefile` | `UNAME_S := $(shell uname -s)` + `ifeq(Darwin)` blokk; `FLASH_PORT ?=` (felülírható env-vel) |
+
+### BL-008 — `app/config.json` firmware default subnet migráció
+
+A firmware-be égetett fallback konfig még a régi `192.168.68.x` subnetet
+tartalmazta. Egy újonnan flashelt, konfig nélküli board a régi alhálón
+próbált volna csatlakozni az agenthez.
+
+| Mező | Régi | Új |
+|------|------|----|
+| `network.ip` | `192.168.68.114` | `10.0.10.20` |
+| `network.gateway` | `192.168.68.1` | `10.0.10.1` |
+| `network.agent_ip` | `192.168.68.125` | `10.0.10.1` |
+
+`10.0.10.20` a device range-en (21–23) kívüli placeholder; `upload_config.py`
+az eszközspecifikus `devices/*/config.json`-nal felülírja.
+
+---
+
 ## 2026-03-10 (23j) — Hardver szintű accel/decel szétválasztás, tank mód kinematika fix
 
 ### Új feature: `duty_accel_rate` / `duty_decel_rate` — külön indulási és megállási gyorsulás

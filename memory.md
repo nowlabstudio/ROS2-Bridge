@@ -14,10 +14,11 @@
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
 
-### Munkamenet: 2026-04-19 — HANDOVER (Phase B lezárva, flash+test következik)
+### Munkamenet: 2026-04-19 — BL-007 + BL-008 lezárva, PEDAL flash következik
 
-**Phase B LEZÁRVA.** A firmware build stabilan reprodukálható Linuxon.
-Utolsó commit: `b988627` (Phase B stabilization), push-olva origin/main-re.
+**Phase B LEZÁRVA** (commit `b988627`). Linux build ZÖLD.
+**BL-007 LEZÁRVA:** `tools/flash.sh` és `Makefile` cross-platform (Linux `/dev/ttyACM0`, `/media/$USER/RPI-RP2`).
+**BL-008 LEZÁRVA:** `app/config.json` migrálva `10.0.10.x` subnetre (ip: 10.0.10.20, agent: 10.0.10.1).
 
 ---
 
@@ -67,10 +68,7 @@ Script: `tools/patches/apply.sh` — idempotens, Makefile `apply-patches` target
 
 **Sorrendben:**
 
-1. **flash.sh Linux adaptáció** (BL-007):
-   - `tools/flash.sh` — macOS `FLASH_PORT=/dev/tty.usbmodem...`, mount `/Volumes/RPI-RP2`
-   - Linuxon: port `/dev/ttyACM0` (vagy `/dev/ttyACM1`), mount `/media/$USER/RPI-RP2`
-   - `Makefile` `FLASH_PORT` default linuxra igazítandó, vagy doc update
+1. ~~**flash.sh Linux adaptáció** (BL-007)~~ — **KÉSZ**
 
 2. **PEDAL board flashelése** az új firmware-rel:
    - Ha `workspace/build/zephyr/zephyr.uf2` nem létezik: `make build` (vagy `make workspace-init` + `make build`)

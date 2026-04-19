@@ -111,27 +111,18 @@ Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dát
 
 ---
 
-## BL-007 — Flash port Linux-on (HAIRLINE)
+## BL-007 — Flash port Linux-on — LEZÁRVA 2026-04-19
 
-- **Kontextus:** `Makefile` `FLASH_PORT := /dev/tty.usbmodem231401` — macOS
-  konvenció. Linuxon tipikusan `/dev/ttyACM0..N`.
-- **Ok:** A `make flash` alapból nem fog működni Linuxon; a `tools/flash.sh`
-  scriptre hivatkozik a README, de érdemes a Makefile alapértelmezést
-  platformra tenni (vagy legalább dokumentálni).
-- **Érintett fájlok:** `Makefile`, `README.md` §Flash, `tools/flash.sh`.
+`tools/flash.sh` cross-platform adaptálva: `uname -s` alapján macOS `/Volumes/RPI-RP2` + `/dev/tty.usbmodem*`, Linux `/media/$USER/RPI-RP2` (+ `/run/media/$USER/RPI-RP2` fallback) + `/dev/ttyACM*`.
+`Makefile` `FLASH_PORT` default: `ifeq ($(UNAME_S),Darwin)` branch → macOS/Linux automatikus. `?=` operátor, felülírható `FLASH_PORT=/dev/ttyACM1 make flash`-sal.
 
 ---
 
-## BL-008 — Single central config.json template vs devices/ eltérés
+## BL-008 — Single central config.json template vs devices/ eltérés — LEZÁRVA 2026-04-19
 
-- **Kontextus:** `app/config.json` (build-be épített default) `192.168.68.114`
-  statikus IP-t tartalmaz, a `devices/*/config.json` már `10.0.10.x` alhálóra
-  migrált (commit `e5fe072`). Egy újonnan flashelt, konfig nélküli board a
-  régi alhálón jelentkezne be.
-- **Ok:** Deploy konzisztencia. A `app/config.json`-t is migrálni kellene
-  a `10.0.10.x` subnetre, vagy jelezni, hogy ez pusztán template és a
-  `devices/*.json` az első boot után felülírja.
-- **Érintett fájlok:** `app/config.json`, `README.md` (configuration ref).
+`app/config.json` migrálva `10.0.10.x` subnetre: ip `10.0.10.20`, gateway+agent_ip `10.0.10.1`.
+Logika: ez a firmware-be égetett fallback default; az `upload_config.py` futtatásával a board felülírja a `devices/*/config.json` értékével.
+`10.0.10.20` szándékos placeholder (kívül a 21–23 device range-en) — DHCP-s boardoknak sem okoz ütközést.
 
 ---
 

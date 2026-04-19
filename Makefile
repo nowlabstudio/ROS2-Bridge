@@ -1,6 +1,13 @@
 BOARD       := w5500_evb_pico
 DOCKER_IMG  := w6100-zephyr-microros:latest
-FLASH_PORT  := /dev/tty.usbmodem231401
+
+# Serial port default: Linux /dev/ttyACM0, macOS /dev/tty.usbmodem*
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    FLASH_PORT ?= /dev/tty.usbmodem231401
+else
+    FLASH_PORT ?= /dev/ttyACM0
+endif
 
 PROJECT_DIR := $(shell pwd)
 WORKSPACE   := $(PROJECT_DIR)/workspace
