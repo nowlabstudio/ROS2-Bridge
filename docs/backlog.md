@@ -9,52 +9,7 @@ Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dát
 
 ---
 
-## BL-001 — `west.yml` pinelése konkrét Zephyr commitra (KRITIKUS)
-
-- **Kontextus:** A jelenlegi manifest:
-  ```yaml
-  - name: zephyr
-    remote: zephyrproject-rtos
-    revision: main          # követi a Zephyr main branchet
-  - name: micro_ros_zephyr_module
-    remote: micro-ros
-    revision: jazzy         # követi a micro-ROS jazzy branchet
-  ```
-  Minden `west update` újabb upstream snapshotot tölt le. A projektet
-  macOS-en egyszer lefordítottuk (Zephyr v4.3.99-kor), majd egy újrabuild
-  után „elveszett a környezet” — valószínűleg egy Zephyr `main` commit tört
-  el nálunk az W6100 / net / WDT API valamelyikén.
-- **Ok:** Reprodukálható build. A firmware **nem fordul** ismeretlen
-  környezetben; minden gépre ugyanazt a Zephyr + micro-ROS bundle-t
-  akarjuk telepíteni. Ameddig ez nincs pinelve, a build minden környezetben
-  rulett.
-- **Érintett fájlok:**
-  - `app/west.yml` — pinelés (SHA vagy tag).
-  - `README.md` — a „Zephyr version” táblázat frissítése a pineket tükrözve.
-  - `memory.md` — a pinelt verziók rögzítése.
-  - Opció: `docker/Dockerfile` — a `zephyr-sdk 0.17.4` mellett a west snapshot
-    hashét is CI-title lehet vinni.
-- **Terv:** az első sikeres Linux build után `git -C workspace/zephyr rev-parse HEAD`
-  és `git -C workspace/modules/lib/micro_ros_zephyr_module rev-parse HEAD` →
-  ezeket rögzítjük a `west.yml`-be `revision:` sorba.
-- **Kockázat lezárva:** Ha PRO módban szeretnénk: digest pin a Docker base image-re
-  is (`FROM zephyrprojectrtos/ci:v0.28.8@sha256:...`).
-
----
-
-## BL-002 — Reprodukálható Pico firmware build Linuxon (KRITIKUS)
-
-- **Kontextus:** A `workspace/` jelenleg hiányzik a gépről (`.gitignore`
-  kizárja, 2 GB+). A Docker image (`w6100-zephyr-microros:latest`) a gépen van,
-  de nem tudjuk, hogy a west pull még stabilan lefut-e.
-- **Ok:** Amíg nem látjuk a **tényleges** hibaüzenetet a Linux build kísérletből,
-  találgatunk. Az első lépés: elvégezni egy `make workspace-init && make build`
-  próbát Linuxon és a logot szó szerint rögzíteni a `memory.md`-ben, majd
-  célzottan javítani.
-- **Érintett fájlok:** `app/west.yml`, `app/prj.conf`,
-  `app/boards/w5500_evb_pico.overlay`, `app/src/**`, `docker/Dockerfile`.
-- **Előfeltétel:** BL-001 pinelés után több értelme van; de az első próbát
-  a jelenlegi állapotban is meg kell tenni, hogy a „mi tört el?” konkrét legyen.
+_(BL-001, BL-002 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
@@ -111,20 +66,7 @@ Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dát
 
 ---
 
-## BL-007 — Flash port Linux-on — LEZÁRVA 2026-04-19
-
-`tools/flash.sh` cross-platform adaptálva: `uname -s` alapján macOS `/Volumes/RPI-RP2` + `/dev/tty.usbmodem*`, Linux `/media/$USER/RPI-RP2` (+ `/run/media/$USER/RPI-RP2` fallback) + `/dev/ttyACM*`.
-`Makefile` `FLASH_PORT` default: `ifeq ($(UNAME_S),Darwin)` branch → macOS/Linux automatikus. `?=` operátor, felülírható `FLASH_PORT=/dev/ttyACM1 make flash`-sal.
-
----
-
-## BL-008 — Single central config.json template vs devices/ eltérés — LEZÁRVA 2026-04-19
-
-`app/config.json` migrálva `10.0.10.x` subnetre: ip `10.0.10.20`, gateway+agent_ip `10.0.10.1`.
-Logika: ez a firmware-be égetett fallback default; az `upload_config.py` futtatásával a board felülírja a `devices/*/config.json` értékével.
-`10.0.10.20` szándékos placeholder (kívül a 21–23 device range-en) — DHCP-s boardoknak sem okoz ütközést.
-
----
+_(BL-007, BL-008 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
@@ -163,6 +105,17 @@ hogy a west update ne driftelje az ismert-jó HEAD-et. Részletek: ERR-025.
 Egy tiszta `rm -rf workspace && make workspace-init && make build` flow
 zöld, mert a `workspace-init` automatikusan hívja a `apply-patches`
 targetet, a `build` szintén függ tőle. Lásd memory.md §0 és ERR-025..028.
+
+### BL-007 — Flash port Linux-on — LEZÁRVA 2026-04-19
+
+`tools/flash.sh` cross-platform adaptálva: `uname -s` alapján macOS `/Volumes/RPI-RP2` + `/dev/tty.usbmodem*`, Linux `/media/$USER/RPI-RP2` (+ `/run/media/$USER/RPI-RP2` fallback) + `/dev/ttyACM*`.
+`Makefile` `FLASH_PORT` default: `ifeq ($(UNAME_S),Darwin)` branch → macOS/Linux automatikus. `?=` operátor, felülírható `FLASH_PORT=/dev/ttyACM1 make flash`-sal.
+
+### BL-008 — Single central config.json template vs devices/ eltérés — LEZÁRVA 2026-04-19
+
+`app/config.json` migrálva `10.0.10.x` subnetre: ip `10.0.10.20`, gateway+agent_ip `10.0.10.1`.
+Logika: ez a firmware-be égetett fallback default; az `upload_config.py` futtatásával a board felülírja a `devices/*/config.json` értékével.
+`10.0.10.20` szándékos placeholder (kívül a 21–23 device range-en) — DHCP-s boardoknak sem okoz ütközést.
 
 ### BL-010 — W6100 chip Ethernet nem működik — LEZÁRVA 2026-04-19
 
