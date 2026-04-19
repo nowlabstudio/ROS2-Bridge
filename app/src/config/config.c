@@ -46,6 +46,85 @@ static char cfg_io_buf[1536];
 	} while (0)
 
 /* ------------------------------------------------------------------ */
+/*  ROS2 identifier validation (BL-003 / ERR-001 prevention)           */
+/* ------------------------------------------------------------------ */
+
+/*
+ * ROS2 node name: [a-zA-Z][a-zA-Z0-9_]*
+ * Empty or invalid names cause rclc_node_init to fail in a retry loop
+ * that makes the shell unresponsive — BOOTSEL button is the only recovery.
+ * Reject here so bad values never reach flash. See ERRATA_BOOTSEL.md.
+ */
+static bool is_valid_ros2_name(const char *s)
+{
+	if (!s || s[0] == '\0') {
+		return false;
+	}
+	if (!((s[0] >= 'a' && s[0] <= 'z') || (s[0] >= 'A' && s[0] <= 'Z'))) {
+		return false;
+	}
+	for (size_t i = 1; s[i] != '\0'; i++) {
+		char c = s[i];
+		bool ok = (c >= 'a' && c <= 'z') ||
+			  (c >= 'A' && c <= 'Z') ||
+			  (c >= '0' && c <= '9') ||
+			  c == '_';
+		if (!ok) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/*
+ * ROS2 namespace: either "/" (root) or "/" + slash-separated segments,
+ * where each segment matches is_valid_ros2_name() above.
+ */
+static bool is_valid_ros2_namespace(const char *s)
+{
+	if (!s || s[0] != '/') {
+		return false;
+	}
+	if (s[1] == '\0') {
+		return true; /* root namespace "/" is valid */
+	}
+	size_t n = strlen(s);
+
+	if (s[n - 1] == '/') {
+		return false; /* trailing "/" not allowed for non-root */
+	}
+
+	const char *p = s + 1;
+
+	while (*p) {
+		const char *seg_start = p;
+
+		while (*p && *p != '/') {
+			p++;
+		}
+		size_t seg_len = p - seg_start;
+
+		if (seg_len == 0) {
+			return false; /* empty segment: "//" */
+		}
+		char seg[CFG_STR_LEN];
+
+		if (seg_len >= sizeof(seg)) {
+			return false;
+		}
+		memcpy(seg, seg_start, seg_len);
+		seg[seg_len] = '\0';
+		if (!is_valid_ros2_name(seg)) {
+			return false;
+		}
+		if (*p == '/') {
+			p++;
+		}
+	}
+	return true;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Factory defaults                                                   */
 /* ------------------------------------------------------------------ */
 
@@ -552,8 +631,14 @@ int config_set(const char *key, const char *value)
 	} else if (strcmp(key, "network.agent_port") == 0) {
 		SAFE_STRCPY(g_config.network.agent_port, value);
 	} else if (strcmp(key, "ros.node_name") == 0) {
+		if (!is_valid_ros2_name(value)) {
+			return -EINVAL;
+		}
 		SAFE_STRCPY(g_config.ros.node_name, value);
 	} else if (strcmp(key, "ros.namespace") == 0) {
+		if (!is_valid_ros2_namespace(value)) {
+			return -EINVAL;
+		}
 		SAFE_STRCPY(g_config.ros.namespace_, value);
 	} else if (strncmp(key, "channels.", 9) == 0) {
 		const char *rest = key + 9;

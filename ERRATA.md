@@ -10,7 +10,7 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 
 | ID | Rövid leírás | Súlyosság | Állapot |
 |----|-------------|-----------|---------|
-| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott |
+| [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Diagnosztika aktív (BL-004 lezárva) |
 | [ERR-025](#err-025) | Zephyr SDK 0.17 → 1.0 drift: west `revision: main` → `find_package(Zephyr-sdk 1.0)` fail | Kritikus | **Javítva** (v4.2.2 pin) |
 | [ERR-026](#err-026) | Architekturális döntés: W6100 → W5500 kompatibilis mód, stock board def használata | Informatív | **Lezárva** |
 | [ERR-027](#err-027) | jazzy HEAD UDP transport header régi Zephyr POSIX layoutot vár (`<posix/sys/socket.h>`) | Kritikus | **Javítva** (tools/patches/apply.sh) |
@@ -477,7 +477,7 @@ Az rclpy `RcutilsLogger.info()` csak egy üzenetstringet fogad (plusz implícit 
 ### `param_server_init error: 11`
 
 **Dátum:** 2026-03-06
-**Állapot:** Nyitott — root cause ismeretlen, folytatás szükséges
+**Állapot:** Diagnosztika aktív (BL-004 lezárva 2026-04-19) — a hiba nem fatális, a heap statisztika logolás be van építve; várunk egy tényleges `error: 11` reprodukcióra az élő board-okon, hogy az új `Heap before/after param_server` logok alapján eldönthető legyen `RCL_RET_BAD_ALLOC` vs. `RCL_RET_INVALID_ARGUMENT`.
 
 #### A hiba
 
@@ -526,8 +526,19 @@ A `rclc_parameter_server_init_with_option` `ret |= ...` mintával OR-olja össze
 
 | Fájl | Megjegyzés |
 |------|-----------|
-| `app/src/bridge/param_server.c` | A hiba itt jelentkezik |
+| `app/src/bridge/param_server.c` | A hiba itt jelentkezik; heap stat log hozzáadva `param_server_init` elejére/végére (`CONFIG_SYS_HEAP_RUNTIME_STATS` gatolt) |
 | `app/src/main.c` | Executor handle count — rendben |
+
+#### Diagnosztikai logok (BL-004)
+
+`CONFIG_SYS_HEAP_RUNTIME_STATS=y` a `prj.conf`-ban, ezért `param_server_init()` most az `rclc_parameter_server_init_with_option` hívása **előtt és után** logolja a heap állapotot:
+
+```
+<inf> param_server: Heap before param_server: free=... alloc=... max=...
+<inf> param_server: Heap after param_server:  free=... alloc=... max=...
+```
+
+Ha a következő reprodukció során `error: 11` jön, és a heap `free` érték drasztikusan csökkent a két log között (vagy a hívás előtt is < 1 KB), akkor a hiba `RCL_RET_BAD_ALLOC` eredetű (heap szűkösség). Ellenkező esetben valószínűbb az `RCL_RET_INVALID_ARGUMENT` — akkor egyesével kell kizárni a 6 belső service init hívást (az rclc forrásból).
 
 ---
 

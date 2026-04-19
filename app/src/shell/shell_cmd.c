@@ -62,6 +62,19 @@ static int cmd_config_set(const struct shell *sh, size_t argc, char **argv)
 	} else if (rc == -ENAMETOOLONG) {
 		shell_error(sh, "Value too long (max %d chars): %s", CFG_STR_LEN - 1, argv[1]);
 		return rc;
+	} else if (rc == -EINVAL) {
+		if (strcmp(argv[1], "ros.node_name") == 0) {
+			shell_error(sh, "Invalid node_name: '%s'", argv[2]);
+			shell_error(sh, "ROS2 names must match [a-zA-Z][a-zA-Z0-9_]*");
+			shell_error(sh, "  OK:  pico_bridge, E_STOP, robot1");
+			shell_error(sh, "  BAD: E-STOP, 1robot, robot.pedal");
+		} else if (strcmp(argv[1], "ros.namespace") == 0) {
+			shell_error(sh, "Invalid namespace: '%s'", argv[2]);
+			shell_error(sh, "Must be '/' or '/seg[/seg...]' where each seg matches [a-zA-Z][a-zA-Z0-9_]*");
+		} else {
+			shell_error(sh, "Invalid value for %s: '%s'", argv[1], argv[2]);
+		}
+		return rc;
 	}
 
 	shell_print(sh, "OK: %s = %s", argv[1], argv[2]);

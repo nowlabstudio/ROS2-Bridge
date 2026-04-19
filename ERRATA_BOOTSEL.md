@@ -70,9 +70,21 @@ ROS2 névszabály: `[a-zA-Z][a-zA-Z0-9_]*`
 
 ---
 
-## Jövőbeli javítás
+## Javítás — BL-003 LEZÁRVA 2026-04-19
 
-A `config_set()` függvénybe validációt kellene hozzáadni a `ros.node_name`
-mezőhöz, ami visszautasítja az érvénytelen karaktereket (`-`, szóköz, stb.)
-még mentés előtt — ezzel megelőzhető, hogy a firmware hibás konfigurációval
-induljon el.
+A `config_set()` függvényben validáció került a `ros.node_name` és
+`ros.namespace` mezőkhöz (lásd `app/src/config/config.c` — `is_valid_ros2_name`
+és `is_valid_ros2_namespace`). Érvénytelen érték `-EINVAL`-t ad vissza, a
+shell oldal pedig konkrét hibaüzenettel elutasítja, mielőtt flash-re kerülne:
+
+```
+uart:~$ bridge config set ros.node_name E-STOP
+Invalid node_name: 'E-STOP'
+ROS2 names must match [a-zA-Z][a-zA-Z0-9_]*
+  OK:  pico_bridge, E_STOP, robot1
+  BAD: E-STOP, 1robot, robot.pedal
+```
+
+Mivel az `upload_config.py` is a shell `bridge config set` parancson át dolgozik,
+a validáció ezen az úton is automatikusan érvényesül — a BOOTSEL-lock már nem
+reprodukálható érvénytelen `node_name`-mel.

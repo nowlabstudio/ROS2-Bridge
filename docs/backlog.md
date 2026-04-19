@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-19 (BL-010 end-to-end zöld, ERR-031 lezárva)
+> Utolsó frissítés: 2026-04-19 (BL-003, BL-004 lezárva; BL-009 PR-anyag előkészítve)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -13,31 +13,7 @@ _(BL-001, BL-002 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
-## BL-003 — `bridge config set` node_name validáció
-
-- **Kontextus:** `ERRATA_BOOTSEL.md` szerint az `E-STOP` (kötőjeles) node_name
-  `rclc_node_init` hibaciklust okoz, ami miatt a shell nem reagál, és a
-  `bridge bootsel` sem működik. Csak fizikai BOOTSEL gombbal lehet kilábalni.
-- **Ok:** Prevenció > recovery. A ROS2 név szabály `[a-zA-Z][a-zA-Z0-9_]*`;
-  érdemes a `bridge config set ros.node_name <val>` shell oldalon elutasítani
-  az érvénytelen értékeket, mielőtt menthető lenne.
-- **Érintett fájlok:**
-  - `app/src/config/config.c` (setter),
-  - `app/src/shell/shell_cmd.c` (szűrés + hibaüzenet),
-  - `ERRATA_BOOTSEL.md` (állapot frissítés javítás után).
-
----
-
-## BL-004 — ERR-001 diagnosztika mélyebbre (KÖZEPES)
-
-- **Kontextus:** `param_server_init error: 11` időnként boot-kor; a board
-  nélküle is fut, csak a `ros2 param` interface nem elérhető. Már megvan a
-  `CONFIG_SYS_HEAP_RUNTIME_STATS=y`.
-- **Ok:** Egy XRCE/Kconfig/limit allokációs hiba megmaradt. A jelenlegi
-  gyanúhalmazon (heap, service count, timeout) túl kell lépni — runtime
-  heap log közvetlenül az init előtt és után adná meg a választ.
-- **Érintett fájlok:** `app/src/bridge/param_server.c`, `app/src/main.c`
-  (heap stat lekérdezés + LOG_INF), `ERRATA.md` (ERR-001 frissítés).
+_(BL-003, BL-004 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
@@ -70,20 +46,24 @@ _(BL-007, BL-008 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
-## BL-009 — Upstream PR-ok a micro_ros_zephyr_module-hoz (KÖZEPES)
+## BL-009 — Upstream PR-ok (ELŐKÉSZÍTVE, ellenőrzésre vár)
 
-- **Kontextus:** A `tools/patches/apply.sh` két lokális patchet alkalmaz a
-  jazzy HEAD-en (UDP transport header POSIX includeok, `libmicroros.mk`
-  std_srvs COLCON_IGNORE). Ezek **upstream hibák**, nem projektspecifikusak.
-- **Ok:** Egy upstream PR véglegessé tenné a javítást mindenkinek. Amíg nem
-  merged, a patch script kell, de ha PR ment, akkor tovább pinelhetünk egy
-  olyan commitre, ami már tartalmazza ezeket a fixeket, és a patch-szkript
-  törölhető.
-- **Érintett fájlok:**
-  - A forrás oldalán: `micro_ros_zephyr_module/modules/libmicroros/microros_transports/udp/microros_transports.h`, `modules/libmicroros/libmicroros.mk`.
-  - Nálunk megszűnik: `tools/patches/apply.sh`, Makefile `apply-patches` target, `build:` függőség.
-- **Ajánlott tartalom:** egy PR mindkét fájlra; commit message hivatkozzon az
-  ERR-027 és ERR-028 kontextusra (build reprodukcióra).
+- **Kontextus:** Három lokálisan hordozott fix, amelyek upstream bug-okat
+  javítanak — mindegyikhez készen van a PR-anyag (diff + commit message +
+  PR title/body) a `docs/upstream_prs.md`-ben:
+  - **PR-A** (`micro_ros_zephyr_module`, ERR-027) — UDP transport header POSIX conditional
+  - **PR-B** (`micro_ros_zephyr_module`, ERR-028) — libmicroros.mk ne zárja ki a std_srvs-t
+  - **PR-C** (`zephyrproject-rtos/zephyr`, ERR-031) — eth_w6100 set_config propagálja az iface link_addr-t
+- **Állapot:** a benyújtás **manuális lépés** a felhasználó részéről (fork,
+  branch, DCO, stb.), a kódon nem kell több munka. Ha bármelyik merged,
+  a megfelelő helyen `west.yml` SHA pint frissítjük és a patch-et töröljük
+  (teljes flow: `docs/upstream_prs.md` — „Benyújtási ellenőrzőlista").
+- **Érintett fájlok (ha merged):**
+  - `west.yml` — új SHA-ra lépés,
+  - `tools/patches/apply.sh` — Patch 1 és/vagy Patch 2 törlése,
+  - ha mindkét micro-ROS patch merged: `apply.sh` teljesen törölhető,
+  - `app/modules/w6100_driver/` — upstream driver használata (ha a fix
+    v4.2.2-re back-portolt verzióra is rámegy).
 
 ---
 
@@ -116,6 +96,14 @@ targetet, a `build` szintén függ tőle. Lásd memory.md §0 és ERR-025..028.
 `app/config.json` migrálva `10.0.10.x` subnetre: ip `10.0.10.20`, gateway+agent_ip `10.0.10.1`.
 Logika: ez a firmware-be égetett fallback default; az `upload_config.py` futtatásával a board felülírja a `devices/*/config.json` értékével.
 `10.0.10.20` szándékos placeholder (kívül a 21–23 device range-en) — DHCP-s boardoknak sem okoz ütközést.
+
+### BL-003 — `bridge config set` node_name validáció — LEZÁRVA 2026-04-19
+
+A `config_set()` mostantól ROS2 identifier szabály szerint validálja a `ros.node_name` (`[a-zA-Z][a-zA-Z0-9_]*`) és a `ros.namespace` (`/` vagy `/seg[/seg...]` szegmensenként ugyanez a szabály) mezőket. Érvénytelen érték `-EINVAL`-t ad, a shell oldal konkrét hibaüzenettel utasítja el (`OK/BAD` példákkal). Mivel az `upload_config.py` is a `bridge config set`-en át dolgozik, a validáció ezen az úton is érvényesül — ezzel megszűnik a BOOTSEL-lock reprodukciója érvénytelen `node_name`-mel (ERRATA_BOOTSEL.md). Érintett fájlok: `app/src/config/config.c` (is_valid_ros2_name + is_valid_ros2_namespace), `app/src/shell/shell_cmd.c` (hibaüzenet `-EINVAL`-ra), `ERRATA_BOOTSEL.md`.
+
+### BL-004 — ERR-001 diagnosztika mélyebbre — LEZÁRVA 2026-04-19
+
+`CONFIG_SYS_HEAP_RUNTIME_STATS=y` + `param_server.c:117–137` logolja a heap állapotot az `rclc_parameter_server_init_with_option` **előtt és után** (`Heap before/after param_server: free=... alloc=... max=...`). Ezzel a következő `error: 11` reprodukciónál egy pillantásból eldönthető, hogy `RCL_RET_BAD_ALLOC` (heap szűkösség) vagy `RCL_RET_INVALID_ARGUMENT` a gyökérok — lásd `ERRATA.md` §ERR-001. A diagnosztikai infrastruktúra kész, a feladat az első reprodukciónál vált élesbe.
 
 ### BL-010 — W6100 chip Ethernet nem működik — LEZÁRVA 2026-04-19
 
