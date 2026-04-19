@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-03-10
+**Utolsó frissítés:** 2026-04-19
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -11,6 +11,10 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | ID | Rövid leírás | Súlyosság | Állapot |
 |----|-------------|-----------|---------|
 | [ERR-001](#err-001) | `param_server_init error: 11` | Közepes | Nyitott |
+| [ERR-025](#err-025) | Zephyr SDK 0.17 → 1.0 drift: west `revision: main` → `find_package(Zephyr-sdk 1.0)` fail | Kritikus | **Javítva** (v4.2.2 pin) |
+| [ERR-026](#err-026) | Architekturális döntés: W6100 → W5500 kompatibilis mód, stock board def használata | Informatív | **Lezárva** |
+| [ERR-027](#err-027) | jazzy HEAD UDP transport header régi Zephyr POSIX layoutot vár (`<posix/sys/socket.h>`) | Kritikus | **Javítva** (tools/patches/apply.sh) |
+| [ERR-028](#err-028) | jazzy HEAD `libmicroros.mk` `touch std_srvs/COLCON_IGNORE`-t tiltja le | Kritikus | **Javítva** (tools/patches/apply.sh) |
 | [ERR-002](#err-002) | `/diagnostics` IP DHCP módban statikus IP-t mutatott | Alacsony | **Javítva** v2.0 |
 | [ERR-003](#err-003) | Router-en az eszköz neve "zephyr" volt | Alacsony | **Javítva** v2.0 |
 | [ERR-004](#err-004) | Több bridge ugyanazon a hálózaton: kapcsolatvesztés | Kritikus | **Javítva** v2.0 |
@@ -34,6 +38,299 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-022](#err-022) | Motor induláskor forgott (cmd_vel_dirty + open_loop: false) | Magas | **Javítva** |
 | [ERR-023](#err-023) | Folyamatos overrun 100Hz-en — WiFi latencia, nem szoftver hiba | Közepes | **Megoldva** (Ethernet-en 100Hz OK) |
 | [ERR-024](#err-024) | SEGFAULT: RCLCPP_WARN_THROTTLE temporális Clock shared_ptr lifetime | Kritikus | **Javítva** |
+
+---
+
+## ERR-028
+
+### jazzy HEAD `libmicroros.mk` kizárja a std_srvs csomagot
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus (firmware app nem fordul) |
+| **Állapot** | **Javítva** (`tools/patches/apply.sh` — Patch 2) |
+| **Felfedezés** | 2026-04-19 |
+| **Javítás** | 2026-04-19 |
+| **Komponens** | `micro_ros_zephyr_module` jazzy @ 87dbe3a9 |
+
+#### Tünet
+
+```
+app/src/bridge/service_manager.c:3:10: fatal error:
+  std_srvs/srv/set_bool.h: No such file or directory
+```
+
+A `libmicroros.a` nem tartalmazza a `std_srvs` csomagot; a `set_bool.h` és
+`trigger.h` header-ek hiányoznak az include fa-ból. A `service_manager.c`
+ezeket `SetBool` (relay_brake) és `Trigger` (estop query) szolgáltatáshoz
+használja.
+
+#### Root cause
+
+A `modules/libmicroros/libmicroros.mk:103`:
+
+```makefile
+touch src/common_interfaces/std_srvs/COLCON_IGNORE; \
+```
+
+Ez a sor a `micro_ros_src/src/common_interfaces/std_srvs/COLCON_IGNORE`
+fájlt hozza létre, amit a colcon „skip this package" jelzésként olvas.
+Így a std_srvs NEM épül be a libmicroros-ba.
+
+A `TECHNICAL_OVERVIEW.md §9.3` szerint ez a v2.0 fejlesztéskor lokálisan
+el lett távolítva a macOS gépen (commit `90935b9`), de az a módosítás
+**sosem került sem a felhasználó repójába, sem upstream-be**. Amikor a
+workspace újragenerálódott, a fix elveszett — pontosan a policy.md §2.8
+„Pin mindent, ami driftelhet" kiindulópontja.
+
+#### Javítás — `tools/patches/apply.sh` Patch 2
+
+A Patch:
+```makefile
+- touch src/common_interfaces/std_srvs/COLCON_IGNORE; \
++ rm -f src/common_interfaces/std_srvs/COLCON_IGNORE; \
+```
+
+A `rm -f` szemantikailag a `touch` inverze: **biztosítja**, hogy a
+COLCON_IGNORE fájl NEM létezik a build előtt. Ez idempotens — stale
+állapotot is rendbe tesz (amit a korábbi buildek `touch`-oltak).
+
+A `apply.sh` a stale COLCON_IGNORE fájlt explicit törli is, ha megtalálja,
+egy korábbi build maradványaként.
+
+#### Érintett fájlok
+
+| Fájl | Megjegyzés |
+|------|-----------|
+| `tools/patches/apply.sh` | Patch 2 logika |
+| `Makefile` | `apply-patches` target, `build:` függ tőle |
+| `app/src/bridge/service_manager.c` | `SetBool` + `Trigger` használat (változatlan) |
+
+---
+
+## ERR-027
+
+### jazzy HEAD UDP transport header régi Zephyr POSIX layoutot vár
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus (firmware app nem fordul) |
+| **Állapot** | **Javítva** (`tools/patches/apply.sh` — Patch 1) |
+| **Felfedezés** | 2026-04-19 |
+| **Javítás** | 2026-04-19 |
+| **Komponens** | `micro_ros_zephyr_module` jazzy @ 87dbe3a9 |
+
+#### Tünet
+
+```
+modules/lib/micro_ros_zephyr_module/modules/libmicroros/microros_transports/
+udp/microros_transports.h:21:10: fatal error:
+  posix/sys/socket.h: No such file or directory
+```
+
+A `main.c:23` `#include <microros_transports.h>`-n keresztül behúzott UDP
+transport header a régi bare `posix/` path-t használja, ami Zephyr v3.1+
+után `zephyr/posix/`-ra költözött.
+
+#### Root cause
+
+A serial és serial-usb transport `.c` fájlokban **már** van feltételes
+include:
+
+```c
+#if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(3,1,0)
+#include <zephyr/posix/unistd.h>
+#else
+#include <posix/unistd.h>
+#endif
+```
+
+A UDP `microros_transports.h` a migrációnál **kimaradt**. Jazzy branch HEAD
+(`87dbe3a9`) is ezt az állapotot tükrözi. Az upstream hiba, nem lokális.
+
+#### Javítás — `tools/patches/apply.sh` Patch 1
+
+Ugyanaz a conditional pattern mint a serial transportokban:
+
+```c
+- #include <sys/types.h>
+- #include <posix/sys/socket.h>
+- #include <posix/poll.h>
++ #include <sys/types.h>
++ #include <version.h>
++
++ #if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(3,1,0)
++ #include <zephyr/posix/sys/socket.h>
++ #include <zephyr/posix/poll.h>
++ #else
++ #include <posix/sys/socket.h>
++ #include <posix/poll.h>
++ #endif
+```
+
+A `<version.h>` (Zephyr) ad `ZEPHYR_VERSION_CODE` és `ZEPHYR_VERSION` makrókat.
+
+#### Hosszú távú megoldás
+
+Upstream PR a `micro-ROS/micro_ros_zephyr_module`-ba: a UDP transport
+header is használjon ugyanolyan `ZEPHYR_VERSION_CODE` guard-ot, mint
+a serial transportok. Addig a lokális patch (BL-009, backlog) elegendő.
+
+#### Érintett fájlok
+
+| Fájl | Megjegyzés |
+|------|-----------|
+| `tools/patches/apply.sh` | Patch 1 logika |
+| `workspace/modules/lib/micro_ros_zephyr_module/modules/libmicroros/microros_transports/udp/microros_transports.h` | patchelt, build után idempotens |
+
+---
+
+## ERR-026
+
+### Architekturális döntés: W6100 → W5500 kompatibilis mód
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Informatív (nem hiba, dokumentált döntés) |
+| **Állapot** | **Lezárva** — alkalmazva v2.2-ben |
+| **Dátum** | 2026-04-19 |
+
+#### Kontextus
+
+A WIZnet W6100 chip a gyártó specifikációja szerint **visszafelé
+kompatibilis a W5500-zal** IPv4 működésre (SPI regiszter szint, hardwired
+TCP/IP stack). A W6100-specifikus funkciók (IPv6, hardveres SSL/TLS, dual
+MAC) opcionálisak; a mi firmware-ünk egyiket sem használja (csak
+`CONFIG_NET_IPV4=y` + UDP).
+
+Eddig a board overlay felülírta a Zephyr DT stock `compatible` sztringet:
+
+```dts
+&ethernet {
+    compatible = "wiznet,w6100";
+};
+```
+
+és a `prj.conf` `CONFIG_ETH_W6100=y`-t használt.
+
+#### Probléma
+
+A Zephyr v4.2.2-ben (amin kényszerültünk a SDK 0.17.4 kompatibilitás miatt):
+
+- `CONFIG_ETH_W6100` Kconfig symbol **nem létezik** (W6100 driver későbbi
+  Zephyr release-ekben érkezett, SDK 1.0+-zal együtt).
+- A `wiznet,w6100` DT binding sem létezik.
+
+#### Döntés
+
+A stock `w5500_evb_pico` board definíciót használjuk változtatás nélkül —
+a W6100 chip W5500 kompatibilis módban fog üzemelni. Változások:
+
+1. `app/prj.conf`: `CONFIG_ETH_W6100=y` → `CONFIG_ETH_W5500=y`
+2. `app/boards/w5500_evb_pico.overlay`: az `&ethernet { compatible = ... }`
+   blokk eltávolítva; a stock board-ban már `wiznet,w5500` a kompatibilis.
+
+#### Veszteségek — **nulla** (funkcionálisan)
+
+| Funkció | Használtuk? | Hatás a döntésre |
+|---------|-------------|------------------|
+| IPv6 (W6100 exkluzív) | Nem | 0 |
+| Hardveres SSL/TLS | Nem | 0 |
+| Dual MAC / IPRaw engine | Nem | 0 |
+
+#### Nyereségek
+
+- A W5500 driver évek óta stabil Zephyr-ben (~v2.x-től), kevesebb drift.
+- Nincs overlay-hack: a stock board definíciót használjuk, upstream CI
+  bármikor tud tesztelni minket.
+- Szélesebb Zephyr upgrade-út (Zephyr újabb W5500 API-változásai kisebbek
+  lesznek, mint W6100-é, amelyik új driver).
+- Dokumentálható, tankönyvi döntés: „a chip W6100, de W5500-kompat módban
+  driveljük, mivel a W6100-specifikus featurokra nincs szükségünk".
+
+#### Visszaváltás feltétele
+
+Ha valaha IPv6 vagy hardveres SSL/TLS kell, akkor:
+
+- `app/prj.conf`: vissza `CONFIG_ETH_W6100=y`
+- `app/boards/w5500_evb_pico.overlay`: overlay override visszaírás
+- Zephyr verzió upgrade: a W6100 driver a Zephyr v4.3+ és SDK 1.0+ párossal
+  érkezik; akkor a Docker base-t is emelni kell.
+
+#### Érintett fájlok
+
+| Fájl | Változás |
+|------|----------|
+| `app/prj.conf` | `CONFIG_ETH_W6100` → `CONFIG_ETH_W5500` |
+| `app/boards/w5500_evb_pico.overlay` | `&ethernet` block törölve |
+
+---
+
+## ERR-025
+
+### Zephyr SDK 0.17 → 1.0 drift, west `revision: main`
+
+| Mező | Érték |
+|------|-------|
+| **Súlyosság** | Kritikus (firmware egyáltalán nem fordul) |
+| **Állapot** | **Javítva** (west pin `v4.2.2`) |
+| **Felfedezés** | 2026-04-19 |
+| **Javítás** | 2026-04-19 |
+
+#### Tünet
+
+```
+CMake Error at /workdir/zephyr/cmake/modules/FindZephyr-sdk.cmake:160:
+  Could not find a configuration file for package "Zephyr-sdk" that is
+  compatible with requested version "1.0".
+
+  The following configuration files were considered but not accepted:
+    /opt/toolchains/zephyr-sdk-0.17.4/cmake/Zephyr-sdkConfig.cmake,
+    version: 0.17.4
+```
+
+A Docker image `zephyrprojectrtos/ci:v0.28.8` Zephyr SDK **0.17.4**-et
+szállít. A `west init + west update` a Zephyr **main** branch aktuális
+HEAD-jét húzta le (`v4.4.99`), ami `find_package(Zephyr-sdk 1.0)`
+minimumot ír elő.
+
+#### Root cause — két drift egyszerre
+
+1. **`app/west.yml` `zephyr.revision: main`** — a branch HEAD driftel minden
+   west update-tel. Ez a policy.md §2.8 („Pin mindent, ami driftelhet")
+   direkt ellenkezője.
+2. **Zephyr SDK minimum bump** — a v4.3.0 → v4.4.0 release közötti
+   időszakban az upstream Zephyr emelte a minimum SDK verziót 0.17 → 1.0.
+
+#### Kompatibilitási mátrix
+
+| Zephyr tag | `SDK_VERSION` | `find_package(Zephyr-sdk X)` | SDK 0.17.4 OK? | `zephyr/posix/time.h` |
+|------------|---------------|------------------------------|----------------|-----------------------|
+| v4.1.0 | 0.17.0 | 0.16 | ✅ | ✅ |
+| v4.2.1 | 0.17.4 | 0.16 | ✅ | ✅ |
+| **v4.2.2** | **0.17.4** | **0.16** | **✅** | **✅** (utolsó!) |
+| v4.3.0 | 0.17.4 | 0.16 | ✅ | ❌ (POSIX layout átrendezés) |
+| v4.4.0 | 1.0.1 | 1.0 | ❌ | ❌ |
+
+**v4.2.2** a sweet spot: az utolsó tag, ahol az SDK 0.17.4 kompat és a
+`zephyr/posix/time.h` (amit a micro-ROS jazzy HEAD használ) egyaránt jó.
+
+#### Javítás
+
+`app/west.yml`:
+```yaml
+- name: zephyr
+  remote: zephyrproject-rtos
+  revision: v4.2.2          # volt: main
+  import: true
+```
+
+#### Érintett fájlok
+
+| Fájl | Változás |
+|------|----------|
+| `app/west.yml` | `zephyr.revision: main` → `v4.2.2` |
+| `docs/backlog.md` | BL-001 lezárva, BL-009 új: patchek upstream PR |
 
 ---
 

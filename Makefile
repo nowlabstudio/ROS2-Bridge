@@ -25,9 +25,24 @@ workspace-init:
 			west init -l app && \
 			west update && \
 			west zephyr-export"
+	$(MAKE) apply-patches
+
+# Idempotens patch-ek a jazzy HEAD ismert hibáihoz (ERR-027, ERR-028).
+# Lásd: tools/patches/apply.sh kommentek és ERRATA.md.
+.PHONY: apply-patches
+apply-patches:
+	docker run --rm \
+		-v $(WORKSPACE):/workdir \
+		-v $(PROJECT_DIR)/tools/patches:/patches:ro \
+		$(DOCKER_IMG) bash /patches/apply.sh /workdir
+
+.PHONY: workspace-clean
+workspace-clean:
+	@echo "Deleting $(WORKSPACE) (requires sudo — owned by docker root)..."
+	sudo rm -rf $(WORKSPACE)
 
 .PHONY: build
-build:
+build: apply-patches
 	docker run --rm \
 		-v $(WORKSPACE):/workdir \
 		-v $(APP_DIR):/workdir/app \

@@ -135,6 +135,36 @@ Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dát
 
 ---
 
+---
+
+## BL-009 — Upstream PR-ok a micro_ros_zephyr_module-hoz (KÖZEPES)
+
+- **Kontextus:** A `tools/patches/apply.sh` két lokális patchet alkalmaz a
+  jazzy HEAD-en (UDP transport header POSIX includeok, `libmicroros.mk`
+  std_srvs COLCON_IGNORE). Ezek **upstream hibák**, nem projektspecifikusak.
+- **Ok:** Egy upstream PR véglegessé tenné a javítást mindenkinek. Amíg nem
+  merged, a patch script kell, de ha PR ment, akkor tovább pinelhetünk egy
+  olyan commitre, ami már tartalmazza ezeket a fixeket, és a patch-szkript
+  törölhető.
+- **Érintett fájlok:**
+  - A forrás oldalán: `micro_ros_zephyr_module/modules/libmicroros/microros_transports/udp/microros_transports.h`, `modules/libmicroros/libmicroros.mk`.
+  - Nálunk megszűnik: `tools/patches/apply.sh`, Makefile `apply-patches` target, `build:` függőség.
+- **Ajánlott tartalom:** egy PR mindkét fájlra; commit message hivatkozzon az
+  ERR-027 és ERR-028 kontextusra (build reprodukcióra).
+
+---
+
 ## Lezárt tételek
 
-(nincsenek — a fájl most jött létre)
+### BL-001 — `west.yml` pinelése — LEZÁRVA 2026-04-19
+
+A `zephyr.revision: main` → `v4.2.2`, `micro_ros_zephyr_module.revision: jazzy`
+→ SHA `87dbe3a9` pinek alkalmazva. A Zephyr v4.2.2 a sweet spot (SDK 0.17.4
+kompat + `zephyr/posix/time.h` még megvan). A micro_ros SHA-pin biztosítja,
+hogy a west update ne driftelje az ismert-jó HEAD-et. Részletek: ERR-025.
+
+### BL-002 — Reprodukálható Pico firmware build Linuxon — LEZÁRVA 2026-04-19
+
+Egy tiszta `rm -rf workspace && make workspace-init && make build` flow
+zöld, mert a `workspace-init` automatikusan hívja a `apply-patches`
+targetet, a `build` szintén függ tőle. Lásd memory.md §0 és ERR-025..028.

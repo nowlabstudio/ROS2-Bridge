@@ -72,10 +72,13 @@
 	};
 };
 
-/* Board contains W6100 chip, not W5500 */
-&ethernet {
-	compatible = "wiznet,w6100";
-};
+/*
+ * Board hardware contains a WIZnet W6100 chip, de W5500-kompatibilis módban
+ * vezéreljük (csak IPv4 UDP kell). A stock `w5500_evb_pico` board def a
+ * wiznet,w5500 drivert köti a &ethernet node-hoz — a felülírást eltávolítottuk.
+ * Ha egyszer W6100-specifikus feature (IPv6, hardveres SSL/TLS) kellene,
+ * akkor cserélendő vissza compatible = "wiznet,w6100"-ra + CONFIG_ETH_W6100.
+ */
 
 /* ADC — akkumulátor feszültség (GP26 = channel 0, placeholder) */
 &adc {

@@ -102,6 +102,41 @@ modullal végeztünk, kiesik a munkakontextusból (a kredit spórolása érdeké
 Ha később visszatérünk hozzá, a `memory.md` alapján rekonstruálható a
 legfontosabb tudás.
 
+### 6b. Compacting előtti mentés és utáni visszaolvasás (kritikus)
+
+A Claude Code beszélgetést a rendszer **automatikusan tömöríti** (compacting),
+amikor közelít a kontextus-limithez. A compacting **részleteket törölhet**,
+ezért saját mentési protokollt tartunk fenn.
+
+**Szabály:**
+
+1. **Folyamatos mentés** — minden érdemi felfedezés (mérés, hibaüzenet,
+   SHA, döntés) **azonnal** a `memory.md`-be kerül. A `memory.md` legyen
+   mindig „megmentési pont", amiből a kontextus újraépíthető.
+2. **Compacting-közeli jelek** — ha a válaszok között érzékelhetően lerövidül
+   az elérhető kontextus (pl. a rendszer compacting-figyelmeztetést ad, vagy
+   hosszú session + sok tool call), **proaktívan** frissítsd a `memory.md`-t:
+   - az aktuális **ágak** (hipotézisek, döntési pontok) leírása,
+   - a legutóbbi **build/teszt logok** lényeges részei (hibaüzenet + fájl:sor),
+   - a **nyitott kérdések** és a rájuk adható válaszok státusza,
+   - a munka folytatásához szükséges **pontos következő lépések**.
+3. **Compacting után** — az első dolog `git pull` (friss állapot) majd
+   **`memory.md` és `policy.md` teljes újraolvasása**, mielőtt bármi tool
+   hívás történik. Ezután az utolsó „következő lépések" szekciót folytatjuk.
+
+**Gyakorlati heurisztika:**
+
+- Minden sikeres build után → SHA-k, RAM/Flash, pin-mátrix frissítés.
+- Minden sikertelen build után → pontos hibaüzenet + a gyanú + a következő
+  kipróbálandó változtatás.
+- Architekturális döntés után → a döntés + miért + alternatívák
+  (elutasított opciók rövid indoklással).
+- Hosszú tool call (workspace init, libmicroros build) előtt →
+  az állapot snapshot, hogy ha közben compacting jön, a folytatás deterministic.
+
+**Tilos:** a `memory.md`-t pusztán „ha lesz idő" frissíteni. A compacting
+előre nem jelezhető — a mentésnek proaktívnak kell lennie.
+
 ### 7. Óvatos, reverzibilitást figyelő műveletek
 
 - Destruktív műveletek (`rm -rf`, `git reset --hard`, force push, workspace
@@ -197,3 +232,24 @@ A `.cursor/rules/errata-changelog.mdc` szabály továbbra is él:
 - [ ] `ONBOARDING.md` csak akkor, ha rendszerszintű változás történt.
 - [ ] `git status` tiszta.
 - [ ] `git push` lefutott.
+
+## 5. Ellenőrző lista munkamenet **elején**
+
+- [ ] `git pull origin main` (friss állapot).
+- [ ] `policy.md` és `memory.md` **teljes** átolvasása.
+- [ ] A `memory.md` „Változásnapló" és „Következő lépések" szekciójából az
+      utolsó állapot visszaállítása a munkakontextusba.
+- [ ] Csak ezután kezdjük el az érdemi munkát, a következő teendő szerint.
+
+## 6. Compacting-esemény kezelés (rövid checklist)
+
+**Előtte (ha gyanítható, hogy közelít):**
+
+- [ ] `memory.md` „Folyamatban lévő munka" szekciója frissítve: aktuális ág,
+      utolsó tool output lényege, következő pontos parancs.
+- [ ] Ha van sikertelen futás: a hibaüzenet szó szerint a `memory.md`-be.
+
+**Utána (új válasz elején):**
+
+- [ ] Tool használat előtt: `memory.md` + `policy.md` újraolvasása.
+- [ ] A „Következő lépések" pont(ok) szerint folytatás.

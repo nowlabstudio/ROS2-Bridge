@@ -8,6 +8,131 @@
 
 ---
 
+## 0. Folyamatban lévő munka (compacting-proof állapot)
+
+> Ez a szekció a legutolsó munkamenet pontos állapotát rögzíti, hogy egy
+> compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
+> felülírjuk az új állapottal. `policy.md §6b` szabályozza.
+
+### Munkamenet: 2026-04-19 — Pico firmware build helyreállítása Linuxon
+
+> Progresszív diagnosztika: minden próba újabb réteg hibát tár fel. A
+> kompatibilitási lánc most már **öt** komponensből áll, és mind ötöt
+> pontosan meg kellett találni.
+
+**Eddigi eredmények ebben a session-ben:**
+
+1. Átnéztük a teljes dokumentációt és kódbázist (docs, Makefile, west.yml,
+   prj.conf, overlay, main.c, devices, Docker, compose, ERRATA, CHANGELOG).
+2. Létrehoztuk: `policy.md`, `memory.md`, `docs/backlog.md` (BL-001..BL-008).
+   Commit `da70069`, push-olva origin/main-re.
+3. `make workspace-init` **sikeres**: Zephyr main letöltve v4.4.99-ig,
+   micro_ros_zephyr_module jazzy branch letöltve.
+   - Zephyr SHA: `78903a98a3cc675c7fb3b3619123328c4bfbb675` (main, VERSION 4.4.99)
+   - micro_ros_zephyr_module SHA: `87dbe3a9b9d0fa347772e971d58d123e2296281a` (jazzy HEAD)
+4. `make build` **sikertelen** — konkrét hiba:
+   ```
+   CMake Error at /workdir/zephyr/cmake/modules/FindZephyr-sdk.cmake:160 (find_package):
+     Could not find a configuration file for package "Zephyr-sdk" that is
+     compatible with requested version "1.0".
+
+     The following configuration files were considered but not accepted:
+       /opt/toolchains/zephyr-sdk-0.17.4/cmake/Zephyr-sdkConfig.cmake, version: 0.17.4
+   ```
+   Hely: `app/CMakeLists.txt:6 (find_package)` → Zephyr `FindHostTools.cmake:51`.
+5. Gyökérok feltárva — **SDK 0.17 → 1.0 drift a v4.3.0 → v4.4.0 Zephyr release határon:**
+
+   | Zephyr tag | SDK_VERSION | `find_package(Zephyr-sdk X)` | Kompat. SDK 0.17.4-gyel |
+   |------------|-------------|------------------------------|-------------------------|
+   | v4.1.0 | 0.17.0 | 0.16 | ✅ |
+   | v4.2.2 | 0.17.4 | 0.16 | ✅ |
+   | **v4.3.0** | **0.17.4** | **0.16** | ✅ **utolsó** |
+   | v4.4.0 | 1.0.1 | 1.0 | ❌ |
+   | main (v4.4.99) | 1.0.1 | 1.0 | ❌ |
+
+6. User közölt **kulcsfontosságú információt**: a W6100 chip WIZnet-spec
+   szerint **W5500 kompatibilis módban** is üzemel IPv4-re. Mivel csak IPv4
+   UDP-t használunk (`CONFIG_NET_IPV4=y`, IPv6 nincs), a W5500 driverrel is
+   megy. Ezzel a board overlay-hack (`compatible = "wiznet,w6100"`)
+   megszüntethető, a stock `w5500_evb_pico` board definíció használható.
+7. User kérés: **maradjunk micro-ROS jazzy branch-en** (a host stack agent +
+   roboclaw image ezt várja). `micro_ros_zephyr_module.revision: jazzy` marad.
+8. User kérés: **test-first megközelítés** preferált (két lépés külön commit).
+
+### Elfogadott stratégia és végrehajtás
+
+**Iteratív, réteg-per-réteg megközelítés.** Minden build egy új hibát tárt fel
+mélyebben a toolchain-ben. A teljes kompatibilitási lánc most:
+
+### A kompatibilitási lánc (5 elem)
+
+| # | Komponens | Állapot | Amit meg kell oldani |
+|---|-----------|---------|----------------------|
+| 1 | **Zephyr SDK ↔ Zephyr** | SDK 0.17.4 (Docker-ben) kompat. v4.2.x-ig; v4.4.0+ SDK 1.0-t követel. | Pin `zephyr.revision: v4.2.2` (utolsó SDK 0.17.4 tag). |
+| 2 | **micro-ROS jazzy ↔ Zephyr POSIX layout** | jazzy HEAD `rcutils` `<zephyr/posix/time.h>`-t várja. v4.2.2-ben megvan, v4.3.0-ban eltávolították. | v4.2.2 az utolsó tag, ahol a header is megvan ÉS SDK 0.17.4 is jó. |
+| 3 | **W6100 Ethernet driver** | `CONFIG_ETH_W6100` csak újabb Zephyrekben (v4.3+) létezik. | W6100→W5500 kompat. mód: `CONFIG_ETH_W5500=y`, overlay override törlés. |
+| 4 | **micro-ROS UDP transport header** | `microros_transports.h` régi layout-ot vár (`<posix/sys/socket.h>`), jazzy HEAD elfelejtette migrálni a serial transportokhoz hasonló conditional-lal. | Patch: `ZEPHYR_VERSION_CODE >= 3.1.0` feltételes include. |
+| 5 | **std_srvs enablement** | jazzy HEAD `libmicroros.mk:103` `touch std_srvs/COLCON_IGNORE` (kizárva). A `service_manager.c` `SetBool`/`Trigger`-t használja. | Patch: `touch` → `rm -f`, hogy minden buildnél biztosan a helyes állapot jöjjön létre. |
+
+### Pin-mátrix (2026-04-19 állapot)
+
+| Komponens | Pin |
+|-----------|-----|
+| Docker base | `zephyrprojectrtos/ci:v0.28.8` (Zephyr SDK 0.17.4 bundled) |
+| Zephyr | tag `v4.2.2`, SHA `dbb536326e611dc8e97cc6a322d379ba9cac1ab7` |
+| micro_ros_zephyr_module | branch `jazzy`, HEAD `87dbe3a9b9d0fa347772e971d58d123e2296281a` (de két lokális patch kell) |
+| Ethernet driver | `CONFIG_ETH_W5500` (W6100 W5500-kompat módban) |
+
+### Lokális patch-ek (repro kötelező!)
+
+1. `workspace/modules/lib/micro_ros_zephyr_module/modules/libmicroros/microros_transports/udp/microros_transports.h`
+   — `<posix/sys/socket.h>` + `<posix/poll.h>` → ZEPHYR_VERSION_CODE conditional (zephyr/posix új layout).
+2. `workspace/modules/lib/micro_ros_zephyr_module/modules/libmicroros/libmicroros.mk`
+   — `touch std_srvs/COLCON_IGNORE` → `rm -f std_srvs/COLCON_IGNORE` (idempotens engedélyezés).
+
+Ezeket a patcheket a `workspace/` bármikori újragenerálásakor újra kell
+alkalmazni — **a `tools/patches/` alá fogjuk menteni és a Makefile-ba
+bedrótozni**, hogy reprodukálható legyen (BL-009, backlog).
+
+### App szintű warning-ok (nem hiba, de tartsuk szemmel)
+
+- `main.c:254` `net_if_ipv4_set_gw` cast mismatch: `const struct net_in_addr *`
+  vs `const struct in_addr *`. Zephyr API változás valahol v4.x közben.
+- `main.c:296, 318, 355` + `channel_manager.c` + `diagnostics.c` több helyen
+  `warn_unused_result` figyelmen kívül hagyva — kozmetikai.
+
+### Következő pontos lépés
+
+A clean rebuild fut (`/tmp/ros2bridge_build_v4.2.2_stdsrvs_clean.log`).
+Várakozás értesítésre. Ha zöld:
+1. UF2/ELF artifacts ellenőrzés (flash+RAM használat).
+2. `tools/patches/` létrehozás a két patch-nek.
+3. Makefile: `patch` target, futtatás `build` előtt.
+4. `west.yml` micro_ros pin SHA-ra (`87dbe3a9`).
+5. `ERRATA.md`: ERR-025 (SDK drift), ERR-026 (W5500 kompat mód),
+   ERR-027 (UDP transport POSIX include bug), ERR-028 (std_srvs COLCON_IGNORE).
+6. Commit + push + ONBOARDING táblázat frissítés.
+
+Ha piros: a log tail alapján következő réteg.
+
+### Kulcs referenciák (ha compacting utána kell visszanézni)
+
+- Build log: `/tmp/ros2bridge_build.log`
+- Workspace-init log: `/tmp/ros2bridge_workspace_init.log`
+- Docker image: `w6100-zephyr-microros:latest` (27.9 GB, jelen van a gépen)
+- Host: `/home/eduard/Dev/ROS2-Bridge` (`main` branch, git tiszta commit
+  `da70069` óta)
+
+### Fel nem tett kérdések (döntésre vár)
+
+- Szint 2 lockdown (SHA pin, Dockerfile digest): T1 után tárgyalandó.
+- Saját board definíció (`boards/nowlab/w6100_evb_pico/`): T2 után, opcionális;
+  W5500-kompat módban nem szükséges, csak IPv6/W6100-exkluzív feature-ökhöz.
+- BL-003 (node_name validáció), BL-004 (ERR-001 diag), BL-007 (flash port
+  Linuxon), BL-008 (`app/config.json` template IP migráció): külön track.
+
+---
+
 ## 1. Projekt állapot röviden
 
 | Terület | Állapot | Megjegyzés |
@@ -224,9 +349,42 @@ A részletek `docs/backlog.md`-ben. Rövid:
 
 ## 11. Változásnapló (memory-é, nem kódé)
 
-- **2026-04-19** — Létrehozva a `memory.md`. Első átnézés: a `workspace/`
+- **2026-04-19 (v1)** — Létrehozva a `memory.md`. Első átnézés: a `workspace/`
   hiányzik Linuxon, Docker image megvan, git tiszta, dokumentáció bő és
   naprakész. Elsődleges gyanú a build-hibára: `west.yml` `revision: main`
   + `jazzy` branch drift. Ellenőrzés akkor esedékes, amikor először futtatunk
   `make workspace-init && make build`-ot Linuxon (a tényleges hibaüzenet fog
   döntést diktálni).
+
+- **2026-04-19 (v2)** — Megtörtént a `make workspace-init && make build`.
+  Workspace sikeresen letöltve (Zephyr main v4.4.99, jazzy HEAD), de a build
+  **SDK inkompatibilitáson elbukott**: Zephyr main `find_package(Zephyr-sdk 1.0)`,
+  a Docker image SDK 0.17.4-et szállít. A drift-pont Zephyr v4.3.0 → v4.4.0
+  release között lépett fel (SDK_VERSION 0.17.4 → 1.0.1 bump). A v4.3.0 az
+  utolsó stabil tag, ami kompatibilis a jelenlegi Dockerrel.
+
+- **2026-04-19 (v3)** — User közölte: a W6100 chip W5500 kompatibilis módban
+  is megy IPv4-re, így a W5500 driverrel is működik, és elhagyható az
+  overlay-hack. Elfogadott stratégia: T1 (csak Zephyr pin v4.3.0-ra, W6100
+  driver marad) → T2 (W5500 driverre váltás). micro-ROS jazzy branch marad.
+  `policy.md`-be bekerült a compacting-policy (§6b + §6) a folytonos
+  memóriamentésről.
+
+- **2026-04-19 (v4)** — T1 alkalmazva (v4.3.0 pin), SDK-dfrift megoldva, de
+  új blocker: `CONFIG_ETH_W6100` Kconfig symbol nem létezik v4.3.0-ban.
+  T2 alkalmazva (CONFIG_ETH_W5500 + overlay törlés), új blocker:
+  `zephyr/posix/time.h` hiány v4.3.0-ban. Átpineltük Zephyr-t **v4.2.2**-re
+  (mindkét feltételt kielégíti). Új blocker: `microros_transports.h` bare
+  `posix/sys/socket.h` (jazzy HEAD elfelejtett feltételes include). Patch
+  alkalmazva. Új blocker: `std_srvs/srv/set_bool.h` hiány — `libmicroros.mk`
+  `touch std_srvs/COLCON_IGNORE`. Patch alkalmazva (`touch` → `rm -f`).
+  **Build ZÖLD:** FLASH 431 KB (2.57%), RAM 263432 B (97.45%), UF2 843 KB.
+  Méretben megegyezik a v2.2 README dokumentált értékével.
+
+- **2026-04-19 (v5)** — Stabilizálás: `tools/patches/apply.sh` script
+  létrehozva (idempotens), `Makefile` `apply-patches` target a `build`
+  előfeltétele, `workspace-init` is futtatja. `west.yml` mindkét
+  projektet pin-eli SHA-ra (Zephyr v4.2.2 tag, micro_ros `87dbe3a9`).
+  ERRATA ERR-025..028 rögzítve, backlog BL-001/BL-002 lezárva, BL-009
+  új (upstream PR). Pristine rebuild (`rm -rf workspace` → `make
+  workspace-init` → `make build`) fut, a reprodukálhatóság bizonyítására.
