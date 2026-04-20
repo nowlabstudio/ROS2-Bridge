@@ -100,6 +100,185 @@ _(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
+## BL-015 — Repo restructure: per-device app profile (közös `common/` + `apps/<device>/`)
+
+> **Státusz:** nyitva, elindítandó friss session-ben.
+> **Előfeltétel (teljesítve):** `bl-014-phase1-done` git tag a jelenlegi
+> zöld állapoton (E_STOP 20 Hz, mindhárom device közös `app/`-ból flash-el).
+> **Blocker:** BL-014 Fázis 2 (új E_STOP csatornák) csak ez után indulhat.
+
+### Kontextus és ok
+
+Jelenleg egyetlen Zephyr app (`app/`) fordul mindhárom device-nak (E_STOP,
+RC, PEDAL), a runtime-viselkedést a `devices/<DEVICE>/config.json`
+`channels.*` mezői döntik el (`app/src/user/user_channels.c`
+`register_if_enabled()`). Ez működik, de:
+
+1. **Pin-konfliktus:** a közös `app/boards/w5500_evb_pico.overlay`-ben
+   GP2..GP7 már foglalt `rc_ch1..rc_ch6` aliasokkal, így E_STOP új
+   csatornái (mode GP2/GP3, okgo GP4/GP5, okgo_led GP22) nem férnek be
+   ugyanabba az overlay-be — Zephyr DT nem enged egy pint két `gpio-keys`
+   node-ban.
+2. **RAM feszes:** RP2040 264 KB SRAM 97.45%-on. Nincs tünet, de 3 új
+   publisher/subscriber (Fázis 2) ~4-5 KB extra RAM — épphogy befér. A
+   per-device `prj.conf`-fal kikapcsolhatók E_STOP-on az ADC, PWM-in stb.
+   subsystem-ek (+5-15 KB margó).
+3. **Architekturális tisztaság:** a user kifejezett kérése, hogy minden
+   device "csak a saját funkcionalitását tudja" és ne legyen benne holt kód.
+
+### Cél
+
+Új struktúra (részletes fa: `docs/ARCHITECTURE.md` §4):
+
+```
+common/                     ← shared Zephyr lib (main.c, bridge/, drivers/, config/, shell/)
+apps/estop/                 ← app: CMakeLists + prj.conf + boards/*.overlay + src/
+apps/rc/
+apps/pedal/
+modules/w6100_driver/       ← változatlan
+devices/<DEVICE>/config.json ← változatlan (runtime config)
+Makefile                    ← DEVICE=estop|rc|pedal switch
+```
+
+### Stratégiai megkötések
+
+- **A régi `app/` fa a restructure ALATT a repóban marad** párhuzamosan,
+  de a restructure **befejező commit-jában törlődik**. Nem permanens
+  coexistence — a git tag (`bl-014-phase1-done`) a biztonsági háló.
+- **Minden migrációs lépés után build + flash + smoke teszt** mindhárom
+  device-on, mielőtt a következő lépés indul.
+- **`devices/<DEVICE>/config.json` változatlan** marad (csak ha Fázis 3
+  subnet restore kell, de az BL-014 ügye).
+- **`modules/w6100_driver/` változatlan** — közös out-of-tree modul, az
+  `apps/<device>/CMakeLists.txt` mindegyik beemeli.
+- **`host_ws/` érintetlen** (külön tier).
+- **Ne csinálj közben stílus-refaktorokat** (policy §1: one-thing-at-a-time).
+
+### Munkamenet-nyitó prompt (másold be új session-be)
+
+```text
+Kezdjük a BL-015 (repo restructure) munkát. Olvasd el:
+
+1. policy.md
+2. memory.md §0 (aktuális munkamenet állapot)
+3. docs/backlog.md → BL-015 szekció (ez)
+4. docs/ARCHITECTURE.md § 2 és § 4 (mostani + tervezett fa)
+
+Majd ellenőrizd:
+- git fetch && git tag | grep bl-014-phase1-done   (baseline tag megvan)
+- git status (tiszta fa)
+- make build (jelenlegi app/ még fordul baseline-ként)
+
+Utána kezdd el a migrációt lépésenként, minden lépés végén STOP és jelezd
+az állapotot a usernek, mielőtt a következő lépést indítod.
+```
+
+### Lépésterv (min. 5 commit, mindegyik után build + smoke teszt gate)
+
+**Lépés 1 — `common/` létrehozása (nincs még build változtatás):**
+
+- `common/` könyvtárfa: `src/main.c`, `src/bridge/`, `src/drivers/`,
+  `src/config/`, `src/shell/` — a mostani `app/src/` megfelelő fájljainak
+  **másolata** (nem move, hogy az eredeti app/ még fordítson).
+- `common/CMakeLists.txt` — INTERFACE library vagy zephyr_library stílus,
+  ami `apps/<device>/CMakeLists.txt`-ből hívható.
+- Commit: `refactor(common): extract shared layer from app/ to common/`
+
+**Lépés 2 — `apps/estop/` minimum set + build verifikáció:**
+
+- `apps/estop/CMakeLists.txt` — beemeli `common/`-ot + saját `src/estop.c`,
+  `src/user_channels.c` (csak estop registráció).
+- `apps/estop/prj.conf` — `app/prj.conf` másolata, ezen a ponton még
+  változatlan (subsystem trim majd Fázis 2 előtt).
+- `apps/estop/boards/w5500_evb_pico.overlay` — csak `estop_btn` GP27 +
+  `user_led` GP25 (RC aliasokat elhagyjuk).
+- `apps/estop/src/estop.c` — másolat az `app/src/user/estop.c`-ből.
+- `Makefile` — új `DEVICE ?= estop` változó, `APP_DIR = apps/$(DEVICE)`
+  (a régi `app/` build ideiglenesen `make build-legacy` alatt megmarad).
+- Build: `make build DEVICE=estop`, flash, `bridge config show` működik,
+  `ros2 topic echo /robot/estop` 20 Hz-en jön (reprodukálja BL-014 Fázis 1
+  mérést `tools/estop_measure.py`-vel).
+- Commit: `feat(apps/estop): add per-device app variant (BL-015)`
+
+**Lépés 3 — `apps/rc/`:**
+
+- Ugyanaz a minta: `apps/rc/boards/*.overlay` GP2..GP7 PWM input, `src/rc.c`
+  másolat, `user_channels.c` csak `rc_ch1..6` regisztrál.
+- Build + flash RC boardra + `ros2 topic hz /robot/motor_left` → nem romlott.
+- `tools/rc_measure.py`-val gyors regressziós pass.
+- Commit: `feat(apps/rc): add per-device app variant (BL-015)`
+
+**Lépés 4 — `apps/pedal/`:**
+
+- PEDAL most `test_heartbeat` placeholder-t használ → hozzunk létre saját
+  `apps/pedal/src/pedal.c`-t minimum /heartbeat publisher-rel (`std_msgs/Bool`
+  1 Hz), hogy a test_channels.c-re ne legyen szükség.
+- `apps/pedal/boards/*.overlay` — pedal ADC pinek (ld. drv_adc.c).
+- Build + flash PEDAL boardra + `ros2 topic echo /robot/heartbeat` OK.
+- Commit: `feat(apps/pedal): add per-device app variant with pedal.c (BL-015)`
+
+**Lépés 5 — régi `app/` törlés + `common/` tisztítás:**
+
+- Mindhárom device a saját `apps/<device>/`-ből flash-elhető és működik.
+- `git rm -r app/` — a régi fa eltűnik.
+- `common/src/user/test_channels.{c,h}` törlés (ha még megvan; dev helper,
+  pedal.c leváltotta).
+- `Makefile` — `make build-legacy` target törlése, `DEVICE ?= estop` default.
+- `docs/ARCHITECTURE.md` §2 frissítés (jelenlegi → tervezett fa becserélés).
+- Commit: `refactor(repo): remove legacy app/ after per-device migration (BL-015)`
+
+### Smoke teszt checklist (minden lépés után)
+
+- [ ] `make build DEVICE=<x>` exit 0
+- [ ] UF2 fájl megvan (`workspace/build/zephyr/zephyr.uf2`)
+- [ ] Flash-elés kézi BOOTSEL-lel OK (a soft bootsel-hiba külön ERR)
+- [ ] `bridge config show` serial shell-ből OK
+- [ ] `ros2 node list` mutatja a device nodeját
+- [ ] device-specifikus topic olvasható / írható
+
+### Megtartott assumption-ök (ne módosítsd BL-015 során)
+
+- micro-ROS v Jazzy, Zephyr v4.2.2 pin (west.yml).
+- W6100 driver out-of-tree (BL-010), MACRAW mode.
+- `config.c` LittleFS `/lfs/config.json` séma.
+- `channel_t` descriptor séma + `register_if_enabled()` pattern.
+- `rclc_executor` handle count: `sub_count + PARAM_SERVER_HANDLES + service_count()`.
+
+### Risk register
+
+1. **Zephyr CMake misconfig** (a leggyakoribb hiba): `zephyr_library` vs
+   `target_sources(app …)` keverés. Ha lépés 1 után build breaks a régi
+   `app/`-ban, az azt jelenti, hogy a copy-t accident-eltük el move-nak.
+2. **Overlay DT konfliktus** lépés 2-ben, ha véletlenül minden alias belekerül:
+   csak a ténylegesen használt `gpio-keys` node-ok maradjanak meg.
+3. **rcl session init fail** (`rclc_executor_init error`) ha a handle count
+   nem stimmel → `common/main.c` `service_count()` számolás per-device OK.
+4. **FLASH size break:** apps/<device>/ prj.conf trim után a micro-ROS
+   kliens library relinkelődik — figyelj a `west build` cache invalidálásra
+   (`west build -t pristine` ha gyanús).
+
+### Érintett fájlok (várható)
+
+- `common/**/*` (új)
+- `apps/estop/**/*`, `apps/rc/**/*`, `apps/pedal/**/*` (új)
+- `Makefile` (DEVICE switch)
+- `docs/ARCHITECTURE.md` (frissítés)
+- `docs/CHANGELOG_DEV.md`, `memory.md` (napló)
+- `app/**/*` (törlés az utolsó commitban)
+
+### Definition of Done
+
+- Mindhárom device a saját `apps/<device>/`-ből flash-elhető egy
+  `make build DEVICE=<x>` paranccsal.
+- E_STOP 20 Hz rate reprodukálva (BL-014 Fázis 1 mérés nem regressziózott).
+- RC csatornák helyesek (rc_measure.py nem jelez anomáliát).
+- PEDAL saját `pedal.c`-vel fut, `test_channels.c` törölve.
+- Régi `app/` fa eltávolítva a main branchről.
+- `docs/ARCHITECTURE.md` § 2 frissítve (jelenlegi = új struktúra).
+- Tag: `bl-015-done`, hogy BL-014 Fázis 2 innen induljon.
+
+---
+
 ## BL-014 — E-stop bridge: kiolvasási ráta mérés/tuning + új input/output csatornák
 
 - **Kontextus:** Az E-stop bridge jelenleg `app/src/user/estop.c` — `period_ms =
@@ -143,13 +322,12 @@ _(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
   30 s edge teszt: 42 edge (21 PRESSED + 21 RELEASED), mindegyik edge→publish
   6.3…52 ms gap.
 
-**Fázis 2 — Új input/output csatornák + per-board overlay:**
+**Fázis 2 — Új input/output csatornák (BLOCKED: előfeltétel BL-015):**
 
-- **Per-board overlay stratégia (A):** külön overlay-fájl device-onként
-  (`boards/w5500_evb_pico_estop.overlay`, `_rc.overlay`, `_pedal.overlay`) +
-  Makefile switch (`BOARD_DEVICE={E_STOP|RC|PEDAL}`), mert a közös overlay
-  GP2..GP7 az RC bridge-nek van lefoglalva és a DT nem engedi ugyanazt a
-  pint két `gpio-keys` node alatt.
+> Ezen fázis elindítása előtt a repo restructure-nek (BL-015) meg kell lennie,
+> hogy az új E_STOP csatornák (GP2/GP3/GP4/GP5/GP22) ne ütközzenek az RC
+> overlay-ben már foglalt GP2..GP7-tel. BL-015 után ez a fázis `apps/estop/`
+> alatt megy.
 - **Új csatornák:**
   - `mode` — `std_msgs/Int32`, GP2 + GP3 olvasás, enum 0/1/2 (learn/follow/auto),
     IRQ mindkét pinre (edge-both), `read()` logika: ha GP2=0 → 2, ha GP3=0 →
