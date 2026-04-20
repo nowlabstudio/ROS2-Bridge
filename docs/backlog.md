@@ -388,6 +388,33 @@ az állapotot a usernek, mielőtt a következő lépést indítod.
 
 ---
 
+## BL-016 — `devices/*/config.json` orphan key cleanup (BL-015 follow-up)
+
+- **Kontextus:** A BL-015 előtt egyetlen közös `app/` bináris futott minden device-on,
+  ezért a `devices/<DEVICE>/config.json` `channels:` szekcióban minden device
+  csatornája szerepelt (estop, test_*, rc_ch1..6) — runtime config döntött
+  arról, hogy az adott device ténylegesen melyiket regisztrálja. BL-015 után
+  a per-device bináris (`apps/<device>/`) csak a saját csatornáit ismeri, a
+  többi kulcs orphan: ártalmatlan (`config_channel_enabled` egyszerűen ignorálja
+  ismeretlen channel-name esetén), de zavaró és hibalehetőség.
+- **Cleanup tartalom:**
+  - `devices/E_STOP/config.json`: csak `estop` (és BL-014 Fázis 2 után: `mode`,
+    `okgo`, `okgo_led`) maradjon — `test_*`, `rc_*` törlése.
+  - `devices/RC/config.json`: csak `rc_ch1..6` (object form a topic-aliasokkal)
+    maradjon — `test_*`, `estop` törlése.
+  - `devices/PEDAL/config.json`: csak `pedal_heartbeat` maradjon — `test_*`,
+    `estop`, `rc_*` törlése. (A jelenlegi `test_heartbeat: true` orphan kulcs
+    helyett az új csatorna-név kerüljön be: `pedal_heartbeat: true`.)
+- **Sorrend:** BL-014 Fázis 2 (E_STOP új csatornák) UTÁN érdemes elvégezni,
+  hogy az E_STOP cleanup egy lépésben tudja a végleges csatorna-listát.
+- **Érintett fájlok:** `devices/E_STOP/config.json`, `devices/RC/config.json`,
+  `devices/PEDAL/config.json`.
+- **Smoke gate:** mind a 3 device flash + `ros2 topic list` + `ros2 topic echo`
+  saját topic-okra (jelenleg dokumentálva: `/robot/estop`, `/robot/heartbeat`,
+  RC topic-ok).
+
+---
+
 ## Lezárt tételek
 
 ### BL-001 — `west.yml` pinelése — LEZÁRVA 2026-04-19
