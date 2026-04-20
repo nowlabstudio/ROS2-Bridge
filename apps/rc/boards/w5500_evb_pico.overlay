@@ -1,0 +1,73 @@
+/*
+ * apps/rc/boards/w5500_evb_pico.overlay — RC-only board overlay (BL-015 step 3).
+ *
+ * Szándékosan csak az RC funkcióhoz szükséges pin-ek vannak deklarálva:
+ *   - rc_ch1..6  GP2..GP7 — PWM input csatornák (edge-both IRQ a drv_pwm_in-ben)
+ *   - user_led   GP25     — link / RC-active visszajelzés (közös funkció)
+ *
+ * NEM kerül ide: estop_btn (GP27), relay_brake (GP14), ADC csatorna —
+ * ezeket az E_STOP/PEDAL device-ok tartalmazzák, és így pin-konfliktus
+ * nélkül szabadon mozognak.
+ *
+ * Ethernet: a board default w5500-ot köt a &ethernet node-ra, itt
+ * felülírjuk W6100-ra (out-of-tree driver: modules/w6100_driver/).
+ *
+ * LittleFS: a config.json perzisztens tárolása a flash utolsó 1 MB-jában
+ * (offset 15 MB) — szükséges a `bridge config` shell parancsokhoz.
+ */
+
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led_0 {
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+			label = "User LED (GP25)";
+		};
+	};
+
+	rc_inputs {
+		compatible = "gpio-keys";
+
+		rc_ch1: rc_ch1 { gpios = <&gpio0 2 0>; label = "RC CH1 (GP2)"; };
+		rc_ch2: rc_ch2 { gpios = <&gpio0 3 0>; label = "RC CH2 (GP3)"; };
+		rc_ch3: rc_ch3 { gpios = <&gpio0 4 0>; label = "RC CH3 (GP4)"; };
+		rc_ch4: rc_ch4 { gpios = <&gpio0 5 0>; label = "RC CH4 (GP5)"; };
+		rc_ch5: rc_ch5 { gpios = <&gpio0 6 0>; label = "RC CH5 (GP6)"; };
+		rc_ch6: rc_ch6 { gpios = <&gpio0 7 0>; label = "RC CH6 (GP7)"; };
+	};
+
+	aliases {
+		led0   = &user_led;
+		rc-ch1 = &rc_ch1;
+		rc-ch2 = &rc_ch2;
+		rc-ch3 = &rc_ch3;
+		rc-ch4 = &rc_ch4;
+		rc-ch5 = &rc_ch5;
+		rc-ch6 = &rc_ch6;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&ethernet {
+	compatible = "wiznet,w6100";
+};
+
+/* LittleFS storage partition — last 1MB of flash (offset 15MB) */
+&flash0 {
+	partitions {
+		storage_partition: partition@f00000 {
+			label = "storage";
+			reg = <0x00f00000 0x00100000>;
+		};
+	};
+};
