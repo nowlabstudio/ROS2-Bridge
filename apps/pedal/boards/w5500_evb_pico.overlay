@@ -1,0 +1,55 @@
+/*
+ * apps/pedal/boards/w5500_evb_pico.overlay — PEDAL board overlay (BL-015 step 4).
+ *
+ * Szándékosan minimális:
+ *   - user_led GP25 — link / heartbeat-active visszajelzés (közös funkció)
+ *
+ * Pin-allokáció szabad — a PEDAL hardware még nincs definiálva a backlog-ban.
+ * NEM kerül ide: estop_btn (GP27), rc_inputs (GP2..GP7), relay_brake (GP14),
+ * ADC csatorna — ezeket az E_STOP/RC device-ok tartalmazzák.
+ *
+ * Ethernet: a board default w5500-ot köt a &ethernet node-ra, itt
+ * felülírjuk W6100-ra (out-of-tree driver: modules/w6100_driver/).
+ *
+ * LittleFS: a config.json perzisztens tárolása a flash utolsó 1 MB-jában
+ * (offset 15 MB) — szükséges a `bridge config` shell parancsokhoz.
+ */
+
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led_0 {
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+			label = "User LED (GP25)";
+		};
+	};
+
+	aliases {
+		led0 = &user_led;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&ethernet {
+	compatible = "wiznet,w6100";
+};
+
+/* LittleFS storage partition — last 1MB of flash (offset 15MB) */
+&flash0 {
+	partitions {
+		storage_partition: partition@f00000 {
+			label = "storage";
+			reg = <0x00f00000 0x00100000>;
+		};
+	};
+};
