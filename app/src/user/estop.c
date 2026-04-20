@@ -49,8 +49,15 @@ const channel_t estop_channel = {
 	.topic_pub   = "estop",
 	.topic_sub   = NULL,
 	.msg_type    = MSG_BOOL,
-	.period_ms   = 500,       /* periodic fallback, even without edge */
-	.irq_capable = true,      /* immediate publish on GPIO edge       */
+	/*
+	 * 20 Hz fallback = 50 ms — safety heartbeat a subscriber
+	 * stale-detekciójához. Az állapot-váltásokra irq_capable=true miatt
+	 * IRQ-alapú azonnali publish érkezik (<1 ms), a period csak a live
+	 * signal. 20 Hz konzisztens az RC switch rate-tel (BL-011, memory §6).
+	 * BL-014 Fázis 1 méréssel igazolva (2026-04-20): 500 ms → 50 ms.
+	 */
+	.period_ms   = 50,
+	.irq_capable = true,
 	.init        = estop_init,
 	.read        = estop_read,
 	.write       = NULL,

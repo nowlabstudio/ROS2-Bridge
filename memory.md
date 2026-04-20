@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-19 (BL-010 end-to-end zöld, ERR-031 lezárva)
+> Utolsó frissítés: 2026-04-20 (BL-014 Fázis 1 lezárva — E-stop 2 Hz → 20 Hz)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -13,6 +13,51 @@
 > Ez a szekció a legutolsó munkamenet pontos állapotát rögzíti, hogy egy
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
+
+### Munkamenet: 2026-04-20 — BL-014 Fázis 1 LEZÁRVA (E-stop rate tuning)
+
+**Állapot:** Fázis 1 commit+push után. Következik Fázis 2 (új input/output
+csatornák + per-device overlay).
+
+**Eredmény (mért, `logs/estop_20260420_*_summary.csv`):**
+
+| metrika | before (`period_ms=500`) | after (`period_ms=50`) |
+|---|---|---|
+| effektív rate | 2.46 Hz | **20.47 Hz** (+8.3×) |
+| gap median | 476 ms | **50 ms** |
+| gap max | 614 ms | **53 ms** |
+| gap p99 | 608 ms | **52 ms** |
+| gap std | 196 ms | **7.4 ms** |
+| gap min (IRQ) | 0.77 ms | 0.77 ms |
+
+30 s-os gombnyomásos teszt: 42 edge (21 PRESSED + 21 RELEASED) — IRQ
+fast-path edge→publish 6.3…52 ms. `period_ms=50` 20 Hz = konzisztens RC
+switch rate-tel (BL-011). `DEBOUNCE_MS=50` változatlan.
+
+**Repo-állapot (commit után):**
+
+- `app/src/user/estop.c` — `period_ms = 50` + magyar komment BL-014 refsszel.
+- `tools/estop_measure.py` — új mérőeszköz (`rc_measure.py` mintájára),
+  `stream` + `compare` subcommand; CSV-k `logs/` alatt (`.gitignore`-olva).
+- `docs/backlog.md` — BL-014 3 fázisra bontva, Fázis 1 lezárható.
+- `devices/E_STOP/config.json` — **nem lett commitolva**: dev subnetre van
+  állítva (`192.168.68.203`, DHCP, agent `192.168.68.125`) csak a mérés
+  idejére. Fázis 3 végén visszaáll prod-ra (`10.0.10.23`, dhcp=false),
+  akkor jön commit (BL-013 mintájára).
+
+**Nyitott ERR kandidátus (BL-014 záráskor ERR-be veendő):**
+
+1. `bridge bootsel` shell parancs kiírja "Entering USB bootloader..." majd
+   `reset_usb_boot(0,0)` hívódik, de a Pico **nem megy át BOOTSEL-be** (USB
+   re-enum nem történik, ugyanaz a VID `2fe3:0100` marad). Fizikai BOOTSEL
+   gombnyomás kell. Zephyr pico_bootrom integráció gyanús. Érintett:
+   `app/src/shell/shell_cmd.c:157` `cmd_bootsel`.
+2. PEDAL teszt-boardon `test_heartbeat: true` esetén `rclc_executor_init
+   error` retry loop — 2 s-os ciklus, puffer overflow. Handle count gyanús
+   (`sub_count + PARAM_SERVER_HANDLES + service_count()`). Érintett:
+   `app/src/user/test_channels.c`, `app/src/main.c`.
+
+---
 
 ### Munkamenet: 2026-04-19 — BL-010 + ERR-031 lezárva, micro-ROS end-to-end zöld
 

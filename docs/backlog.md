@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-20 (BL-011 RC EMA tuning lezárva; BL-012 GPIO placeholders, BL-013 RC subnet restore nyitva)
+> Utolsó frissítés: 2026-04-20 (BL-014 E-stop rate + input/output kiegészítés nyitva)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -97,6 +97,95 @@ _(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
 - **Érintett fájlok:** `devices/RC/config.json`, `app/src/config/config.{c,h}`,
   `app/src/user/gpio_publish.{c,h}` (új), `app/boards/w5500_evb_pico.overlay`,
   `app/CMakeLists.txt`, `app/prj.conf` (ADC / GPIO konfig), `README.md` §RC config.
+
+---
+
+## BL-014 — E-stop bridge: kiolvasási ráta mérés/tuning + új input/output csatornák
+
+- **Kontextus:** Az E-stop bridge jelenleg `app/src/user/estop.c` — `period_ms =
+  500` (2 Hz fallback), `irq_capable = true` (50 ms debounce, edge-both IRQ).
+  A user jelzése szerint a ROS oldalon tapasztalt kiolvasási sebesség túl
+  alacsonynak tűnik (~1 Hz), a cél 10–20 Hz lenne. Emellett az E-stop board
+  kap **három új GPIO funkciót**:
+  - 3-állású forgókapcsoló (`follow` = GP3 aktív low, `learn` = közép, nincs
+    aktív pin, `auto` = GP2 aktív low) → **1 `std_msgs/Int32` topic**, enum
+    értékek `0 = learn, 1 = follow, 2 = auto`.
+  - okgo nyomógomb (off-stabil) — **safety 2-pin AND**: GP4 ÉS GP5 egyszerre
+    aktív low. Mindkét pinre IRQ, `read()` AND-olja.
+  - okgo LED — GP22 aktív high (output, ROS→firmware). Subscribe Bool.
+- **Ok:** Az estop reakcióidő biztonsági funkció — a lassú rate csökkenti a
+  rendszer hatékonyságát; a 3-állású kapcsoló és az okgo gomb az üzemmód-
+  választást és az engedélyező biztonsági láncot képezi; az LED operátor-
+  visszajelzés.
+
+### Scope — fázisokra bontva
+
+**Fázis 1 — E-stop latency mérés + rate tuning (LEZÁRVA 2026-04-20):**
+
+- `tools/estop_measure.py` (új, commit) — rclpy subscriber
+  `std_msgs/Bool /robot/estop`, `stream` + `compare` subcommand; CSV
+  summary + raw (`logs/estop_<ts>_<label>_*.csv`).
+- `app/src/user/estop.c` — `period_ms 500 → 50` (20 Hz fallback); IRQ
+  fast-path változatlan (`irq_capable=true`, `DEBOUNCE_MS=50`).
+- `devices/E_STOP/config.json` ideiglenesen dev subnetre (`192.168.68.203`,
+  DHCP, agent `192.168.68.125`) — **nincs commitolva**, Fázis 3 végén áll
+  vissza prod subnetre (BL-013 pattern).
+- **Mért eredmény** (15 s idle + 30 s edge teszt):
+
+  | metrika | before (500 ms) | after (50 ms) |
+  |---|---|---|
+  | effektív rate | 2.46 Hz | **20.47 Hz** (+8.3×) |
+  | gap median | 476 ms | **50 ms** |
+  | gap p99 | 608 ms | **52 ms** |
+  | gap std | 196 ms | **7.4 ms** |
+  | IRQ min-gap | 0.77 ms | 0.77 ms |
+
+  30 s edge teszt: 42 edge (21 PRESSED + 21 RELEASED), mindegyik edge→publish
+  6.3…52 ms gap.
+
+**Fázis 2 — Új input/output csatornák + per-board overlay:**
+
+- **Per-board overlay stratégia (A):** külön overlay-fájl device-onként
+  (`boards/w5500_evb_pico_estop.overlay`, `_rc.overlay`, `_pedal.overlay`) +
+  Makefile switch (`BOARD_DEVICE={E_STOP|RC|PEDAL}`), mert a közös overlay
+  GP2..GP7 az RC bridge-nek van lefoglalva és a DT nem engedi ugyanazt a
+  pint két `gpio-keys` node alatt.
+- **Új csatornák:**
+  - `mode` — `std_msgs/Int32`, GP2 + GP3 olvasás, enum 0/1/2 (learn/follow/auto),
+    IRQ mindkét pinre (edge-both), `read()` logika: ha GP2=0 → 2, ha GP3=0 →
+    1, egyébként 0. Debounce: 30 ms (rotary switch tipikus).
+  - `okgo` — `std_msgs/Bool`, GP4 ÉS GP5 AND, mindkét pinre IRQ,
+    `read()` = `(gp4==0) && (gp5==0)`.
+  - `okgo_led` — `std_msgs/Bool`, GP22 output, ROS subscribe → `drv_gpio_write`.
+    Új `drv_gpio_setup_output()` helper kell (most csak `setup_irq` van).
+- Topic javasolt: `/robot/mode`, `/robot/okgo`, `/robot/okgo_led` (config-
+  remap-elhetők).
+- `devices/E_STOP/config.json` — új csatornák engedélyezése (`mode: true,
+  okgo: true, okgo_led: true`).
+- `config.h` — `CFG_MAX_CHANNELS = 12` jelenleg, az E_STOP most 11 csatornát
+  használ → belefér.
+
+**Fázis 3 — Teszt + dokumentálás:**
+
+- ROS2 shell: `ros2 topic echo /robot/estop`, `/robot/mode`, `/robot/okgo`,
+  `ros2 topic pub /robot/okgo_led std_msgs/Bool "data: true"`.
+- E-stop latency utó-mérés az új rate-tel.
+- Visszaállás prod subnetre (`devices/E_STOP/config.json` — statikus
+  `10.0.10.23`, `dhcp=false`).
+
+### Érintett fájlok
+
+- `app/src/user/estop.c` (period_ms tune; Fázis 1)
+- `app/src/drivers/drv_gpio.{c,h}` (output support; esetleg debounce tune)
+- `app/src/user/mode.{c,h}` (új; Fázis 2)
+- `app/src/user/okgo.{c,h}` (új; Fázis 2)
+- `app/src/user/okgo_led.{c,h}` (új; Fázis 2)
+- `app/src/user/user_channels.c` (új csatornák regisztrálása)
+- `app/boards/w5500_evb_pico_{estop,rc,pedal}.overlay` (új; Fázis 2)
+- `Makefile` (board/device switch; Fázis 2)
+- `devices/E_STOP/config.json` (dev subnet tesztre, új csatornák)
+- `tools/estop_measure.py` (új; Fázis 1)
+- `memory.md`, `CHANGELOG_DEV.md`, `ERRATA.md` (ha új ERR-k jönnek)
 
 ---
 
