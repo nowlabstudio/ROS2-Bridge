@@ -11,7 +11,16 @@ endif
 
 PROJECT_DIR := $(shell pwd)
 WORKSPACE   := $(PROJECT_DIR)/workspace
-APP_DIR     := $(PROJECT_DIR)/app
+
+# BL-015 (per-device app restructure): minden device a saját apps/<device>/
+# variantját buildeli. A `make build` a $(DEVICE) változó alapján a megfelelő
+# apps/<device>/-t mountolja. A régi közös app/ továbbra is fordítható a
+# `make build-legacy` targettel — a BL-015 step 5-ben törlődik, miután
+# mindhárom device migrálva van (estop, rc, pedal).
+DEVICE         ?= estop
+APP_DIR        := $(PROJECT_DIR)/apps/$(DEVICE)
+LEGACY_APP_DIR := $(PROJECT_DIR)/app
+
 HOST_WS     := $(PROJECT_DIR)/host_ws
 
 # ==============================================================
@@ -53,6 +62,21 @@ build: apply-patches
 	docker run --rm \
 		-v $(WORKSPACE):/workdir \
 		-v $(APP_DIR):/workdir/app \
+		-v $(PROJECT_DIR):/repo:ro \
+		-e W6100_MODULE_DIR=/repo/modules/w6100_driver \
+		-e COMMON_DIR=/repo/common \
+		$(DOCKER_IMG) bash -c "\
+			cd /workdir && \
+			west build -b $(BOARD) app --pristine=always"
+
+# BL-015 step 2..4 közben: a régi közös app/ build, hogy a migráció lépésein
+# át regressziósan ellenőrizhető legyen (smoke gate). Step 5-ben ez a target
+# és a hozzá tartozó app/ fa is törlődik.
+.PHONY: build-legacy
+build-legacy: apply-patches
+	docker run --rm \
+		-v $(WORKSPACE):/workdir \
+		-v $(LEGACY_APP_DIR):/workdir/app \
 		$(DOCKER_IMG) bash -c "\
 			cd /workdir && \
 			west build -b $(BOARD) app --pristine=always"
@@ -190,10 +214,11 @@ portainer-stop:
 help:
 	@echo ""
 	@echo "  ── Zephyr Firmware (Tier 1 — Pico MCU) ──"
-	@echo "  make docker-build    - Build Docker image (once)"
-	@echo "  make workspace-init  - Download Zephyr workspace (~2GB, once)"
-	@echo "  make build           - Build firmware"
-	@echo "  make flash           - Flash via OpenOCD"
+	@echo "  make docker-build         - Build Docker image (once)"
+	@echo "  make workspace-init       - Download Zephyr workspace (~2GB, once)"
+	@echo "  make build [DEVICE=estop] - Build per-device firmware (apps/<DEVICE>/)"
+	@echo "  make build-legacy         - Build legacy common app/ (BL-015 transition)"
+	@echo "  make flash                - Flash via OpenOCD"
 	@echo "  make flash-uf2       - Show UF2 file location"
 	@echo "  make monitor         - Serial monitor 115200 baud"
 	@echo "  make shell           - Open Docker shell"

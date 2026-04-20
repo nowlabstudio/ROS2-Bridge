@@ -1,0 +1,67 @@
+/*
+ * apps/estop/boards/w5500_evb_pico.overlay — E_STOP-only board overlay (BL-015 step 2).
+ *
+ * Szándékosan csak az E_STOP funkcióhoz szükséges pin-ek vannak deklarálva:
+ *   - estop_btn  GP27 — NC gomb (GND felé kötve, pull-up), edge-both IRQ
+ *   - user_led   GP25 — operátor visszajelzés
+ *
+ * A régi közös app/boards/w5500_evb_pico.overlay-ben szereplő rc_ch1..6
+ * (GP2..GP7), relay_brake (GP14), és az ADC csatorna NEM kerül ide — így
+ * BL-014 Fázis 2 új E_STOP csatornái (mode GP2/GP3, okgo GP4/GP5, okgo_led
+ * GP22) szabad pineken jöhetnek majd be, pin-konfliktus nélkül.
+ *
+ * Ethernet: a board default w5500-ot köt a &ethernet node-ra, itt
+ * felülírjuk W6100-ra (out-of-tree driver: modules/w6100_driver/).
+ *
+ * LittleFS: a config.json perzisztens tárolása a flash utolsó 1 MB-jában
+ * (offset 15 MB) — szükséges a `bridge config` shell parancsokhoz.
+ */
+
+/ {
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,shell-uart = &cdc_acm_uart0;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		user_led: led_0 {
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+			label = "User LED (GP25)";
+		};
+	};
+
+	gpio_channels {
+		compatible = "gpio-keys";
+
+		estop_btn: estop_btn {
+			gpios = <&gpio0 27 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "E-Stop button (NC)";
+		};
+	};
+
+	aliases {
+		led0      = &user_led;
+		estop-btn = &estop_btn;
+	};
+};
+
+&zephyr_udc0 {
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&ethernet {
+	compatible = "wiznet,w6100";
+};
+
+/* LittleFS storage partition — last 1MB of flash (offset 15MB) */
+&flash0 {
+	partitions {
+		storage_partition: partition@f00000 {
+			label = "storage";
+			reg = <0x00f00000 0x00100000>;
+		};
+	};
+};

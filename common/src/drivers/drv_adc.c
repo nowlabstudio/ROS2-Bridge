@@ -3,8 +3,18 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/adc.h>
+#include <zephyr/devicetree.h>
 
 LOG_MODULE_REGISTER(drv_adc, LOG_LEVEL_INF);
+
+/*
+ * BL-015: a per-device overlay-ek nem feltétlenül definiálnak ADC csatornát
+ * (E_STOP, RC nem használ ADC-t). Ha a `chosen.zephyr,user.io-channels`
+ * deklaráció hiányzik, akkor a teljes ADC implementációt eldobjuk —
+ * a libapp ekkor nem hivatkozik az adc_battery_channel symbol-ra sem,
+ * így a per-device user_channels.c-nek nem kell róla tudnia.
+ */
+#if DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels)
 
 /* ------------------------------------------------------------------ */
 /*  Hardware configuration                                             */
@@ -81,3 +91,5 @@ const channel_t adc_battery_channel = {
 	.read        = adc_battery_read,
 	.write       = NULL,
 };
+
+#endif /* DT_NODE_HAS_PROP(DT_PATH(zephyr_user), io_channels) */

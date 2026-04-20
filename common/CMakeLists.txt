@@ -3,33 +3,35 @@
 # Beemelési minta az apps/<device>/CMakeLists.txt-ből:
 #
 #     add_subdirectory(
-#         ${CMAKE_CURRENT_SOURCE_DIR}/../../common
+#         $ENV{COMMON_DIR}
 #         ${CMAKE_CURRENT_BINARY_DIR}/common)
 #
-# A user/ réteg NEM közös: minden device a saját apps/<device>/src/-jében
-# definiálja a register_if_enabled() hívásokat és a csatorna-implementációkat.
+# A user/ réteg NEM közös (csak a user/user_channels.h interface header):
+# minden device a saját apps/<device>/src/-jében definiálja a
+# user_register_channels() implementációt és a csatorna-objektumokat.
 #
-# BL-015 step 1 állapot: ez a fájl még NINCS hívva sehonnan — csak akkor
-# aktivizálódik, amikor az első apps/<device>/ létrejön (step 2). A régi app/
-# build érintetlen.
+# Build mód: NINCS önálló zephyr_library — minden közös .c fájlt a
+# `app` Zephyr default target-hez fűzünk (target_sources(app PRIVATE ...)),
+# mint a régi app/-ban. Indok: a libmicroros és littlefs header-eket csak
+# az `app` target kapja meg automatikusan a Zephyr build kontextusból; egy
+# új zephyr_library_named(...) target nem örökli ezeket, és minden közös
+# include-ot (rcl/rcl.h, lfs.h, stb.) manuálisan kéne be propagálni.
 
-zephyr_library_named(w6100_bridge_common)
-
-zephyr_library_sources(
-    src/main.c
-    src/config/config.c
-    src/shell/shell_cmd.c
-    src/bridge/channel_manager.c
-    src/bridge/diagnostics.c
-    src/bridge/param_server.c
-    src/bridge/service_manager.c
-    src/drivers/drv_gpio.c
-    src/drivers/drv_adc.c
-    src/drivers/drv_pwm_in.c
+target_sources(app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/config/config.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/shell/shell_cmd.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge/channel_manager.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge/diagnostics.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge/param_server.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge/service_manager.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_gpio.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_adc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in.c
 )
 
 # A modulonkénti header-ek a src/<modul>/ mellett laknak (channel.h,
-# config.h, drv_*.h, ...). Globálisan elérhetővé tesszük, hogy a per-device
-# user_channels.c is megtalálja őket — ugyanaz a használati minta, mint a
-# régi app/-ban a `target_include_directories(app PRIVATE src)`.
-zephyr_include_directories(src)
+# config.h, drv_*.h, user/user_channels.h ...). Hozzáadjuk az `app` target
+# include path-jaihoz, így a per-device user_channels.c is megtalálja őket
+# (#include "bridge/...", "user/user_channels.h", stb.).
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
