@@ -1,14 +1,16 @@
 /*
- * apps/estop/boards/w5500_evb_pico.overlay — E_STOP-only board overlay (BL-015 step 2).
+ * apps/estop/boards/w5500_evb_pico.overlay — E_STOP-only board overlay.
  *
- * Szándékosan csak az E_STOP funkcióhoz szükséges pin-ek vannak deklarálva:
- *   - estop_btn  GP27 — NC gomb (GND felé kötve, pull-up), edge-both IRQ
- *   - user_led   GP25 — operátor visszajelzés
- *
- * A régi közös app/boards/w5500_evb_pico.overlay-ben szereplő rc_ch1..6
- * (GP2..GP7), relay_brake (GP14), és az ADC csatorna NEM kerül ide — így
- * BL-014 Fázis 2 új E_STOP csatornái (mode GP2/GP3, okgo GP4/GP5, okgo_led
- * GP22) szabad pineken jöhetnek majd be, pin-konfliktus nélkül.
+ * Pin-kiosztás (BL-014 Fázis 2 bővítéssel):
+ *   - estop_btn   GP27 — NC gomb (GND felé kötve, pull-up), edge-both IRQ
+ *   - mode_auto   GP2  — 3-állású rotary, aktív low = "auto"
+ *   - mode_follow GP3  — 3-állású rotary, aktív low = "follow"
+ *                         (egyik sem aktív → "learn")
+ *   - okgo_btn_a  GP4  — safety nyomógomb pin A, aktív low
+ *   - okgo_btn_b  GP5  — safety nyomógomb pin B, aktív low
+ *                         (read() AND-olja a két pint)
+ *   - okgo_led    GP22 — operátor visszajelzés (output, aktív high)
+ *   - user_led    GP25 — bridge online indikátor (common/src/main.c)
  *
  * Ethernet: a board default w5500-ot köt a &ethernet node-ra, itt
  * felülírjuk W6100-ra (out-of-tree driver: modules/w6100_driver/).
@@ -29,6 +31,10 @@
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
 			label = "User LED (GP25)";
 		};
+		okgo_led: okgo_led {
+			gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
+			label = "OK-Go LED (GP22)";
+		};
 	};
 
 	gpio_channels {
@@ -38,11 +44,32 @@
 			gpios = <&gpio0 27 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 			label = "E-Stop button (NC)";
 		};
+		mode_auto: mode_auto {
+			gpios = <&gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "Mode rotary: auto";
+		};
+		mode_follow: mode_follow {
+			gpios = <&gpio0 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "Mode rotary: follow";
+		};
+		okgo_btn_a: okgo_btn_a {
+			gpios = <&gpio0 4 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "OK-Go button pin A";
+		};
+		okgo_btn_b: okgo_btn_b {
+			gpios = <&gpio0 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			label = "OK-Go button pin B";
+		};
 	};
 
 	aliases {
-		led0      = &user_led;
-		estop-btn = &estop_btn;
+		led0        = &user_led;
+		estop-btn   = &estop_btn;
+		mode-auto   = &mode_auto;
+		mode-follow = &mode_follow;
+		okgo-btn-a  = &okgo_btn_a;
+		okgo-btn-b  = &okgo_btn_b;
+		okgo-led    = &okgo_led;
 	};
 };
 

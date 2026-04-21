@@ -75,6 +75,27 @@ int drv_gpio_setup_irq(int channel_idx, gpio_channel_cfg_t *cfg)
 	return 0;
 }
 
+int drv_gpio_setup_output(gpio_channel_cfg_t *cfg)
+{
+	if (!cfg) {
+		return -EINVAL;
+	}
+
+	if (!device_is_ready(cfg->spec.port)) {
+		LOG_ERR("GPIO device not ready: %s", cfg->spec.port->name);
+		return -ENODEV;
+	}
+
+	int rc = gpio_pin_configure_dt(&cfg->spec, GPIO_OUTPUT_INACTIVE);
+	if (rc < 0) {
+		LOG_ERR("GPIO output configure error: %d", rc);
+		return rc;
+	}
+
+	LOG_INF("GPIO OUT configured: pin %d", cfg->spec.pin);
+	return 0;
+}
+
 int drv_gpio_read(const gpio_channel_cfg_t *cfg)
 {
 	if (!cfg) {

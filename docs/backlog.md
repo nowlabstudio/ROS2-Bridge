@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-20 (BL-014 E-stop rate + input/output kiegészítés nyitva)
+> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 input hw-teszt zöld; BL-017 — okgo_led sub nem fut — nyitva)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -322,48 +322,73 @@ az állapotot a usernek, mielőtt a következő lépést indítod.
   30 s edge teszt: 42 edge (21 PRESSED + 21 RELEASED), mindegyik edge→publish
   6.3…52 ms gap.
 
-**Fázis 2 — Új input/output csatornák (BLOCKED: előfeltétel BL-015):**
+**Fázis 2 — Új input/output csatornák (FIRMWARE LEZÁRVA 2026-04-21):**
 
-> Ezen fázis elindítása előtt a repo restructure-nek (BL-015) meg kell lennie,
-> hogy az új E_STOP csatornák (GP2/GP3/GP4/GP5/GP22) ne ütközzenek az RC
-> overlay-ben már foglalt GP2..GP7-tel. BL-015 után ez a fázis `apps/estop/`
-> alatt megy.
-- **Új csatornák:**
+A BL-015 restructure lezárása után a Fázis 2 unblocked volt; a commit
+alatt mind a 3 új csatorna firmware oldalon él és fordul az `apps/estop/`
+app-ban (build zöld, RAM 97.42%, FLASH 2.57%). A DT overlay új alias-okat
+deklarál a szabad pineken (mode-auto GP2, mode-follow GP3, okgo-btn-a GP4,
+okgo-btn-b GP5, okgo-led GP22).
+
+- **Új csatornák (implementálva):**
   - `mode` — `std_msgs/Int32`, GP2 + GP3 olvasás, enum 0/1/2 (learn/follow/auto),
-    IRQ mindkét pinre (edge-both), `read()` logika: ha GP2=0 → 2, ha GP3=0 →
-    1, egyébként 0. Debounce: 30 ms (rotary switch tipikus).
-  - `okgo` — `std_msgs/Bool`, GP4 ÉS GP5 AND, mindkét pinre IRQ,
-    `read()` = `(gp4==0) && (gp5==0)`.
-  - `okgo_led` — `std_msgs/Bool`, GP22 output, ROS subscribe → `drv_gpio_write`.
-    Új `drv_gpio_setup_output()` helper kell (most csak `setup_irq` van).
-- Topic javasolt: `/robot/mode`, `/robot/okgo`, `/robot/okgo_led` (config-
-  remap-elhetők).
-- `devices/E_STOP/config.json` — új csatornák engedélyezése (`mode: true,
-  okgo: true, okgo_led: true`).
-- `config.h` — `CFG_MAX_CHANNELS = 12` jelenleg, az E_STOP most 11 csatornát
-  használ → belefér.
+    IRQ mindkét pinre (edge-both), közös `channel_idx`. Period 100 ms +
+    IRQ fast-path. Debounce: `drv_gpio.c` global 50 ms — 30 ms tuning
+    later, ha a rotary bounce zavar.
+  - `okgo_btn` — `std_msgs/Bool`, GP4 ÉS GP5 AND (safety 2-pin),
+    mindkét pinre IRQ, közös `channel_idx`. Period 100 ms + IRQ.
+  - `okgo_led` — `std_msgs/Bool`, GP22 output, ROS subscribe →
+    `drv_gpio_write`. Új `drv_gpio_setup_output()` helper a
+    `common/src/drivers/drv_gpio.{c,h}`-ban.
+- **Topic-ok:** `/robot/mode`, `/robot/okgo_btn`, `/robot/okgo_led`
+  (C default + config-remap-elhetők a `channels:` object-form-mal, ha kell).
+- **`devices/E_STOP/config.json`** — `mode:true, okgo_btn:true, okgo_led:true`
+  bekapcsolva. **BL-016 E_STOP rész előrehozva:** a `test_*` és `rc_*`
+  orphan kulcsok törölve (13 kulcs túllépte volna `CFG_MAX_CHANNELS=12`
+  limitet). RC és PEDAL config cleanup marad BL-016-nak.
 
-**Fázis 3 — Teszt + dokumentálás:**
+**Fázis 3 — Hardware verifikáció (RÉSZBEN LEZÁRVA 2026-04-21) + subnet restore:**
 
-- ROS2 shell: `ros2 topic echo /robot/estop`, `/robot/mode`, `/robot/okgo`,
-  `ros2 topic pub /robot/okgo_led std_msgs/Bool "data: true"`.
-- E-stop latency utó-mérés az új rate-tel.
-- Visszaállás prod subnetre (`devices/E_STOP/config.json` — statikus
-  `10.0.10.23`, `dhcp=false`).
+Flash megvolt, 4 csatorna regisztrálva, session aktív (dev subnet,
+`192.168.68.203` DHCP, agent `192.168.68.125`).
 
-### Érintett fájlok
+| csatorna | hw-teszt | eredmény |
+|---|---|---|
+| `/robot/estop` (GP27 NC) | `ros2 topic echo` + gomb | ✅ False↔True helyes |
+| `/robot/mode` (GP2/GP3) | `ros2 topic echo` + rotary 3 állás | ✅ 0=LEARN / 1=FOLLOW / 2=AUTO |
+| `/robot/okgo_btn` (GP4+GP5 AND) | `ros2 topic echo` + gomb | ✅ AND + IRQ edge-both |
+| `/robot/okgo_led` (GP22 out) | `ros2 topic pub` → multiméter | ❌ GP22 alacsony marad, callback nem fut — **BL-017** |
 
-- `app/src/user/estop.c` (period_ms tune; Fázis 1)
-- `app/src/drivers/drv_gpio.{c,h}` (output support; esetleg debounce tune)
-- `app/src/user/mode.{c,h}` (új; Fázis 2)
-- `app/src/user/okgo.{c,h}` (új; Fázis 2)
-- `app/src/user/okgo_led.{c,h}` (új; Fázis 2)
-- `app/src/user/user_channels.c` (új csatornák regisztrálása)
-- `app/boards/w5500_evb_pico_{estop,rc,pedal}.overlay` (új; Fázis 2)
-- `Makefile` (board/device switch; Fázis 2)
-- `devices/E_STOP/config.json` (dev subnet tesztre, új csatornák)
-- `tools/estop_measure.py` (új; Fázis 1)
-- `memory.md`, `CHANGELOG_DEV.md`, `ERRATA.md` (ha új ERR-k jönnek)
+**Hátralévő lépések (BL-017 után):**
+
+1. BL-017 lezárása (`okgo_led` sub_callback helyreállítás).
+2. Subnet restore (BL-013 pattern): `devices/E_STOP/config.json` prod-ra
+   (`ip=10.0.10.23`, `gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`),
+   upload_config, commit.
+3. `tools/estop_measure.py stream` regresszió check — 20 Hz még megvan.
+4. Fázis 3 lezárás → git tag `bl-014-phase2-done` annotated tag.
+
+### Érintett fájlok (állapot-jelzéssel)
+
+Fázis 1 (LEZÁRVA):
+- `app/src/user/estop.c` — `period_ms` 500 → 50
+- `apps/estop/src/estop.c` — ugyanez, a BL-015 restructure során átkerült
+- `tools/estop_measure.py` (új)
+
+Fázis 2 firmware (LEZÁRVA 2026-04-21):
+- `common/src/drivers/drv_gpio.{c,h}` — új `drv_gpio_setup_output()`
+- `apps/estop/boards/w5500_evb_pico.overlay` — 4 új input alias + okgo_led output
+- `apps/estop/src/mode.{c,h}` (új)
+- `apps/estop/src/okgo_btn.{c,h}` (új)
+- `apps/estop/src/okgo_led.{c,h}` (új)
+- `apps/estop/src/user_channels.c` — 3 új register
+- `apps/estop/CMakeLists.txt` — 3 új source
+- `devices/E_STOP/config.json` — új csatornák + orphan cleanup (BL-016 előrehozott rész)
+
+Fázis 3 (NYITVA, hw-access):
+- `devices/E_STOP/config.json` — subnet restore prod-ra (BL-013 pattern)
+- `memory.md`, `CHANGELOG_DEV.md` — Fázis 3 zárás
+- `ERRATA.md` — ha új ERR jön a hw tesztből
 
 ---
 
@@ -398,8 +423,10 @@ az állapotot a usernek, mielőtt a következő lépést indítod.
   többi kulcs orphan: ártalmatlan (`config_channel_enabled` egyszerűen ignorálja
   ismeretlen channel-name esetén), de zavaró és hibalehetőség.
 - **Cleanup tartalom:**
-  - `devices/E_STOP/config.json`: csak `estop` (és BL-014 Fázis 2 után: `mode`,
-    `okgo`, `okgo_led`) maradjon — `test_*`, `rc_*` törlése.
+  - `devices/E_STOP/config.json`: csak `estop`, `mode`, `okgo_btn`,
+    `okgo_led` maradjon — `test_*`, `rc_*` törlése. (**E_STOP rész**
+    2026-04-21 BL-014 Fázis 2 firmware mellett már de facto megtörtént,
+    hogy a `CFG_MAX_CHANNELS=12` parser-limit ne sértődjön.)
   - `devices/RC/config.json`: csak `rc_ch1..6` (object form a topic-aliasokkal)
     maradjon — `test_*`, `estop` törlése.
   - `devices/PEDAL/config.json`: csak `pedal_heartbeat` maradjon — `test_*`,
@@ -412,6 +439,55 @@ az állapotot a usernek, mielőtt a következő lépést indítod.
 - **Smoke gate:** mind a 3 device flash + `ros2 topic list` + `ros2 topic echo`
   saját topic-okra (jelenleg dokumentálva: `/robot/estop`, `/robot/heartbeat`,
   RC topic-ok).
+
+---
+
+## BL-017 — `okgo_led` Bool subscribe callback nem fut (E_STOP, apps/estop/src/okgo_led.c)
+
+- **Tünet:** `ros2 topic pub /robot/okgo_led std_msgs/msg/Bool 'data: true'`
+  hatására GP22 (overlay alias `okgo-led`, ACTIVE_HIGH) nem vált magasra,
+  és egy diagnosztikai GP25-toggle (user LED) sem reagál — tehát a
+  `okgo_led_write()` callback ténylegesen **nem fut le**. 2026-04-21 dev
+  subneten (192.168.68.x) E_STOP board, `apps/estop/` bináris.
+- **Eddigi megfigyelések:**
+  - Boot log szerint init zöld: `drv_gpio: GPIO OUT configured: pin 22`
+    + `channel_manager: okgo_led init OK`.
+  - Session is aktív: `channel_manager: okgo_led subscriber: okgo_led`
+    + `main: micro-ROS session active. 4 channels, 1 subscribers.`
+  - `ros2 topic echo /robot/okgo_led` látja a publish-olt üzenetet → DDS
+    routing zöld, az üzenet eljut az xrce-dds agentig.
+  - Micro-ROS client oldalon se `okgo_led_write()` LOG_INF, se GP25-toggle
+    — dispatch nem történik meg.
+  - `ros2 topic info -v /robot/okgo_led`: több ghost SUBSCRIPTION endpoint
+    halmozódik session-ciklusokból (agent cleanup-hiány), de az aktuális
+    sessionben csak 1 sub van az executorban.
+  - Boot logban **`param_server_init error: 11`** (EAGAIN) — párhuzamos
+    gyanú: a rclc_executor handle-allokációja (`handle_count =
+    sub_count + PARAM_SERVER_HANDLES(6) + service_count()`) és a
+    részleges param_server állapot konfliktál a sub dispatch-csel.
+  - USB CDC log a boot utáni buffer-megtelés után nem továbbít új üzeneteket
+    (nem dispatch-bug, csak nehezíti a diagnosztikát).
+- **Input oldal OK (ugyanez a firmware 2026-04-21):**
+  - `/robot/estop` (GP27 NC) — OK
+  - `/robot/mode` (GP2/GP3 rotary Int32) — OK (0=LEARN/1=FOLLOW/2=AUTO)
+  - `/robot/okgo_btn` (GP4+GP5 AND IRQ edge-both Bool) — OK
+- **Hipotézisek (priority szerint):**
+  1. `param_server_init` hibája blokkolja a rclc_executor subscription
+     dispatch-et. Teszt: `prj.conf`-ban ideiglenesen kikapcsolni a param
+     server-t vagy a `PARAM_SERVER_HANDLES`-t kivenni a handle_count-ból
+     ha init hibás.
+  2. `rclc_subscription_init_default` QoS mismatch — History depth
+     UNKNOWN a `ros2 topic info`-n; lehet, hogy a micro-ROS Bool-sub
+     RELIABLE/BEST_EFFORT szinkronja nem megy.
+  3. Session-cikluson át nem takarított sub[i] slot-leak okoz dispatch-et
+     elnyelő ghost referenciát.
+- **Érintett fájlok:** `common/src/bridge/channel_manager.c`
+  (create_entities + add_subs_to_executor + sub_callback),
+  `common/src/bridge/param_server.c`, `apps/estop/src/okgo_led.c`,
+  `common/src/main.c` (`ros_session_init` handle_count).
+- **Smoke gate lezáráshoz:** publish → GP22 magasra vált → `false`
+  publish-re alacsonyra. Másik device-on (rc/pedal) is tesztelni egy
+  subscribe-only output kialakítással, hogy reprodukálható-e.
 
 ---
 

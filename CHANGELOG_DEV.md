@@ -4,6 +4,102 @@ Folyamatos haladáskövetés. Minden munkamenet változásai időrendben.
 
 ---
 
+## 2026-04-21 (session: BL-014 Fázis 2) — E_STOP új csatornák (mode, okgo_btn, okgo_led)
+
+### BL-014 Fázis 2 — `apps/estop/` három új csatornával
+
+A BL-015 per-device restructure lezárása után a Fázis 2 unblocked: az új
+csatornák már az `apps/estop/` alatt laknak, az RC overlay GP2..GP7 foglalásával
+nincs pin-ütközés.
+
+**Csatornák:**
+
+| név | típus | irány | pin(ek) | period | megjegyzés |
+|-----|-------|-------|---------|--------|------------|
+| `mode` | `std_msgs/Int32` | pub | GP2 (auto) + GP3 (follow), ACTIVE_LOW + PULL_UP | 100 ms + IRQ | enum: 0=learn, 1=follow, 2=auto |
+| `okgo_btn` | `std_msgs/Bool` | pub | GP4 + GP5, ACTIVE_LOW + PULL_UP | 100 ms + IRQ | safety 2-pin AND |
+| `okgo_led` | `std_msgs/Bool` | sub | GP22, ACTIVE_HIGH OUTPUT | — | ROS → firmware visszajelzés |
+
+Mind a három csatornához több pin / bit tartozik; a `mode` és `okgo_btn`
+két különálló `gpio_channel_cfg_t`-t regisztrál ugyanarra a `channel_idx`-re,
+így bármelyik pin IRQ-ja azonos atomic flag-et állít, a main loop egyszeri
+publish-t végez.
+
+**Új `drv_gpio_setup_output()` helper** (`common/src/drivers/drv_gpio.{c,h}`):
+output pin configure + ready check, IRQ nélkül. Az `okgo_led.c` `init()`-je
+ezen keresztül konfigurálja a GP22-t `GPIO_OUTPUT_INACTIVE`-re.
+
+**Overlay bővítés** (`apps/estop/boards/w5500_evb_pico.overlay`):
+új `gpio-keys` node-ok (`mode_auto`, `mode_follow`, `okgo_btn_a`,
+`okgo_btn_b`) + új `gpio-leds` node (`okgo_led`) + DT alias-ok
+(`mode-auto`, `mode-follow`, `okgo-btn-a`, `okgo-btn-b`, `okgo-led`).
+
+**Config cleanup (BL-016 előhozott lépése):** a `devices/E_STOP/config.json`
+`channels:` blokk most csak a ténylegesen E_STOP-specifikus kulcsokat
+tartalmazza (`estop`, `mode`, `okgo_btn`, `okgo_led`). Az orphan `test_*`
+és `rc_*` kulcsok törölve, mert 13 bejegyzés meghaladta volna a
+`CFG_MAX_CHANNELS=12` parser limitet. A többi device (RC, PEDAL) config
+cleanup-ja marad BL-016-nak.
+
+**Build eredmény (make build DEVICE=estop):**
+
+| metrika | érték | vs. BL-015 step 2 |
+|---|---|---|
+| FLASH | 430956 B (2.57%) | +~1.3 KB (3 új obj) |
+| RAM | 263360 B (97.42%) | -80 B (≈ azonos) |
+| UF2 | 862720 B | +~0.5 KB |
+
+A RAM margó nem szűkült, 97.42%-on stabil — a két új input csatorna és
+az output csatorna statikus `gpio_channel_cfg_t` struktúrái a megtakarítást
+(legacy test_channels eltávolítása az apps/estop-ból) ellensúlyozzák.
+
+**Még hátra (Fázis 3, hardware access kell):**
+
+1. Flash `workspace/build/zephyr/zephyr.uf2` az E_STOP boardra (BOOTSEL).
+2. `python3 tools/upload_config.py --config devices/E_STOP/config.json` a dev
+   subnet értékekkel (jelenlegi commit: `192.168.68.203` DHCP).
+3. ROS2 oldali teszt:
+   - `ros2 topic echo /robot/mode` — rotary kapcsoló három állása.
+   - `ros2 topic echo /robot/okgo_btn` — gomb nyomva/felengedve.
+   - `ros2 topic pub /robot/okgo_led std_msgs/Bool "data: true"` — LED kigyullad.
+4. E-stop latency utó-mérés (`tools/estop_measure.py stream`) hogy a 20 Hz
+   nem regresszált.
+5. Subnet restore: `devices/E_STOP/config.json` vissza `10.0.10.23` /
+   `dhcp=false`-ra (BL-013 pattern), commit, push.
+
+| Fájl | Változás |
+|------|---------|
+| `common/src/drivers/drv_gpio.{c,h}` | új `drv_gpio_setup_output()` |
+| `apps/estop/boards/w5500_evb_pico.overlay` | 4 új input alias + `okgo_led` output |
+| `apps/estop/src/mode.{c,h}` | új (Int32, 3-state rotary, 2 GPIO AND-sense) |
+| `apps/estop/src/okgo_btn.{c,h}` | új (Bool, 2-pin safety AND) |
+| `apps/estop/src/okgo_led.{c,h}` | új (Bool, output subscribe) |
+| `apps/estop/src/user_channels.c` | 3 új `register_if_enabled()` |
+| `apps/estop/CMakeLists.txt` | 3 új source fájl |
+| `devices/E_STOP/config.json` | 3 új csatorna `true`, orphan kulcsok törölve, dev subnet marad Fázis 3-ig |
+| `docs/backlog.md` | BL-014 Fázis 2 lezárva + BL-017 (okgo_led bug) felvéve |
+| `memory.md` | §0 új állapot |
+| `CHANGELOG_DEV.md` | ez a bejegyzés |
+
+### Fázis 3 hw-teszt (ugyanaznap, dev subnet 192.168.68.x)
+
+E_STOP board flash-elve, micro-ROS session felállt, 4 csatorna / 1 sub
+regisztrálva. `ros2 topic echo` alatt manuális input teszt:
+
+| csatorna | eredmény |
+|---|---|
+| `/robot/estop` (GP27 NC) | ✅ OK — `False` alap, nyomásra `True`, felengedve `False` |
+| `/robot/mode` (GP2/GP3 rotary Int32) | ✅ OK — LEARN=0 / FOLLOW=1 / AUTO=2 mind a 3 állás helyes |
+| `/robot/okgo_btn` (GP4+GP5 AND Bool IRQ) | ✅ OK — csak mindkét pin aktív esetén `True`, él-trigger élben |
+| `/robot/okgo_led` (GP22 output Bool sub) | ❌ **BUG — BL-017**: publish DDS-ig eljut (`ros2 topic echo` látja), de a board oldali `sub_callback` nem fut le. GP22 alacsony marad; diagnosztikai GP25-toggle (user LED) szintén nem reagál. Init logok zöldek (`GPIO OUT configured: pin 22`, `okgo_led init OK`, `okgo_led subscriber: okgo_led`, `4 channels, 1 subscribers`). Hibabontás BL-017-ben — hipotézis: `param_server_init error: 11` és a `rclc_executor` handle-allokáció konfliktusa. |
+
+**Következtetés:** az inputok (3 csatorna, 5 pin + 1 IRQ-kapacitás)
+lezárhatók, az output subscribe bug az executor / param_server oldalon
+keresendő — a `okgo_led` per se (init + pin config) helyes, a probléma
+lejjebb van. Subnet restore BL-017 után.
+
+---
+
 ## 2026-04-19 (session: BL-010 follow-up) — ERR-031 lezárva, end-to-end micro-ROS zöld
 
 ### ERR-031 — W6100 `set_config(MAC)` nem frissíti az iface link_addr-t

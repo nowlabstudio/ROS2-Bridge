@@ -11,14 +11,17 @@
  * config.json) eldöntheti, hogy az adott csatornát aktív legyen-e — ezzel a
  * meglévő config_channel_enabled() szemantika változatlan.
  *
- * BL-014 Fázis 2 új csatornái (mode/okgo/okgo_led) ide kerülnek be, miután
- * BL-015 lezárult.
+ * BL-014 Fázis 2: mode (GP2/GP3 rotary), okgo_btn (GP4/GP5 AND),
+ * okgo_led (GP22 output) csatornák regisztrálva.
  */
 
 #include "user/user_channels.h"
 #include "bridge/channel_manager.h"
 #include "config/config.h"
 #include "estop.h"
+#include "mode.h"
+#include "okgo_btn.h"
+#include "okgo_led.h"
 
 static void register_if_enabled(const channel_t *ch)
 {
@@ -30,4 +33,7 @@ static void register_if_enabled(const channel_t *ch)
 void user_register_channels(void)
 {
 	register_if_enabled(&estop_channel);
+	register_if_enabled(&mode_channel);
+	register_if_enabled(&okgo_btn_channel);
+	register_if_enabled(&okgo_led_channel);
 }

@@ -33,6 +33,15 @@ typedef struct {
 int drv_gpio_setup_irq(int channel_idx, gpio_channel_cfg_t *cfg);
 
 /**
+ * Configure a GPIO pin as output (no IRQ). For subscribe-driven channels
+ * whose write() writes the pin via drv_gpio_write().
+ *
+ * @param cfg  Pointer to a configured gpio_channel_cfg_t (spec filled in)
+ * @return 0 on success, negative errno on error
+ */
+int drv_gpio_setup_output(gpio_channel_cfg_t *cfg);
+
+/**
  * Read current GPIO pin level.
  *
  * @param cfg  Pointer to a configured gpio_channel_cfg_t

@@ -34,6 +34,9 @@ add_subdirectory(
 target_sources(app PRIVATE
     src/user_channels.c
     src/estop.c
+    src/mode.c
+    src/okgo_btn.c
+    src/okgo_led.c
 )
 
 target_include_directories(app PRIVATE src)

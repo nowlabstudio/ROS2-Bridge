@@ -2,11 +2,11 @@
     "_comment": "python3 tools/upload_config.py --config devices/E_STOP/config.json --port /dev/tty.usbmodem23301",
   "network": {
     "mac": "0C:2F:94:30:58:33",
-    "ip": "10.0.10.23",
+    "ip": "192.168.68.203",
     "netmask": "255.255.255.0",
-    "gateway": "10.0.10.1",
-    "dhcp": false,
-    "agent_ip": "10.0.10.1",
+    "gateway": "192.168.68.1",
+    "dhcp": true,
+    "agent_ip": "192.168.68.125",
     "agent_port": 8888
   },
 
@@ -17,14 +17,8 @@
 
   "channels": {
     "estop": true,
-    "test_counter": false,
-    "test_heartbeat": false,
-    "test_echo": false,
-    "rc_ch1": false,
-    "rc_ch2": false,
-    "rc_ch3": false,
-    "rc_ch4": false,
-    "rc_ch5": false,
-    "rc_ch6": false
+    "mode": true,
+    "okgo_btn": true,
+    "okgo_led": true
   }
 }
