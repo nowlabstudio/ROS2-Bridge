@@ -148,6 +148,31 @@ Fázis 3 zárásaként a `devices/E_STOP/config.json` visszaállt prod-ra:
 - Annotated tag: **`bl-014-phase2-done`** — ez lesz a következő (BL-015 Step 5
   vagy egyéb) munka baseline-ja.
 
+### Post-validation gyors smoke-teszt — DHCP dev subnet
+
+Ugyanaznap késő-délutáni gyors revalidáció a `chore: prj.conf cleanup`
+(`084f1f6`) commit utáni binárison + a per-device prj.conf SERVERS=8 → 2
+és agent_ip default módosítások hatásának ellenőrzésére. A board ideiglenesen
+DHCP-re átállítva (`devices/E_STOP/config.json` lokálisan `dhcp=true`,
+`agent_ip=192.168.68.125`), `make build DEVICE=estop` + UF2 flash, a
+validáció után visszaírva prod-ra.
+
+| csatorna | mért | elvárás | eredmény |
+|---|---|---|---|
+| `/robot/estop` (pub) | 19.6 Hz, true/false edge | 20 Hz, GP27 NC | ✅ |
+| `/robot/mode` (pub) | 9.8 Hz, 0/1/2 mind a 3 állás | 10 Hz, rotary | ✅ |
+| `/robot/okgo_btn` (pub) | 9.8 Hz, true/false edge AND | 10 Hz, 2-pin AND | ✅ |
+| `/robot/okgo_led` (sub) | btn→led relay vizuálisan követi | BL-017 dispatch | ✅ |
+
+A `CONFIG_MICROROS_SERVERS="2"` redukció nem okozott executor-kapacitás-hibát,
+a 4 csatorna mind regisztrálódott, session stabil. A korábban észlelt
+`Publisher count: 7` zombi publisher a host CycloneDDS oldali discovery
+maradványa volt (előző session-ek), a publish/subscribe flow-t nem akadályozta.
+
+Build artefakt: `421532 B FLASH (2.51%)` / `261208 B RAM (96.62%)` — a
+`084f1f6` commit hatására kissé csökkent a flash (≈10 KB), a RAM is, mert
+kevesebb micro-ROS server slot allokálódik.
+
 ---
 
 ## 2026-04-19 (session: BL-010 follow-up) — ERR-031 lezárva, end-to-end micro-ROS zöld
