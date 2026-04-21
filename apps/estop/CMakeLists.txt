@@ -9,7 +9,9 @@
 #      modules/w6100_driver volt, mert a modul az app/ alatt élt).
 #   2. find_package(Zephyr) — standard Zephyr build init.
 #   3. add_subdirectory(common) — beemeli a közös réteget (main.c, bridge/,
-#      drivers/, config/, shell/) mint zephyr_library_named(w6100_bridge_common).
+#      drivers/, config/, shell/) a default `app` target-hez (target_sources(app
+#      PRIVATE …) stílus, NEM zephyr_library_named — lásd common/CMakeLists.txt:
+#      a libmicroros/littlefs include-ok csak az `app` target-en öröklődnek).
 #      Útvonal: COMMON_DIR env (Makefile állítja /workdir/common-ra), így
 #      egyszerűen váltható, ha a közös réteg helye módosul.
 #   4. target_sources(app PRIVATE src/...) — E_STOP-specifikus source-ok
