@@ -1,5 +1,8 @@
 #include "okgo_led.h"
 #include "drivers/drv_gpio.h"
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(okgo_led, LOG_LEVEL_DBG);
 
 /* ------------------------------------------------------------------ */
 /*  OK-Go visszajelző LED — subscribe-only output csatorna             */
@@ -24,6 +27,7 @@ static int okgo_led_init(void)
 
 static void okgo_led_write(const channel_value_t *val)
 {
+	LOG_DBG("write CB: val=%d", val->b ? 1 : 0);
 	drv_gpio_write(&okgo_led_cfg, val->b ? 1 : 0);
 }
 

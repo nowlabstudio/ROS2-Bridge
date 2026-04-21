@@ -324,11 +324,14 @@ static bool ros_session_init(void)
 	}
 
 	int sub_count    = channel_manager_sub_count();
-	int handle_count = sub_count + PARAM_SERVER_HANDLES + service_count();
+	int handle_count = sub_count + service_count();
 
 	if (handle_count < 1) {
 		handle_count = 1;
 	}
+
+	LOG_INF("Executor: %d subs + %d svcs = %d handles",
+		sub_count, service_count(), handle_count);
 
 	if (rclc_executor_init(&executor, &support.context,
 			       handle_count, &allocator) != RCL_RET_OK) {
@@ -342,10 +345,8 @@ static bool ros_session_init(void)
 
 	channel_manager_add_subs_to_executor(&executor);
 
-	/* Parameter server — after executor init, adds itself to executor */
-	if (param_server_init(&node, &executor) < 0) {
-		LOG_WRN("Param server init failed — continuing without params");
-	}
+	/* Parameter server disabled — config.json is the single source of truth
+	 * for channel params. See BL-017 for ERR-INVALID-ARG investigation. */
 
 	/* Services — after executor init, each adds itself to executor */
 	if (service_manager_init(&node, &executor) < 0) {
