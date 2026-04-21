@@ -1,7 +1,7 @@
 # W6100 EVB Pico — Zephyr + micro-ROS Universal Bridge
 
 > **Developer Reference Documentation**
-> Last updated: 2026-03-10 | Version: v2.2 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
+> Last updated: 2026-04-21 (BL-014 Fázis 2 + BL-017 lezárva) | Version: v2.3 | Author: Eduard Sik — [eduard@nowlab.eu](mailto:eduard@nowlab.eu)
 
 ---
 
@@ -58,16 +58,25 @@ The goal: connect physical devices (sensors, motors, GPIO, RC receivers, encoder
 
 ### Pinout — Important Pins
 
-| Pin | Function | Note |
-|-----|----------|------|
-| GP25 | Built-in LED (status LED) | HIGH = LED on, shows ROS agent connection |
-| GP27 | E-Stop input | NC (normally closed) switch, pull-up, GPIO IRQ |
-| GP2–GP7 | RC receiver CH1–CH6 | PWM pulse-width input, 50ms debounce on GPIO IRQ |
-| GP26 | ADC0 | Analog input |
-| GP28 | ADC2 | Analog input |
-| GP0–GP1 | UART0 TX/RX | Serial devices |
-| GP4–GP5 | I2C0 SDA/SCL | I2C devices |
-| GP16–GP19 | SPI0 | SPI interface devices |
+Pin-kiosztás **per-device**: BL-015 óta minden device saját overlay-t kap
+(`apps/<device>/boards/w5500_evb_pico.overlay`), és csak a saját csatornáit
+regisztrálja. Nincs cross-device pin-konfliktus.
+
+| Pin | E_STOP | RC | PEDAL |
+|-----|--------|----|-------|
+| GP25 | user_led (bridge-online indikátor) | user_led | user_led |
+| GP27 | estop_btn (NC, IRQ edge-both) | — | — |
+| GP2  | mode_auto (ACTIVE_LOW, rotary) | rc_ch1 (PWM-in) | — |
+| GP3  | mode_follow (ACTIVE_LOW, rotary) | rc_ch2 (PWM-in) | — |
+| GP4  | okgo_btn_a (ACTIVE_LOW, IRQ) | rc_ch3 (PWM-in) | — |
+| GP5  | okgo_btn_b (ACTIVE_LOW, IRQ) | rc_ch4 (PWM-in) | — |
+| GP6  | — | rc_ch5 (PWM-in) | — |
+| GP7  | — | rc_ch6 (PWM-in) | — |
+| GP22 | okgo_led (Bool sub, ACTIVE_HIGH out) | — | — |
+| GP26 | — | — | ADC0 (BL-012 későbbi) |
+| GP28 | — | — | ADC2 (BL-012 későbbi) |
+| GP0–GP1 | UART0 (shared) |||
+| GP16–GP19 | SPI0 (W6100, shared) |||
 
 > **Zephyr board name note:** The overlay file is named `w5500_evb_pico.overlay` because the Zephyr board target is `w5500_evb_pico`. The actual chip is W6100 — the overlay sets `compatible = "wiznet,w6100"`.
 
@@ -125,42 +134,64 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 │           ├── zephyr.elf           ← ELF with debug symbols
 │           └── zephyr.uf2           ← FLASHABLE FIRMWARE
 │
-└── app/                             ← FIRMWARE SOURCE — work here
-    ├── CMakeLists.txt               ← add new .c files here
-    ├── prj.conf                     ← Zephyr Kconfig
-    ├── west.yml                     ← Zephyr + micro-ROS dependencies
-    ├── config.json                  ← Template config (Python uploader source)
-    │
-    ├── boards/
-    │   └── w5500_evb_pico.overlay   ← DTS: USB CDC, LED, LittleFS, W6100, RC inputs
-    │
-    └── src/
-        ├── main.c                   ← Entry point, reconnection loop, watchdog
-        │
-        ├── config/
-        │   ├── config.h             ← bridge_config_t, API declarations
-        │   └── config.c             ← LittleFS, JSON parser, config_set/save/load
-        │
-        ├── shell/
-        │   └── shell_cmd.c          ← 'bridge' shell commands
-        │
-        ├── bridge/
-        │   ├── channel.h            ← channel_t, channel_state_t, msg_type_t
-        │   ├── channel_manager.c/.h ← Pub/sub framework, topic override, entity lifecycle
-        │   ├── diagnostics.c/.h     ← /diagnostics publisher (IP+MAC, 5s period)
-        │   ├── param_server.c/.h    ← rclc_parameter_server (low_mem_mode)
-        │   └── service_manager.c/.h ← std_srvs SetBool / Trigger
-        │
-        ├── drivers/
-        │   ├── drv_gpio.c/.h        ← GPIO input with 50ms debounce (E-Stop GP27)
-        │   ├── drv_adc.c/.h         ← ADC voltage input (GP26)
-        │   └── drv_pwm_in.c/.h      ← RC PWM input driver (pulse-width, k_cycle_get_32)
-        │
-        └── user/
-            ├── user_channels.h/.c   ← Channel registration (config-driven enable/disable)
-            ├── test_channels.h/.c   ← Built-in test channels (counter/heartbeat/echo)
-            ├── estop.h/.c           ← E-Stop NC switch on GP27
-            └── rc.h/.c              ← RC receiver CH1–CH6, normalization + trim
+├── common/                          ← SHARED FIRMWARE LAYER (all devices use this)
+│   ├── CMakeLists.txt               ← target_sources(app PRIVATE …) pattern
+│   └── src/
+│       ├── main.c                   ← Entry point, reconnection loop, watchdog
+│       │                              (param_server_init call REMOVED — BL-017/ERR-032)
+│       ├── config/
+│       │   ├── config.h             ← bridge_config_t, API (CFG_MAX_CHANNELS=12)
+│       │   └── config.c             ← LittleFS, JSON parser, config_set/save/load
+│       ├── shell/
+│       │   └── shell_cmd.c          ← 'bridge' shell commands
+│       ├── bridge/
+│       │   ├── channel.h            ← channel_t, channel_state_t, msg_type_t
+│       │   ├── channel_manager.c/.h ← Pub/sub framework, topic override
+│       │   ├── diagnostics.c/.h     ← /diagnostics publisher (IP+MAC, 5s period)
+│       │   ├── param_server.c/.h    ← DEAD CODE (not called anywhere since BL-017)
+│       │   └── service_manager.c/.h ← std_srvs SetBool / Trigger
+│       ├── drivers/
+│       │   ├── drv_gpio.c/.h        ← GPIO input IRQ + debounce + setup_output
+│       │   ├── drv_adc.c/.h         ← ADC voltage input (opt-in via DT_PATH(zephyr_user))
+│       │   └── drv_pwm_in.c/.h      ← RC PWM input driver
+│       └── user/
+│           └── user_channels.h      ← Shared header (register_if_enabled, channel_t)
+│
+├── apps/                            ← PER-DEVICE FIRMWARE — work here
+│   ├── estop/
+│   │   ├── CMakeLists.txt           ← adds own src/ + common/ layer
+│   │   ├── prj.conf                 ← Zephyr Kconfig (no ADC/PWM-in subsystems)
+│   │   ├── west.yml                 ← Zephyr + micro-ROS deps
+│   │   ├── boards/w5500_evb_pico.overlay   ← GP25 + GP27 + mode(GP2/3) + okgo(GP4/5) + GP22
+│   │   └── src/
+│   │       ├── user_channels.c      ← registers: estop, mode, okgo_btn, okgo_led
+│   │       ├── estop.{c,h}          ← E-Stop NC switch (GP27)
+│   │       ├── mode.{c,h}           ← 3-state rotary (GP2/3, Int32 0/1/2)
+│   │       ├── okgo_btn.{c,h}       ← 2-pin AND safety button (GP4/5, Bool)
+│   │       └── okgo_led.{c,h}       ← ROS→firmware LED (GP22, Bool SUB)
+│   ├── rc/
+│   │   ├── CMakeLists.txt
+│   │   ├── prj.conf
+│   │   ├── west.yml
+│   │   ├── boards/w5500_evb_pico.overlay   ← GP25 + GP2..GP7 PWM inputs
+│   │   └── src/
+│   │       ├── user_channels.c      ← registers: rc_ch1..6
+│   │       └── rc.{c,h}             ← RC receiver CH1–CH6, normalization + trim
+│   └── pedal/
+│       ├── CMakeLists.txt
+│       ├── prj.conf
+│       ├── west.yml
+│       ├── boards/w5500_evb_pico.overlay   ← GP25 only (ADC pins reserved for BL-012)
+│       └── src/
+│           ├── user_channels.c      ← registers: pedal_heartbeat
+│           └── pedal.{c,h}          ← /robot/heartbeat (Bool 1 Hz)
+│
+├── modules/
+│   └── w6100_driver/                ← Out-of-tree W6100 SPI MACRAW driver (BL-010)
+│
+└── app/                             ← LEGACY, BL-015 Step 5 will remove it.
+                                       `make build-legacy` keeps a regression net
+                                       until then.
 ```
 
 ---
@@ -190,15 +221,28 @@ make workspace-init
 
 > **Important:** The `workspace/` directory must NOT be inside Dropbox/iCloud. Docker's virtiofs and cloud sync cause deadlocks. Keep in `~/Dev/`.
 
-### 3. Build the firmware
+### 3. Build the firmware (per-device)
 
 ```bash
-make build
+make build DEVICE=estop   # or rc, pedal
 ```
 
 Output: `workspace/build/zephyr/zephyr.uf2`
 
-Build stats: ~426 KB flash (2.54% of 16 MB), ~263 KB RAM (97.49% of 264 KB). Heap: 96 KB.
+Per-device build stats (E_STOP, BL-014 Fázis 2):
+- FLASH: ~431 KB (2.57% of 16 MB)
+- RAM: ~263 KB (97.42% of 264 KB)
+- Heap: 96 KB
+
+Each device has its own `apps/<device>/prj.conf` and overlay — the UF2
+from one device **cannot** be flashed onto another device without rebuild
+(overlay DT differs).
+
+Legacy single-binary build (regression net, to be removed in BL-015 Step 5):
+
+```bash
+make build-legacy
+```
 
 ### 4. Flash the firmware
 
@@ -531,7 +575,7 @@ typedef struct {
 
 ### How to add a new sensor or actuator
 
-#### Step 1 — Create a device file (`app/src/user/my_sensor.c`)
+#### Step 1 — Create a device file (`apps/<device>/src/my_sensor.c`, or `common/src/user/` if shared across devices)
 
 ```c
 #include "bridge/channel.h"
@@ -555,7 +599,7 @@ const channel_t my_sensor_channel = {
 };
 ```
 
-#### Step 2 — Declare in a header (`app/src/user/my_sensor.h`)
+#### Step 2 — Declare in a header (`apps/<device>/src/my_sensor.h`)
 
 ```c
 #pragma once
@@ -577,12 +621,12 @@ void user_register_channels(void)
 
 `register_if_enabled()` checks `config.json` — if `"my_sensor": false` in the channels section, the channel is not registered.
 
-#### Step 4 — Add to build (`app/CMakeLists.txt`)
+#### Step 4 — Add to build (`apps/<device>/CMakeLists.txt`)
 
 ```cmake
 target_sources(app PRIVATE
     ...
-    src/user/my_sensor.c
+    src/my_sensor.c
 )
 ```
 
@@ -604,7 +648,7 @@ Or with topic override:
 #### Step 6 — Build, flash, verify
 
 ```bash
-make build
+make build DEVICE=<device>
 tools/flash.sh
 ros2 topic echo /robot/temperature
 ```
@@ -620,39 +664,49 @@ ros2 topic echo /robot/temperature
 ### Constraints
 
 - Maximum **12 channels** (`CFG_MAX_CHANNELS = 12` in `config.h`)
-- Executor handle count = subscriber channels + `PARAM_SERVER_HANDLES` (6) + service count
+- Executor handle count = subscriber channels + service count (BL-017 /
+  ERR-032: the `PARAM_SERVER_HANDLES` (6) slot was removed because
+  `rclc_parameter_server_init_with_option` returns `RCL_RET_INVALID_ARGUMENT`
+  on our setup and leaves the 6 service handles in a `initialized=true`
+  but corrupted state, which poisons the executor dispatch loop — real
+  subscription callbacks stop firing. Therefore the interactive `ros2 param`
+  interface is **not** available; channel parameters live in
+  `devices/<DEVICE>/config.json` only.)
 
 ---
 
 ## Built-in Channels
 
-### Test channels (no hardware required)
+### Test channels (legacy `app/` tree only)
 
-Located in `app/src/user/test_channels.c`. Disabled by default in `config.json` — set to `true` to enable.
+Located in `app/src/user/test_channels.c`. **Not present** in the per-device
+`apps/<device>/` binaries — PEDAL has its own `pedal.c` (`pedal_heartbeat`
+channel) instead of the placeholder `test_heartbeat`. Kept for
+`make build-legacy` regression until BL-015 Step 5 removes the legacy tree.
 
-| Channel | Default topic | Type | Period | Description |
-|---------|--------------|------|--------|-------------|
-| `test_counter` | `pico/counter` | INT32 | 500 ms | Counts up from 0 |
-| `test_heartbeat` | `pico/heartbeat` | BOOL | 1000 ms | Toggles true/false |
-| `test_echo` | `pico/echo_out` / `pico/echo_in` | INT32 | 1000 ms | Echoes received value |
+### E-Stop channels (`apps/estop/`)
 
-### E-Stop channel
+The E_STOP board owns 4 channels — 3 publishers + 1 subscriber:
 
-Located in `app/src/user/estop.c`. GPIO IRQ-capable, 50ms hardware debounce.
+| Channel | Default topic | Type | Pin(s) | Period | Description |
+|---------|--------------|------|--------|--------|-------------|
+| `estop` | `estop` | BOOL | GP27 NC + PULL_UP | 50 ms + IRQ | `true` = circuit open (button pressed). Edge-both IRQ, 50 ms debounce, 20 Hz fallback. |
+| `mode` | `mode` | INT32 | GP2 (auto) + GP3 (follow), ACTIVE_LOW + PULL_UP | 100 ms + IRQ | 3-state rotary: 0=LEARN, 1=FOLLOW, 2=AUTO. Both pins → common channel_idx, either pin's IRQ triggers publish. |
+| `okgo_btn` | `okgo_btn` | BOOL | GP4 + GP5, ACTIVE_LOW + PULL_UP | 100 ms + IRQ | Safety 2-pin AND: `true` only when **both** pins active. Edge-both IRQ per pin. |
+| `okgo_led` | `okgo_led` | BOOL | GP22 ACTIVE_HIGH OUTPUT | — (sub) | ROS → firmware. Subscribing to `/robot/okgo_led` drives GP22. |
 
-| Channel | Default topic | Type | Description |
-|---------|--------------|------|-------------|
-| `estop` | `estop` | BOOL | NC switch on GP27. `true` = circuit open (button pressed). IRQ-triggered. |
-
-> **Multi-board note:** Only enable `estop` on the board that physically has the E-Stop switch wired. Disable it on all other boards in their `config.json`.
+Located in `apps/estop/src/{estop,mode,okgo_btn,okgo_led}.{c,h}`.
 
 ```bash
 ros2 topic echo /robot/estop     # false = normal, true = E-Stop active
+ros2 topic echo /robot/mode      # 0/1/2 enum
+ros2 topic echo /robot/okgo_btn  # AND of GP4 and GP5
+ros2 topic pub /robot/okgo_led std_msgs/msg/Bool "{data: true}"   # LED on
 ```
 
-### RC receiver channels
+### RC receiver channels (`apps/rc/`)
 
-Located in `app/src/user/rc.c`. Uses `app/src/drivers/drv_pwm_in.c` (pulse-width input on GP2–GP7).
+Located in `apps/rc/src/rc.c`. Uses `common/src/drivers/drv_pwm_in.c` (pulse-width input on GP2–GP7).
 
 | Channel | GPIO | Default topic | Type | Description |
 |---------|------|--------------|------|-------------|
@@ -738,10 +792,14 @@ ros2 node list
 
 ros2 topic list
 # /robot/estop
+# /robot/mode
+# /robot/okgo_btn
+# /robot/okgo_led
 # /robot/motor_left
 # /robot/motor_right
 # /robot/rc_mode
 # /robot/winch
+# /robot/heartbeat
 # /diagnostics
 
 ros2 topic echo /robot/estop
@@ -750,23 +808,50 @@ ros2 topic echo /robot/motor_left
 
 ---
 
-## Parameter Server
+## Parameter handling (config.json only)
 
-The bridge exposes an `rclc_parameter_server` (`low_mem_mode=true`) with three parameters per channel:
+**The interactive `ros2 param` interface is NOT available** since 2026-04-21
+(BL-017 / ERR-032). Root cause: the `rclc_parameter_server_init_with_option`
+call returns `RCL_RET_INVALID_ARGUMENT`, but the preceding
+`rclc_executor_add_parameter_server_with_context` already marked all 6
+param-service handles as `initialized=true` in `executor.handles[]`. The
+`rclc_executor_spin_some` loop then iterates over these corrupted handles +
+the valid sub handles, and the corrupted dispatch fragments poison the real
+subscription data-pull — real callbacks silently stop firing.
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `ch.<name>.period_ms` | INT | Publish period override |
-| `ch.<name>.enabled` | BOOL | Enable/disable channel |
-| `ch.<name>.invert_logic` | BOOL | Invert bool value |
+The `param_server_init` call has been removed from `common/src/main.c`
+(`ros_session_init`). The `common/src/bridge/param_server.{c,h}` files remain
+as dead code.
+
+**Channel parameters are managed via `devices/<DEVICE>/config.json` only.**
+Supported channel-level fields (subset per channel):
+
+- `enabled` (bool) — register/skip this channel
+- `period_ms` (int) — publish period override (ignored for subscribe-only channels)
+- `invert_logic` (bool) — swap true/false for Bool channels
+- `topic` (string) — override default topic name
+
+Update flow:
 
 ```bash
-ros2 param list /robot/estop
-ros2 param set /robot/estop ch.estop.period_ms 100
-ros2 param dump /robot/estop
+# Edit devices/<DEVICE>/config.json, then:
+python3 tools/upload_config.py --config devices/<DEVICE>/config.json --port /dev/ttyACM0
+# upload_config does: bridge config set ... → bridge config save → bridge reboot
 ```
 
-> **Known issue (ERR-001):** The param server may fail to initialize (`param_server_init error: 11`). The board runs normally without it — channels publish, but `ros2 param` is unavailable. See `ERRATA.md`.
+Or live (persisted to NVS, reboot to apply network changes):
+
+```bash
+# Over the USB CDC shell:
+bridge config set channels.estop      true
+bridge config set channels.rc_ch1     true
+bridge config set channels.rc_ch1.topic  motor_left
+bridge config save
+bridge reboot
+```
+
+See `ERRATA.md` §ERR-032 for the full root-cause writeup; future re-enabling
+is tracked as **BL-018**.
 
 ---
 

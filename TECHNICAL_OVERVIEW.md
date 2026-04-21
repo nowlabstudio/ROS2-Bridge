@@ -1,7 +1,10 @@
-# W6100 EVB Pico — Zephyr + micro-ROS Bridge v2.0
+# W6100 EVB Pico — Zephyr + micro-ROS Bridge v2.3
 ## Technical Overview for Senior Developers and Robot Integrators
 
 **Target audience:** Senior embedded developer familiar with Zephyr RTOS, and/or ROS 2 integrator who needs to understand the full system.
+
+**Last updated:** 2026-04-21 — per-device build tree (BL-015 Step 1-4),
+BL-014 Fázis 2 (E_STOP mode/okgo_btn/okgo_led), BL-017 / ERR-032 resolved.
 
 ---
 
@@ -19,7 +22,7 @@
 | ADC | GP26 = ADC channel 0 — battery voltage (placeholder, 12-bit, internal reference) |
 | Watchdog | RP2040 hardware WDT, 30 s timeout |
 
-> **Board name mismatch:** WIZnet ships the board as "W6100 EVB Pico" but the Zephyr board definition is `w5500_evb_pico` (inherited from the W5500 variant). The overlay file `app/boards/w5500_evb_pico.overlay` patches the `compatible` property to `"wiznet,w6100"` at build time.
+> **Board name mismatch:** WIZnet ships the board as "W6100 EVB Pico" but the Zephyr board definition is `w5500_evb_pico` (inherited from the W5500 variant). The overlay file `apps/<device>/boards/w5500_evb_pico.overlay` patches the `compatible` property to `"wiznet,w6100"` at build time.
 
 ---
 
@@ -39,9 +42,9 @@
 │  └──────┬──────┘  └──────┬───────┘  └──────────────────────┘   │
 │         │                │                                       │
 │  ┌──────▼──────────────────────────────────────────────────┐    │
-│  │                   Bridge Core (app/src/)                 │    │
-│  │  channel_manager | param_server | service_manager        │    │
-│  │  diagnostics     | config       | shell_cmd              │    │
+│  │              Bridge Core (common/src/)                   │    │
+│  │  channel_manager | service_manager (param_server: dead) │    │
+│  │  diagnostics     | config         | shell_cmd            │    │
 │  └──────┬──────────────────────────────────────────────────┘    │
 │         │                                                         │
 │  ┌──────▼──────────────────────────────────────────────────┐    │
@@ -66,31 +69,61 @@
 
 ## 3. Repository Structure
 
+Per-device build tree since BL-015 Step 1-4 (2026-04-21). The legacy common
+`app/` tree remains only as a `make build-legacy` regression net and will be
+deleted in BL-015 Step 5.
+
 ```
-W6100_EVB_Pico_Zephyr_MicroROS/
-├── app/                          # Zephyr application
-│   ├── CMakeLists.txt
-│   ├── prj.conf                  # Kconfig (all tunables here)
-│   ├── boards/
-│   │   └── w5500_evb_pico.overlay  # DTS patches: W6100, ADC, GPIO, LittleFS
+ROS2-Bridge/
+├── common/                       # Shared firmware layer (every device gets this)
+│   ├── CMakeLists.txt            # target_sources(app PRIVATE …)
 │   └── src/
-│       ├── main.c                # Entry point, reconnect loop
+│       ├── main.c                # Entry point, reconnect loop, executor
+│       │                         # (param_server_init REMOVED — BL-017/ERR-032)
 │       ├── bridge/
 │       │   ├── channel.h         # channel_t, channel_state_t, channel_value_t
 │       │   ├── channel_manager.c # Core: registration, entities, publish, IRQ
 │       │   ├── diagnostics.c     # /diagnostics topic publisher
-│       │   ├── param_server.c    # rclc_parameter_server (period_ms, enabled)
+│       │   ├── param_server.c    # DEAD CODE (kept for BL-018 revisit)
 │       │   └── service_manager.c # SetBool / Trigger services
 │       ├── config/
-│       │   └── config.c          # LittleFS JSON config (IP, agent, node name)
+│       │   └── config.c          # LittleFS JSON config (IP, agent, channels)
 │       ├── drivers/
-│       │   ├── drv_adc.c         # ADC channel driver (battery voltage)
-│       │   └── drv_gpio.c        # GPIO driver (E-Stop, relay-brake)
+│       │   ├── drv_adc.c         # ADC (opt-in via DT_PATH(zephyr_user))
+│       │   ├── drv_gpio.c        # GPIO input IRQ + debounce + setup_output
+│       │   └── drv_pwm_in.c      # PWM pulse-width input
 │       ├── shell/
 │       │   └── shell_cmd.c       # `bridge` shell subcommands
 │       └── user/
-│           ├── user_channels.c   # INTEGRATION POINT: register your channels here
-│           └── test_channels.c   # Built-in test channels (counter, heartbeat, echo)
+│           └── user_channels.h   # Shared header: register_if_enabled API
+│
+├── apps/
+│   ├── estop/                    # E_STOP device build
+│   │   ├── CMakeLists.txt        # pulls in common/ + own src/
+│   │   ├── prj.conf              # per-device Kconfig (no ADC/PWM-in)
+│   │   ├── west.yml
+│   │   ├── boards/w5500_evb_pico.overlay
+│   │   └── src/
+│   │       ├── user_channels.c   # registers: estop, mode, okgo_btn, okgo_led
+│   │       ├── estop.{c,h}       # GP27 NC button (Bool IRQ)
+│   │       ├── mode.{c,h}        # GP2/GP3 rotary 3-state (Int32)
+│   │       ├── okgo_btn.{c,h}    # GP4+GP5 AND safety (Bool IRQ)
+│   │       └── okgo_led.{c,h}    # GP22 output (Bool SUB)
+│   ├── rc/                       # RC receiver device build
+│   │   ├── boards/w5500_evb_pico.overlay  # GP2..GP7 PWM inputs
+│   │   └── src/
+│   │       ├── user_channels.c   # registers: rc_ch1..6
+│   │       └── rc.{c,h}          # normalization + EMA + trim
+│   └── pedal/                    # Pedal device build (minimal, ADC later in BL-012)
+│       └── src/
+│           ├── user_channels.c   # registers: pedal_heartbeat
+│           └── pedal.{c,h}       # /robot/heartbeat Bool 1 Hz
+│
+├── modules/
+│   └── w6100_driver/             # Out-of-tree W6100 SPI MACRAW driver (BL-010)
+│
+├── app/                          # LEGACY — BL-015 Step 5 will remove.
+                                    `make build-legacy` keeps regression net.
 ├── workspace/                    # West workspace
 │   ├── zephyr/                   # Zephyr RTOS source
 │   ├── modules/lib/
@@ -145,19 +178,25 @@ The descriptor (`channel_t`) is intentionally `const`-qualified and lives in fla
 ### 4.2 Registration Flow
 
 ```
-main() → user_register_channels()
+main() → user_register_channels()          (apps/<device>/src/user_channels.c)
            └─ channel_register(&my_channel)   // adds to channels[] array
          → channel_manager_init_channels()    // calls ch->init() on all
          → [network up, agent found]
-         → ros_session_init()
+         → ros_session_init()                 (common/src/main.c)
+              ├─ rclc_executor_init(handle_count = sub_count + service_count())
+              │    // BL-017/ERR-032: param_server_init REMOVED, no +6 handles
               ├─ channel_manager_create_entities()  // creates pubs + subs
               ├─ channel_manager_add_subs_to_executor()
-              └─ param_server_load_from_config()    // restores periods/enabled
+              └─ service_manager_init()             // std_srvs SetBool / Trigger
 ```
+
+Channel parameters (`period_ms`, `enabled`, `invert_logic`) are loaded from
+`config.json` at boot via `param_server_load_from_config()`; the
+`rclc_parameter_server` itself is disabled (ERR-032).
 
 ### 4.3 Adding a New Channel
 
-Edit `app/src/user/user_channels.c`:
+Edit `apps/<device>/src/user_channels.c`:
 
 ```c
 #include "my_sensor.h"   // your channel descriptor
@@ -281,35 +320,39 @@ ros2 service call /bridge/estop std_srvs/srv/Trigger "{}"
 
 All service request/response message memory is statically allocated (no heap). Response string buffers are 64 bytes each, bound to the `rosidl_runtime_c__String` struct at callback time.
 
-### 5.4 Parameter Server
+### 5.4 Parameter handling — config.json only (ros2 param NOT available)
 
-Implemented with `rclc_parameter_server` in `low_mem_mode = true` (mandatory for RP2040).
+**Status (2026-04-21, BL-017 / ERR-032):** the interactive
+`rclc_parameter_server` is **disabled**. The `param_server_init` call is
+removed from `common/src/main.c`, and the executor handle count no longer
+reserves the 6 param-service handles.
 
-Parameters auto-created for each registered channel:
+**Why:** `rclc_parameter_server_init_with_option` fails with
+`RCL_RET_INVALID_ARGUMENT` on our stack (details in `ERRATA.md` §ERR-032).
+Crucially, the preceding `rclc_executor_add_parameter_server_with_context`
+call had already registered all 6 service handles as `initialized=true` in
+the `rclc_executor.handles[]` array before the internal service init failed.
+The `rclc_executor_spin_some` loop — which iterates while
+`handles[i].initialized` is set — then stepped over the 6 corrupted param
+handles on every spin. Empirically this stops real subscription callbacks
+from firing: in BL-014 Fázis 2 the `okgo_led` Bool subscriber's `write()`
+callback never ran until the `param_server_init` call was removed.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `ch.<name>.period_ms` | INT | from descriptor | Publish period (ms) |
-| `ch.<name>.enabled` | BOOL | true | Channel on/off switch |
+**What this means in practice:**
 
-**Important:** String-type parameters are NOT available in `low_mem_mode`. Only BOOL and INT (mapped from DOUBLE in some rmw versions — treated as integer).
+- `ros2 param list /robot/estop` returns empty — there are no parameters.
+- Channel parameters (`period_ms`, `enabled`, `invert_logic`, `topic`
+  override) live in `devices/<DEVICE>/config.json` and are loaded at boot.
+- Live config changes go through the USB CDC shell (`bridge config set …`)
+  or via `tools/upload_config.py`, both of which persist to LittleFS at
+  `/lfs/config.json` and require a reboot for network-layer changes.
 
-**Persistence:** Parameter values are saved to `/lfs/ch_params.json` via a callback triggered on every parameter change. On the next boot (or reconnect), `param_server_load_from_config()` restores all values before the main loop starts.
-
-**From ROS 2 CLI:**
-```bash
-# List all bridge parameters
-ros2 param list /pico_bridge
-
-# Set counter publish period to 200ms
-ros2 param set /pico_bridge ch.test_counter.period_ms 200
-
-# Disable heartbeat
-ros2 param set /pico_bridge ch.test_heartbeat.enabled false
-
-# Dump all
-ros2 param dump /pico_bridge
-```
+**Backward-compatible fallback code remains:** `common/src/bridge/param_server.{c,h}`
+are still in the tree as dead code. Re-enabling the interactive paramserver
+is tracked as **BL-018**; the root cause of the `error: 11` would need to be
+isolated first (likely candidates: the node_name/service_name concat in
+`rclc_parameter_server_init_service`, or a transport/entity-pool sizing
+mismatch).
 
 ### 5.5 Entity Limits (rmw_microxrcedds)
 
@@ -494,15 +537,18 @@ Flash (16 MB):
 All builds run inside a Docker container to ensure reproducibility:
 
 ```bash
-# Full build (auto-pristine)
-make build
+# Per-device build (auto-pristine)
+make build DEVICE=estop    # or rc, pedal
+
+# Legacy single-binary build (BL-015 Step 5 will remove)
+make build-legacy
 
 # Force full CMake regeneration (needed after include/ changes)
 docker run --rm \
   -v $(pwd)/workspace:/workdir \
-  -v $(pwd)/app:/workdir/app \
+  -v $(pwd):/repo:ro \
   w6100-zephyr-microros:latest bash -c \
-  "cd /workdir && west build -b w5500_evb_pico app --pristine=always"
+  "cd /workdir && west build -b w5500_evb_pico /repo/apps/estop --pristine=always"
 
 # Flash (copy UF2 to Pico in BOOTSEL mode)
 make flash
@@ -614,7 +660,12 @@ Bridge static data:        ~10 KB
 CONFIG_HEAP_MEM_POOL_SIZE: 96 KB   (reduced from 128 KB in v1.5)
 ```
 
-**Why heap was reduced:** v2.0 adds `std_srvs`, `rclc_parameter_server`, and `diagnostic_msgs` static data, plus larger rmw entity tables. The original 128 KB heap caused a ~25 KB RAM overflow. Reducing to 96 KB leaves the static region viable with ~7.8 KB margin.
+**Why heap was reduced:** v2.0 added `std_srvs`, `rclc_parameter_server`
+(now unused — see §5.4), and `diagnostic_msgs` static data, plus larger
+rmw entity tables. The original 128 KB heap caused a ~25 KB RAM overflow.
+Reducing to 96 KB leaves the static region viable with ~7.8 KB margin.
+Note that the param-server static footprint is still linked in (libmicroros.a
+is pre-built) even though we no longer call `param_server_init` at runtime.
 
 **Runtime heap usage:** micro-ROS uses heap for DDS session setup and internal message queues during initialization. The session init phase peaks at ~40–60 KB heap usage, then stabilizes. This has not been measured precisely on v2.0 — runtime heap monitoring is recommended for production.
 
@@ -753,21 +804,23 @@ Results saved to `tools/v2_stress_report.json`.
 ## 15. Quick Reference
 
 ```bash
-# Build
-make build
+# Build per-device
+make build DEVICE=estop   # or rc, pedal
 
-# Flash (BOOTSEL)
-cp workspace/build/zephyr/zephyr.uf2 /Volumes/RPI-RP2/
+# Flash (BOOTSEL or `bridge bootsel` shell cmd + tools/flash.sh)
+tools/flash.sh
 
 # Start agent
 ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
 
 # Monitor topics
-ros2 topic echo /pico/counter std_msgs/msg/Int32
+ros2 topic echo /robot/estop std_msgs/msg/Bool
 ros2 topic hz /pico/counter
 
-# Set parameter
-ros2 param set /pico_bridge ch.test_counter.period_ms 200
+# Update channel config (live, via USB CDC shell — ros2 param is not wired up, BL-017/ERR-032)
+bridge config set channels.rc_ch1.topic motor_right
+bridge config save
+bridge reboot
 
 # Call service
 ros2 service call /bridge/relay_brake std_srvs/srv/SetBool "{data: true}"

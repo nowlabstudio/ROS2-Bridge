@@ -91,12 +91,62 @@ regisztrálva. `ros2 topic echo` alatt manuális input teszt:
 | `/robot/estop` (GP27 NC) | ✅ OK — `False` alap, nyomásra `True`, felengedve `False` |
 | `/robot/mode` (GP2/GP3 rotary Int32) | ✅ OK — LEARN=0 / FOLLOW=1 / AUTO=2 mind a 3 állás helyes |
 | `/robot/okgo_btn` (GP4+GP5 AND Bool IRQ) | ✅ OK — csak mindkét pin aktív esetén `True`, él-trigger élben |
-| `/robot/okgo_led` (GP22 output Bool sub) | ❌ **BUG — BL-017**: publish DDS-ig eljut (`ros2 topic echo` látja), de a board oldali `sub_callback` nem fut le. GP22 alacsony marad; diagnosztikai GP25-toggle (user LED) szintén nem reagál. Init logok zöldek (`GPIO OUT configured: pin 22`, `okgo_led init OK`, `okgo_led subscriber: okgo_led`, `4 channels, 1 subscribers`). Hibabontás BL-017-ben — hipotézis: `param_server_init error: 11` és a `rclc_executor` handle-allokáció konfliktusa. |
+| `/robot/okgo_led` (GP22 output Bool sub) | ✅ OK — BL-017 fix után. `true` → GP22 magas (LED ég), `false` → alacsony. 5 publish-ből 4 callback log látszott a serial capture-ben (1 a capture-start előtt elveszett), a LED tényleges váltása vizuálisan megerősítve. |
 
-**Következtetés:** az inputok (3 csatorna, 5 pin + 1 IRQ-kapacitás)
-lezárhatók, az output subscribe bug az executor / param_server oldalon
-keresendő — a `okgo_led` per se (init + pin config) helyes, a probléma
-lejjebb van. Subnet restore BL-017 után.
+**Következtetés:** mind a 4 csatorna zöld. Az input-oldali 3 csatorna (estop,
+mode, okgo_btn) hibamentesen fut IRQ-val, a sub-oldali okgo_led a param_server
+eltávolítása után hibamentesen dispatchel. BL-014 Fázis 2 firmware + hw-teszt
+LEZÁRVA.
+
+### BL-017 — `okgo_led` subscribe dispatch fix (ERR-032)
+
+**Tünet:** 2026-04-21 Fázis 3 hw-teszt során az `okgo_led` sub callback
+soha nem futott le publish hatására, pedig a boot szerint init zöld,
+`ros2 topic echo` látja a DDS üzenetet, session aktív, executor-ban 1 sub.
+
+**Gyökérok (ERRATA.md §ERR-032 részletesen):** a `param_server_init` a
+`rclc_parameter_server_init_with_option`-ban `RCL_RET_INVALID_ARGUMENT`
+(error: 11) hibával bukott — de a `rclc_executor_add_parameter_server_with_context`
+a belső init hiba ELŐTT már mind a 6 paraméter-service handle-t
+`initialized=true`-ra állította az `executor.handles[]` tömbben. Emiatt a
+`rclc_executor_spin_some` loop (`for (i=0; i<max_handles && handles[i].initialized)`)
+végigment a 6 törött param-handle-n + a valós sub-on, és a törött handle-ök
+dispatch-fázisa megmérgezte a sub DATA-pullingját.
+
+**Fix:** a `param_server_init` hívás eltávolítva a `common/src/main.c`-ből,
+és a handle_count számításból is kivéve a `PARAM_SERVER_HANDLES (6)` konstans.
+Executor most tiszta 1 handle-lel működik az E_STOP-on. A
+`common/src/bridge/param_server.{c,h}` fájlok a fában maradnak mint holt
+kód — az interaktív `ros2 param` nem elérhető, a `devices/<device>/config.json`
+az egyedüli paraméterforrás (user explicit elvetette a live paramserver-t).
+
+**Verifikáció ua.napi dev subneten:**
+- Boot log: `Executor: 1 subs + 0 svcs = 1 handles` (új LOG_INF a main.c-ben)
+- `ros2 topic pub /robot/okgo_led std_msgs/msg/Bool "{data: true}"`
+  → `<inf> okgo_led: write CB: val=1` → GP22 magas → LED világít
+- `ros2 topic pub ... "{data: false}"` → `val=0` → GP22 alacsony → LED kialszik
+
+**Érintett fájlok:**
+- `common/src/main.c` — `param_server_init` hívás kivéve, `handle_count`
+  már nem számol `PARAM_SERVER_HANDLES`-szel, új diag LOG_INF
+- `apps/estop/src/okgo_led.c` — `LOG_DBG("write CB: val=%d")` dispatch-path
+  dokumentálás (default off release build-ben)
+- `ERRATA.md` — ERR-032 bejegyzés (a "lesson learned" szekcióval: ha egy
+  sub callback rejtélyesen silent, nézd meg van-e másik bukott init
+  ugyanazon executor-on, ami `initialized=true`-ként bennragadt)
+
+### Subnet restore — prod (10.0.10.0/24)
+
+Fázis 3 zárásaként a `devices/E_STOP/config.json` visszaállt prod-ra:
+`ip=10.0.10.23`, `dhcp=false`, `agent_ip=10.0.10.1` (BL-013 pattern).
+`upload_config.py` után reboot zöld, a board a prod subneten jött fel.
+
+**Git artefaktok:**
+- `444f6e9` — `fix(common): disable param_server — unblock subscribe dispatch (BL-017)`
+- `dfb18ef` — `docs(bl-017): close BL-017, add ERR-032 root-cause writeup`
+- `80c4bd5` — `chore(devices/E_STOP): restore prod subnet after BL-014 Fázis 2`
+- Annotated tag: **`bl-014-phase2-done`** — ez lesz a következő (BL-015 Step 5
+  vagy egyéb) munka baseline-ja.
 
 ---
 
