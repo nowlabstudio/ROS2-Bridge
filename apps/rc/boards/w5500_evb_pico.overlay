@@ -1,13 +1,17 @@
 /*
- * apps/rc/boards/w5500_evb_pico.overlay — RC-only board overlay (BL-015 step 3).
+ * apps/rc/boards/w5500_evb_pico.overlay — RC-only board overlay.
  *
- * Szándékosan csak az RC funkcióhoz szükséges pin-ek vannak deklarálva:
- *   - rc_ch1..6  GP2..GP7 — PWM input csatornák (edge-both IRQ a drv_pwm_in-ben)
- *   - user_led   GP25     — link / RC-active visszajelzés (közös funkció)
+ * Pin-kiosztás:
+ *   - rc_ch1..6   GP2..GP7  — PWM input (edge-both IRQ a drv_pwm_in-ben)
+ *   - gp8..gp11   GP8..GP11 — generic Bool output + pin-readback feedback
+ *                             (ACTIVE_HIGH, cmd sub + state pub csatornák;
+ *                              GP8 fizikailag világítás-relét hajt, a többi
+ *                              még szabad — bármilyen relé/LED bedrótozható).
+ *   - user_led    GP25      — bridge-online indikátor (common/src/main.c)
  *
- * NEM kerül ide: estop_btn (GP27), relay_brake (GP14), ADC csatorna —
- * ezeket az E_STOP/PEDAL device-ok tartalmazzák, és így pin-konfliktus
- * nélkül szabadon mozognak.
+ * A per-device overlay csak az RC funkciókhoz szükséges pineket deklarálja —
+ * más device-ok (E_STOP, PEDAL) pinkiosztása független, így ugyanaz a pin
+ * egy másik app-ban más szerepet kaphat (pl. GP22 E_STOP okgo_led).
  *
  * Ethernet: a board default w5500-ot köt a &ethernet node-ra, itt
  * felülírjuk W6100-ra (out-of-tree driver: modules/w6100_driver/).
@@ -28,6 +32,22 @@
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
 			label = "User LED (GP25)";
 		};
+		gp8_out: gp8_out {
+			gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+			label = "GP8 generic output (lights relay)";
+		};
+		gp9_out: gp9_out {
+			gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>;
+			label = "GP9 generic output";
+		};
+		gp10_out: gp10_out {
+			gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>;
+			label = "GP10 generic output";
+		};
+		gp11_out: gp11_out {
+			gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+			label = "GP11 generic output";
+		};
 	};
 
 	rc_inputs {
@@ -42,13 +62,17 @@
 	};
 
 	aliases {
-		led0   = &user_led;
-		rc-ch1 = &rc_ch1;
-		rc-ch2 = &rc_ch2;
-		rc-ch3 = &rc_ch3;
-		rc-ch4 = &rc_ch4;
-		rc-ch5 = &rc_ch5;
-		rc-ch6 = &rc_ch6;
+		led0    = &user_led;
+		rc-ch1  = &rc_ch1;
+		rc-ch2  = &rc_ch2;
+		rc-ch3  = &rc_ch3;
+		rc-ch4  = &rc_ch4;
+		rc-ch5  = &rc_ch5;
+		rc-ch6  = &rc_ch6;
+		gp8-out  = &gp8_out;
+		gp9-out  = &gp9_out;
+		gp10-out = &gp10_out;
+		gp11-out = &gp11_out;
 	};
 };
 

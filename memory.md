@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 hw-teszt 100% zöld; BL-017 LEZÁRVA — okgo_led dispatch gyógyítva a param_server kivételével; subnet restore & commit hátra)
+> Utolsó frissítés: 2026-04-21 (BL-018 LEZÁRVA — RC GP8..GP11 generic Bool I/O cmd+state; BL-016 RC rész lezárva; BL-012 superseded; ERR-033 dokumentálva; BL-019 nyitva — host-side rc_lights_bridge; CH3→GP8 end-to-end hw-verifikálva)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -14,7 +14,85 @@
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
 
-### Munkamenet: 2026-04-21 — BL-014 Fázis 2 + BL-017 LEZÁRVA (okgo_led dispatch gyógyítva)
+### Munkamenet: 2026-04-21 (késő este) — BL-018 LEZÁRVA (RC GP8..GP11 bidirectional Bool I/O) + BL-016 RC + BL-012 superseded + ERR-033 + CH3→GP8 bridge
+
+**Állapot:** Az RC app kapott 4 generic ACTIVE_HIGH Bool I/O csatornát
+(`gp8..gp11`), mindegyik bidirectional: ROS2 sub (`/robot/gpX`) + state
+publisher (`/robot/gpX_state`, 5 Hz). GP8 fizikailag a világítás-relét hajtja,
+GP9..GP11 későbbi bekötésig szabad. A host oldalon egy ideiglenes rclpy
+node (`/tmp/rc_lights_bridge.py`) köti a TX CH3-at a GP8-hoz hiszterézissel
+(±0.2) — user megerősítette, hogy a lámpa a kormányzás CH3 billentésére
+kattan. Ez BL-019 nyitott ticket-je: formalizálni kell `host_ws/` alá.
+
+**BL-018 csatorna-pattern (`apps/rc/src/gpio_out.c`):**
+
+| csatorna | pin | irány | topic pub | topic sub | period |
+|---|---|---|---|---|---|
+| `gp8`  | GP8  | I/O | `/robot/gp8_state`  | `/robot/gp8`  | 200 ms |
+| `gp9`  | GP9  | I/O | `/robot/gp9_state`  | `/robot/gp9`  | 200 ms |
+| `gp10` | GP10 | I/O | `/robot/gp10_state` | `/robot/gp10` | 200 ms |
+| `gp11` | GP11 | I/O | `/robot/gp11_state` | `/robot/gp11` | 200 ms |
+
+A `channel_t.topic_pub` ÉS `.topic_sub` egyszerre van kitöltve — a
+`channel_manager` mindkettőt regisztrálja egyetlen descriptor-ból (ez
+a pattern BL-014 Fázis 2 után már működött az `okgo_led`-en, de ott sub-only
+volt; itt first bidirectional csatornák a repóban).
+
+**ERR-033 (új, RP2040 GPIO quirk):** az output pinen `gpio_pin_get_dt()` 0-t
+ad, mert Zephyr RP2040 driver a `GPIO_OUTPUT_INACTIVE`-hoz nem kapcsolja be
+az input buffert. Tünet: `gpX_state` publisher mindig false-t publikált, pedig
+a DMM szerint a pin magas volt. **Mitigáció:** per-pin `static bool
+gpX_state_cache;` a `gpio_out.c`-ben; `write()` frissíti, `read()` ezt adja
+ki. `drv_gpio` közös réteget nem módosítottuk (másik kliens territóriuma,
+nincs jelenlegi use-case a többi device-on erre a pattern-re). Pure output
+pinen a cache semantikailag azonos a tényleges pin-szinttel.
+
+**BL-016 RC rész lezárva:** `devices/RC/config.json` `channels:` most 10 kulcs
+(6 RC PWM + 4 GP I/O), nincs orphan (`test_*`, `estop`, `lights` törölve).
+`rc_ch3.topic` átnevezve `lights_input`-ra — ezen a topic-on érkezik a
+CH3 Float32 a host bridge-be. PEDAL config cleanup még nyitott (BL-016 egyetlen
+hátralévő item-e).
+
+**BL-012 superseded:** az eredeti GP07-GP11+A0 scope-ból GP8..GP11 kész
+(BL-018 via), GP07 hw-en nincs kivezetve, A0 ADC nem implementálva (külön
+ticket kell ha tényleg kell).
+
+**CH3 → GP8 host bridge prototípus (`/tmp/rc_lights_bridge.py`, nem commitolt):**
+
+```python
+# Float32 /robot/lights_input ∈ [-1..+1] → Bool /robot/gp8
+# hiszterézis: v > +0.2 → True, v < -0.2 → False
+if self.state is None:         new = v > 0.0
+elif self.state and v < -0.2:  new = False
+elif (not self.state) and v > 0.2: new = True
+else: new = self.state
+```
+
+Ezt a node-ot `micro-ros-agent` konténer mellett futtattuk rclpy-vel;
+működött, relé kattant, lámpa ki/be. BL-019 ticket a formalizálásra.
+
+**Verifikációs pointek (BL-018 hw-teszt):**
+- `ros2 topic pub /robot/gpX std_msgs/msg/Bool "{data: true}" -r 2` → DMM magas
+- `ros2 topic echo /robot/gpX_state` → 5 Hz-en echózza
+- CH3 joystick billentés → `/robot/lights_input` Float32 → bridge → `/robot/gp8`
+  Bool → GP8 magas → relé + lámpa
+
+**Megjegyzés publish discoverability-hez:** `ros2 topic pub --once` esetén
+gyakran discovery race miatt nem ér el a sub-hoz; mindig `-r N` rate-tel
+használtuk sustained publishekre. `cat /dev/ttyACM0` szintén problémás volt
+(DTR/RTS twiddling → shell_uart RX buffer full); helyette pyserial
+`dsrdtr=False, rtscts=False, setDTR(False), setRTS(False)` szkripttel
+olvastuk a Zephyr shell log-ot.
+
+**Nyitott (push előtti utolsó dolog):**
+1. `devices/RC/config.json` prod subnet restore (BL-013 pattern):
+   `ip=10.0.10.22`, `gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`.
+2. Commit: `feat(apps/rc): BL-018 + BL-016 — RC GP8-11 Bool I/O csatornák + config cleanup + prod subnet restore`.
+3. Push origin/main (user megerősítés után).
+
+---
+
+### Munkamenet: 2026-04-21 (nappal) — BL-014 Fázis 2 + BL-017 LEZÁRVA (okgo_led dispatch gyógyítva)
 
 **Állapot:** BL-014 Fázis 2 firmware ÉS hw-teszt 100% zöld. BL-017 (okgo_led sub
 callback nem fut) lezárva a `param_server_init` eltávolításával. Hátra: subnet

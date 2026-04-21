@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 hw-teszt 100% zöld; BL-017 LEZÁRVA — okgo_led dispatch OK a param_server eltávolítása után)
+> Utolsó frissítés: 2026-04-21 (BL-018 LEZÁRVA — RC GP8-11 generic Bool I/O csatornák + BL-016 RC rész lezárva + BL-012 superseded; ERR-033 dokumentálva; BL-019 nyitva — host-side rc_lights_bridge)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -71,32 +71,7 @@ _(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
-## BL-012 — RC bridge jövőbeni GPIO csatornák (GP07–GP11 + A0)
-
-- **Kontextus:** A W6100 EVB Pico RC bridge-en a GP07, GP08, GP09, GP10, GP11
-  digitális és az A0 (ADC0) analóg lábak ki vannak vezetve, de jelenleg nincs
-  használatban. A user jelezte, hogy később kerülnek bekötésre — addig is
-  legyenek a configban placeholder-ként, és a firmware publikáljon rájuk
-  topic-okat a `/robot` namespace alatt (konzisztens a meglévő csatornákkal).
-- **Ok:** Ha előre rögzítjük a topic-neveket és a config schema-t, a későbbi
-  bekötéskor nem kell újra firmware-t flashelni — `bridge config set`-tel
-  engedélyezhető lesz. Jelenleg a munka a szűrésre lett fókuszálva (BL-011),
-  ezért a GPIO bővítés deferred.
-- **Scope:**
-  - `devices/RC/config.json` — új `gpio` blokk: `gp07..gp11` digitális
-    (enabled bool + topic string), `a0` analóg (enabled + topic).
-  - `app/src/config/config.{c,h}` — `gpio_ch_t` struct + parser (a
-    `channels` mintájára), defaultolva `enabled=false`.
-  - `app/src/user/` — új modul (pl. `gpio_publish.c`): GP07–GP11 input-pull-up
-    publikáció `std_msgs/Bool`-ként; A0 ADC1 channel read → `std_msgs/Float32`
-    normalizálva (0.0–1.0 vagy -1.0..+1.0, tisztázandó).
-  - `app/boards/w5500_evb_pico.overlay` — GP07–GP11 GPIO aliases + ADC node.
-  - Publikációs ráta: ~20–50 Hz (mint az rc_mode/winch), CPU budget vizsgálandó.
-- **Javasolt topic-nevek:** `/robot/gp07`..`/robot/gp11` (Bool), `/robot/a0` (Float32).
-  Final nevek a config-remap-elhetők (mint a meglévő CH-k).
-- **Érintett fájlok:** `devices/RC/config.json`, `app/src/config/config.{c,h}`,
-  `app/src/user/gpio_publish.{c,h}` (új), `app/boards/w5500_evb_pico.overlay`,
-  `app/CMakeLists.txt`, `app/prj.conf` (ADC / GPIO konfig), `README.md` §RC config.
+_(BL-012 superseded by BL-018 — RC GP8..GP11 generic Bool I/O csatornák 2026-04-21-én lezárva; A0 ADC csatorna még nincs, új ticket kell ha kell majd. Lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
@@ -393,28 +368,43 @@ Fázis 3 (NYITVA, hw-access):
 
 ---
 
-## BL-013 — RC config: prod subnet visszaállítása teszt után
+## BL-019 — host-side `rc_lights_bridge` node (TX CH3 → `/robot/gp8`)
 
-- **Kontextus:** `devices/RC/config.json` jelenleg dev subneten van
-  (`ip=192.168.68.202`, `dhcp=true`, `agent_ip=192.168.68.125`), hogy a
-  laptop-hoz közvetlenül elérhető legyen — a 2026-04-19/20 zaj-mérés ezt
-  követelte meg. A többi bridge (PEDAL, E_STOP) már prod subneten van
-  (`10.0.10.0/24`, `dhcp=false`).
-- **Ok:** Éles üzemben az RC-nek a robot 10.0.10.0/24 subnetén kell lennie
-  (agent a roboton belül), különben nem párosul a többi bridge-dzsel és a
-  ROS2 Jazzy agenttel.
-- **Visszaállítandó értékek** (lásd memory: `project_network_subnets.md`):
-  - `network.ip` = `10.0.10.22`
-  - `network.gateway` = `10.0.10.1`
-  - `network.agent_ip` = `10.0.10.1`
-  - `network.dhcp` = `false`
-- **Művelet:** JSON szerkesztés + `python3 tools/upload_config.py --config devices/RC/config.json --port /dev/ttyACM0`
-  (a board reboot-ol, új subneten jön fel).
-- **Érintett fájlok:** `devices/RC/config.json`.
+- **Kontextus:** A BL-018 lezárása után az RC bridge `/robot/rc_ch3`-on (topic
+  alias: `/robot/lights_input`) publikálja a TX CH3 jelét `std_msgs/Float32`
+  normalizált [-1..+1] tartományban; a GP8 relé a `/robot/gp8` `std_msgs/Bool`
+  subscriber-en vár. A rádió kormányzás → világítás-kapcsolás integrációja
+  host oldalon készül el, hogy ROS2 szinten más node-ok is tudjanak reagálni
+  a CH3-ra (pl. horn, learn-mode enable stb.), ne firmware-be legyen égetve.
+- **Hw-tesztelt prototípus** (2026-04-21, nem commitolva): `/tmp/rc_lights_bridge.py`
+  rclpy Node, hiszterézissel (±0.2) kapcsolja a GP8-at. Működik, relé hall-
+  hatóan kattan, lámpa ki/be — user megerősítette.
+- **Scope:**
+  - Új ROS2 Python package a `host_ws/src/` alatt (pl. `rc_bridge/rc_bridge/lights_bridge.py`).
+    Nem a pico firmware része — a host Jetson-on fut.
+  - Launch fájl integráció a meglévő robot-stack launchbe (ha van).
+  - Config: threshold (`on_threshold`, `off_threshold`) ros2 params legyen,
+    ne konstans.
+  - Egység teszt a hiszterézisre.
+  - Opció: bővíthető legyen CH5 (rc_mode) → horn vagy egyéb GPIO trigger-re.
+- **Miért nem firmware:** a CH3 → GP8 mapping robot-policy, nem sensor/actuator
+  funkcionalitás. Pico firmware maradjon dumb I/O (TX PWM in, GPIO out); a
+  magasabb logika host-on rugalmasabb (ros2 param, runtime config), és ha
+  később DDS-en más forrásból jön a kapcsolási jel, nem kell flash.
+- **Érintett fájlok:** `host_ws/src/rc_bridge/` (új csomag), `host_ws/src/.../launch/*.launch.py`.
+
+---
+
+_(BL-013 lezárva — `devices/RC/config.json` 2026-04-21-én prod subnetre
+állítva a BL-018 commit-ban. Lásd a „Lezárt tételek" szekciót.)_
 
 ---
 
 ## BL-016 — `devices/*/config.json` orphan key cleanup (BL-015 follow-up)
+
+> **Részleges státusz (2026-04-21):** E_STOP és RC rész LEZÁRVA (lásd alább).
+> Már csak a PEDAL config cleanup maradt (flash + hw-access), azt tartsuk
+> nyitva a BL-016 ticket alatt.
 
 - **Kontextus:** A BL-015 előtt egyetlen közös `app/` bináris futott minden device-on,
   ezért a `devices/<DEVICE>/config.json` `channels:` szekcióban minden device
@@ -424,26 +414,103 @@ Fázis 3 (NYITVA, hw-access):
   többi kulcs orphan: ártalmatlan (`config_channel_enabled` egyszerűen ignorálja
   ismeretlen channel-name esetén), de zavaró és hibalehetőség.
 - **Cleanup tartalom:**
-  - `devices/E_STOP/config.json`: csak `estop`, `mode`, `okgo_btn`,
-    `okgo_led` maradjon — `test_*`, `rc_*` törlése. (**E_STOP rész**
-    2026-04-21 BL-014 Fázis 2 firmware mellett már de facto megtörtént,
-    hogy a `CFG_MAX_CHANNELS=12` parser-limit ne sértődjön.)
-  - `devices/RC/config.json`: csak `rc_ch1..6` (object form a topic-aliasokkal)
-    maradjon — `test_*`, `estop` törlése.
+  - ~~`devices/E_STOP/config.json`: csak `estop`, `mode`, `okgo_btn`,
+    `okgo_led` maradjon.~~ **Kész 2026-04-21** (BL-014 Fázis 2 előrehozott része).
+  - ~~`devices/RC/config.json`: csak `rc_ch1..6` (object form a topic-aliasokkal)
+    + új `gp8..gp11` maradjon — `test_*`, `estop`, `lights` törlése.~~
+    **Kész 2026-04-21** (BL-018 mellett; `rc_ch3.topic=lights_input` rename,
+    `gp8..gp11` csatornák hozzáadva).
   - `devices/PEDAL/config.json`: csak `pedal_heartbeat` maradjon — `test_*`,
     `estop`, `rc_*` törlése. (A jelenlegi `test_heartbeat: true` orphan kulcs
     helyett az új csatorna-név kerüljön be: `pedal_heartbeat: true`.)
-- **Sorrend:** BL-014 Fázis 2 (E_STOP új csatornák) UTÁN érdemes elvégezni,
-  hogy az E_STOP cleanup egy lépésben tudja a végleges csatorna-listát.
-- **Érintett fájlok:** `devices/E_STOP/config.json`, `devices/RC/config.json`,
-  `devices/PEDAL/config.json`.
-- **Smoke gate:** mind a 3 device flash + `ros2 topic list` + `ros2 topic echo`
-  saját topic-okra (jelenleg dokumentálva: `/robot/estop`, `/robot/heartbeat`,
-  RC topic-ok).
+- **Érintett fájlok (nyitott):** `devices/PEDAL/config.json`.
+- **Smoke gate:** PEDAL flash + `ros2 topic list` + `ros2 topic echo /robot/heartbeat`.
 
 ---
 
 ## Lezárt tételek
+
+### BL-018 — RC GP8..GP11 generic Bool I/O csatornák (cmd sub + state pub) — LEZÁRVA 2026-04-21
+
+**Cél:** Az RC bridge-en a GP8..GP11 digitális pinek legyenek ROS2 oldalról
+vezérelhetők és visszaolvashatók. GP8 fizikailag a világítás-relét hajtja
+(horgász-LED bar), a többi GP9..GP11 aktuálisan szabad — bármilyen
+ACTIVE_HIGH relé / LED bedrótozható későbbi bővítéskor (nem kell firmware
+rebuild). Ez a BL-012 utódja: az eredeti ticket GP07-et és A0-t is tartalmazott,
+de GP07 hw-en nem elérhető, az A0 ADC-t külön tickethez pakolhatjuk ha
+tényleg kell.
+
+**Csatornák:**
+
+| csatorna | pin | típus | irány | topic (default) | period |
+|---|---|---|---|---|---|
+| `gp8`  | GP8  | Bool | sub + state pub | `/robot/gp8` + `/robot/gp8_state`  | 200 ms (5 Hz) |
+| `gp9`  | GP9  | Bool | sub + state pub | `/robot/gp9` + `/robot/gp9_state`  | 200 ms |
+| `gp10` | GP10 | Bool | sub + state pub | `/robot/gp10` + `/robot/gp10_state` | 200 ms |
+| `gp11` | GP11 | Bool | sub + state pub | `/robot/gp11` + `/robot/gp11_state` | 200 ms |
+
+A `channel_t` descriptor `topic_pub` ÉS `topic_sub` mezeit egyszerre használja
+— a `channel_manager` BL-015 után már mindkét irányt tudja regisztrálni
+egyetlen csatornából.
+
+**State feedback (ERR-033 workaround):** a `read()` nem a fizikai pint olvassa
+vissza `gpio_pin_get_dt()`-vel, mert a Zephyr RP2040 driver
+`GPIO_OUTPUT_INACTIVE`-val nem kapcsolja be az input buffert → output pinen
+mindig 0-t ad. Helyette per-pin `static bool gpX_state_cache` változó tartja
+a legutóbb kiadott parancsot; `write()` frissíti a cache-t, `read()` ezt
+publikálja 5 Hz-en. Pure output pinen nincs külső hatás, tehát a write-echo
+semantikailag azonos a tényleges pinszinttel. A `drv_gpio` közös réteget
+nem kellett módosítani.
+
+**Érintett fájlok:**
+- `apps/rc/boards/w5500_evb_pico.overlay` — 4 új output alias (`gp8-out` ..
+  `gp11-out`), a régi `lights_out` kulcs törölve.
+- `apps/rc/src/gpio_out.{c,h}` (új) — 4 `channel_t` descriptor a fenti
+  pattern szerint, közös `gpio_write_common()` helper.
+- `apps/rc/src/user_channels.c` — `gp8..gp11` registerelve a
+  `register_if_enabled()`-del, a régi egyedi `lights_*` kulcs eltávolítva.
+- `apps/rc/CMakeLists.txt` — `src/gpio_out.c` hozzáadva, a régi `src/lights.c`
+  törölve a target_sources listából.
+- `devices/RC/config.json` — `channels:` blokkban `gp8..gp11: {enabled:true}`
+  felvéve; régi orphan `test_*`, `estop`, `lights` kulcsok (BL-016 RC rész)
+  törölve; `rc_ch3.topic` átállítva `lights_input`-ra a BL-019 host bridge
+  subscribe-hoz.
+
+**Hw-verifikáció (2026-04-21 dev subnet):** mind a 4 pin ACTIVE_HIGH,
+`ros2 topic pub /robot/gpX std_msgs/msg/Bool "{data: true}" -r 2` → DMM magas,
+`{data: false}` → DMM alacsony; mind a 4 `/robot/gpX_state` 5 Hz-en echózik.
+GP8 esetén a világítás-relé kattan, a LED-bar ki/be megy — user megerősítette.
+
+**Nyitott követő tétel:** BL-019 — host oldalon (rclpy) a TX CH3 →
+`/robot/gp8` bridge formalizálása (prototípus `/tmp/rc_lights_bridge.py`-ban
+működött).
+
+---
+
+### BL-013 — RC config: prod subnet visszaállítása teszt után — LEZÁRVA 2026-04-21
+
+`devices/RC/config.json` visszaállítva prod subnetre (`ip=10.0.10.22`,
+`gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`) a BL-018 commit-ban.
+A dev subnetre (`192.168.68.202`, dhcp=true, agent `192.168.68.125`) csak a
+fejlesztő laptopról történő teszteléshez váltsunk vissza ideiglenesen, majd
+a session végén mindig vissza prod-ra push előtt (user explicit feedback).
+
+**Érintett fájl:** `devices/RC/config.json`.
+
+---
+
+### BL-012 — RC bridge jövőbeni GPIO csatornák (GP07..GP11 + A0) — SUPERSEDED 2026-04-21
+
+**Státusz:** superseded BL-018 által — az RC bridge-en GP8..GP11 Bool I/O
+csatornák 2026-04-21-én implementálva + hw-verifikálva. A BL-012 eredeti
+scope-jából:
+- **GP8..GP11 Bool I/O:** kész — BL-018 (bidirectional cmd + state).
+- **GP07:** a hw layouton nem érhető el erre a boardra, elhagyva.
+- **A0 (ADC0) Float32:** nem implementálva. Ha tényleg kellene, nyissunk
+  új ticketet — a scope BL-018-éval eltér (ADC1 channel read → Float32
+  normalizált) és eltérő drv_adc integrációt igényel.
+
+---
 
 ### BL-017 — `okgo_led` Bool subscribe callback nem futott — LEZÁRVA 2026-04-21
 

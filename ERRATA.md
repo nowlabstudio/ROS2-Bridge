@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-04-21 (ERR-032 dokumentálva — rclc_parameter_server partial handle-registration megmérgezi az executor dispatch-et)
+**Utolsó frissítés:** 2026-04-21 (ERR-033 dokumentálva — RP2040 output pin readback `gpio_pin_get_dt()`-n 0-t ad, ha az input buffer nincs bekapcsolva; write-echo state cache workaround-ként)
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -42,6 +42,7 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-030](#err-030) | W6100 chip nem válaszolt SPI-n: CIDR=0x00, minden regiszter olvasás 0x00 (hiányzó reset pulzus + CHPLCKR/NETLCKR lock) | Kritikus | **Javítva** (out-of-tree W6100 driver) |
 | [ERR-031](#err-031) | W6100 `set_config(MAC_ADDRESS)` frissíti a chip SHAR-t, de nem az iface->link_addr-t — MACRAW keret src MAC beragad | Kritikus | **Javítva** (net_if_set_link_addr hívás hozzáadva) |
 | [ERR-032](#err-032) | `rclc_parameter_server_init_with_option` `RCL_RET_INVALID_ARGUMENT` (11) bukás után a 6 részlegesen regisztrált service handle poisons the executor dispatch loop — valós subscription callback-ek (pl. okgo_led Bool write) sem futnak | Kritikus | **Kerülve** (param_server_init call eltávolítva a common/src/main.c-ből) |
+| [ERR-033](#err-033) | RP2040 Zephyr GPIO driver: `gpio_pin_get_dt()` output pinen 0-t ad, ha `GPIO_OUTPUT_INACTIVE`-val konfiguráltuk — nincs input buffer a readback-hez | Közepes | **Megkerülve** (per-channel write-echo state cache a gpio_out.c-ben) |
 
 ---
 
@@ -144,6 +145,76 @@ registered marad.
 
 **Related:** ERR-001 (a `error: 11` diagnosztika), BL-017 (tracking),
 BL-018 (jövőbeli param_server root-cause).
+
+---
+
+## ERR-033
+
+### RP2040 GPIO output pin readback — `gpio_pin_get_dt()` 0-t ad input buffer nélkül
+
+**Tünet (2026-04-21, BL-018):** RC boardon a GP8..GP11 output pinek `state`
+publisher (`/robot/gpX_state`, 5 Hz) mindig `false` (0)-t küldött, pedig a
+DMM szerint a pin ténylegesen magas (3.3 V) volt `ros2 topic pub /robot/gp8
+std_msgs/msg/Bool "{data: true}"` után. A `read()` callback a
+`common/src/drivers/drv_gpio.c`-ban a szabvány Zephyr `gpio_pin_get_dt(&cfg->spec)`-et
+hívja, ami boolean 0-t adott vissza a kimeneti pineken, annak ellenére, hogy
+a `write()` path helyes volt és a chip-oldali OUTPUT szint valóban 1 lett.
+
+**Gyökérok:** a Zephyr RP2040 `gpio_rpi_pico` driver `pin_configure()`-je az
+alapértelmezett `GPIO_OUTPUT` / `GPIO_OUTPUT_INACTIVE` flag-kombináció mellett
+**nem kapcsolja be az input buffert** (SIO `GPIO_CTRL[OEOVER]` + `IE` regiszter
+bit). Az input path így teljesen inaktív — `gpio_pin_get_dt()` olyan, mint
+egy nyitott kapu: mindig 0-t ad. A readback csak akkor működne, ha:
+1. a pin `GPIO_OUTPUT | GPIO_INPUT`-ként lenne konfigurálva (input buffer
+   explicit bekapcsolva), vagy
+2. a driver saját readback-et csinálna a `GPIO_OUT` regiszterből (írt érték
+   shadow-olása).
+
+Más Zephyr SoC-okon (pl. nRF, STM32) ez máshogy működhet — ott az input
+buffer alapból él output módban is. Az RP2040 SIO-n explicit IE kell,
+különben GPIO read nem értelmes.
+
+**Mitigáció (alkalmazott):** a közös `drv_gpio` réteget nem módosítottuk
+(másik kliens territóriuma, BL-015 után is közös). Helyette `apps/rc/src/gpio_out.c`-ben
+minden pinnek van saját `static bool gpX_state_cache;` változója:
+
+```c
+static void gpio_write_common(gpio_channel_cfg_t *cfg, bool *cache,
+                              const channel_value_t *val) {
+    drv_gpio_write(cfg, val->b ? 1 : 0);
+    *cache = val->b;                          // write-echo cache update
+}
+static void gp8_read(channel_value_t *out)  { out->b = gp8_state_cache; }
+static void gp8_write(const channel_value_t *v)
+                    { gpio_write_common(&gp8_cfg, &gp8_state_cache, v); }
+```
+
+Pure output pinen (nincs külső driver, nincs open-drain kontencjó) a cache
+semantikailag azonos a fizikai pin-szintű readback-kel. Ha később short-
+circuit-detektálásra vagy back-drive monitoring-ra lesz szükség (pl. relé
+fault detection), akkor fel kell hozni egy igazi readback path-et a
+`drv_gpio`-ban (`gpio_pin_configure` kiegészítés `GPIO_INPUT` flag-gel a
+setup_output-ban), de most nem indokolt.
+
+**Miért nem `drv_gpio` fix:** a `common/src/drivers/drv_gpio.c` a másik
+device-okkal (E_STOP, PEDAL) osztott — azokon a driver OUTPUT pin (GP22
+okgo_led, stb.) nem publikál state feedback-et (publisher-only vagy
+subscriber-only csatornák), tehát ott nem jön ki ez a bug. Egyedül az RC
+csinál bidirectional cmd+state pattern-t output pinen. Lokális fix a helyes
+megközelítés: a közös réteget nem piszkálja, a viselkedés az RC app-ban
+kontextuálisan dokumentált (`gpio_out.c` fájl-szintű komment).
+
+**Verifikáció (2026-04-21, dev subnet):** `ros2 topic pub /robot/gp8 -r 2
+std_msgs/msg/Bool "{data: true}"` → DMM magas, `/robot/gp8_state` 5 Hz-en
+`True` → cache → pub path működik. `{data: false}` → DMM alacsony,
+`/robot/gp8_state` `False`. Mind a 4 pin (GP8..GP11) ugyanúgy viselkedik.
+
+**Érintett fájlok:**
+- `apps/rc/src/gpio_out.c` — per-pin state cache + fájl-szintű komment
+  magyarázza az RP2040 readback quirk-et.
+- `apps/rc/src/gpio_out.h` — nincs változás (descriptor-listing).
+
+**Related:** BL-018 (tracking), BL-012 (superseded parent ticket).
 
 ---
 

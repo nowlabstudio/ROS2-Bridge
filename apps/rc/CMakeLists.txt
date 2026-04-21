@@ -19,6 +19,7 @@ add_subdirectory(
 target_sources(app PRIVATE
     src/user_channels.c
     src/rc.c
+    src/gpio_out.c
 )
 
 target_include_directories(app PRIVATE src)
