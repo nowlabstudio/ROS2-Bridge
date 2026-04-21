@@ -8,6 +8,44 @@ BL-014 Fázis 2 (E_STOP mode/okgo_btn/okgo_led), BL-017 / ERR-032 resolved.
 
 ---
 
+## Purpose and Positioning
+
+This project implements a **hardware-agnostic sensor/actuator bridge** between physical I/O
+(GPIO, ADC, PWM, I²C, SPI, UART, encoders) and a ROS 2 computational graph, using a
+WIZnet W6100 EVB Pico (RP2040 + W6100 hardwired Ethernet) as the edge node.
+
+The bridge runs **Zephyr RTOS** (v4.2.2 pinned) with **micro-ROS** (Jazzy libraries, Humble
+agent compatible) as the ROS 2 transport layer, over **UDP/IPv4 via hardwired Ethernet**.
+
+### Compared to similar approaches
+
+| Approach | Transport | RTOS | Config | Reconnect | Sensor API |
+|---|---|---|---|---|---|
+| **This project** | UDP / Ethernet (W6100) | Zephyr | JSON on flash | Automatic state machine | `channel_t` descriptor |
+| rosserial (ROS 1) | UART | Bare metal | Compile-time | Manual reset required | Custom message classes |
+| micro-ROS on Arduino | WiFi or UART | FreeRTOS / none | Compile-time | Partial (library) | Direct rcl/rclc calls |
+| micro-ROS on ESP32 | WiFi or Ethernet | FreeRTOS | Compile-time | Agent-ping loop | Direct rcl/rclc calls |
+| MicroPython + uros | UART or UDP | Cooperative | Compile-time | None | Python callbacks |
+| Zenoh bridge (pico) | UDP / Ethernet | FreeRTOS | Compile-time | Partial | Zenoh topic API |
+
+**Key differentiators of this system:**
+- Runtime JSON configuration (IP, agent address, ROS namespace, per-channel `enabled` /
+  `period_ms` / `topic` / `invert_logic`) stored on flash — no recompile to deploy to a
+  different network or robot. `config.json` is the **single source of truth** for channel
+  parameters; the interactive `ros2 param` API is **not wired up** (BL-017 / ERR-032).
+- Clean hardware abstraction: adding a new sensor requires writing one `channel_t`
+  struct and one or two functions (`read` / `write`) in `apps/<device>/src/`. Zero
+  changes to framework code (`common/`).
+- Per-device firmware binaries (`apps/estop/`, `apps/rc/`, `apps/pedal/`) isolate
+  pin-allocation and code size; one `zephyr.uf2` is NOT flashable to a different device.
+- Full automatic reconnection with 4-phase state machine (link → DHCP → agent ping →
+  session init → run → cleanup on loss).
+- Hardware watchdog (RP2040 built-in WDT, 30 s) ensures recovery from any firmware hang.
+- Hardwired Ethernet (W6100) eliminates WiFi association latency and interference — latency
+  is bounded by 100 Mbit/s link + UDP RTT (typically 1–5 ms on LAN).
+
+---
+
 ## 1. Hardware Platform
 
 | Component | Details |
@@ -838,3 +876,209 @@ bridge reboot
 # Stress test
 python3 tools/v2_stress_test.py --port /dev/tty.usbmodem* --agent-ip 192.168.68.125
 ```
+
+---
+
+## 16. External Communication Channel Integration
+
+This section describes how to connect any physical or logical interface to the ROS 2 graph
+using the channel system. Under the per-device tree, all new channels live in
+`apps/<device>/src/` and get registered by that device's `user_channels.c`.
+
+### 16.1 The single-file model
+
+Adding a new peripheral requires two files (`<ch>.c` + `<ch>.h`) in
+`apps/<device>/src/`, plus two lines: a `register_if_enabled(…)` call in that app's
+`user_channels.c` and a `target_sources(app PRIVATE src/<ch>.c)` in `apps/<device>/CMakeLists.txt`.
+No changes to `common/src/main.c`, `common/src/bridge/channel_manager.c`, or any other
+framework file in `common/`.
+
+### 16.2 GPIO (digital I/O)
+
+```c
+// Publish-only: read a button or limit switch
+static void button_read(channel_value_t *val) {
+    val->b = gpio_pin_get_dt(&button_spec);
+}
+
+const channel_t button_channel = {
+    .name = "door_sensor", .topic_pub = "robot/door", .topic_sub = NULL,
+    .msg_type = MSG_BOOL, .period_ms = 100,
+    .init = button_init, .read = button_read, .write = NULL,
+};
+
+// Subscribe-only: drive a relay or LED from ROS2 (see apps/estop/src/okgo_led.c
+// for the real example in-tree)
+static void relay_write(const channel_value_t *val) {
+    gpio_pin_set_dt(&relay_spec, val->b ? 1 : 0);
+}
+```
+
+### 16.3 ADC (analogue sensors)
+
+```c
+static void adc_read(channel_value_t *val) {
+    int16_t raw;
+    adc_read(&adc_seq);
+    val->f32 = (float)raw * ADC_REF_MV / ADC_RESOLUTION;
+}
+
+const channel_t voltage_channel = {
+    .name = "battery_voltage", .topic_pub = "robot/battery_v",
+    .msg_type = MSG_FLOAT32, .period_ms = 1000,
+    .init = adc_init, .read = adc_read, .write = NULL,
+};
+```
+
+### 16.4 PWM (servo, motor speed)
+
+```c
+static void pwm_write(const channel_value_t *val) {
+    // val->i32 = duty cycle 0–65535
+    pwm_set_dt(&servo_spec, PWM_PERIOD_NS, val->i32 * PWM_PERIOD_NS / 65535);
+}
+
+const channel_t servo_channel = {
+    .name = "servo_pan", .topic_pub = NULL, .topic_sub = "robot/servo/pan",
+    .msg_type = MSG_INT32, .period_ms = 0,
+    .init = servo_init, .read = NULL, .write = pwm_write,
+};
+```
+
+### 16.5 I²C sensors (temperature, IMU, ToF distance)
+
+```c
+#include <zephyr/drivers/i2c.h>
+
+static void imu_read(channel_value_t *val) {
+    uint8_t buf[2];
+    i2c_burst_read_dt(&imu_i2c, REG_ACCEL_X, buf, 2);
+    val->f32 = (int16_t)((buf[0] << 8) | buf[1]) * ACCEL_SCALE;
+}
+```
+
+### 16.6 SPI sensors (high-speed ADC, magnetic encoders)
+
+```c
+#include <zephyr/drivers/spi.h>
+
+static void encoder_read(channel_value_t *val) {
+    uint8_t tx[2] = {0}, rx[2];
+    spi_transceive_dt(&enc_spi, &tx_buf, &rx_buf);
+    val->i32 = ((rx[0] & 0x3F) << 8) | rx[1];  // 14-bit AS5048A
+}
+```
+
+### 16.7 UART peripherals (LIDAR, GPS, serial sensors)
+
+```c
+#include <zephyr/drivers/uart.h>
+
+static void lidar_read(channel_value_t *val) {
+    // poll internal ring buffer populated by UART ISR
+    val->f32 = g_lidar_distance_m;
+}
+```
+
+### 16.8 PIO / encoder (RP2040-specific)
+
+The RP2040's PIO state machines are ideal for quadrature encoder reading without CPU overhead.
+Zephyr exposes PIO via the `pio-qdec` driver:
+
+```c
+#include <zephyr/drivers/sensor.h>
+
+static void encoder_read(channel_value_t *val) {
+    struct sensor_value ticks;
+    sensor_sample_fetch(qdec_dev);
+    sensor_channel_get(qdec_dev, SENSOR_CHAN_ROTATION, &ticks);
+    val->i32 = ticks.val1;
+}
+```
+
+### 16.9 Software / computed channels
+
+A channel does not need to represent physical hardware. Examples:
+- **Uptime counter:** `val->i32 = (int32_t)(k_uptime_get() / 1000);`
+- **CPU temperature** (RP2040 ADC ch 4): reads the built-in temperature sensor
+- **PID output:** reads setpoint from one subscribe channel, reads encoder, publishes
+  control effort — all in `read()` and `write()` with shared state via file-scope variables
+- **Watchdog heartbeat** (see `apps/pedal/src/pedal.c` in-tree): publish a BOOL at 1 Hz;
+  if it stops, the ROS 2 side detects the failure via topic timeout
+
+### 16.10 Bidirectional example (motor + encoder)
+
+```c
+static int32_t g_setpoint = 0;
+
+static void motor_write(const channel_value_t *val) {
+    g_setpoint = val->i32;
+    // apply to PWM driver
+}
+
+static void motor_read(channel_value_t *val) {
+    val->i32 = encoder_get_ticks();  // current position
+}
+
+const channel_t motor_channel = {
+    .name      = "motor_left",
+    .topic_pub = "robot/motor_left/ticks",    // encoder → ROS2, 20 Hz
+    .topic_sub = "robot/motor_left/setpoint", // ROS2 → PWM duty
+    .msg_type  = MSG_INT32,
+    .period_ms = 50,
+    .init      = motor_init,
+    .read      = motor_read,
+    .write     = motor_write,
+};
+```
+
+---
+
+## 17. Robustness and Failure Handling
+
+| Failure scenario | Detection | Recovery |
+|---|---|---|
+| micro-ROS agent unreachable at boot | ping timeout (200 ms, every 2 s) | wait in Phase 1 loop; WDT fed; LED stays OFF |
+| Agent disappears mid-session | ping failure in Phase 3 (1 s interval) | Phase 4 cleanup → Phase 1 |
+| Ethernet cable unplugged | net_if DOWN event or ping timeout | reconnect on re-plug |
+| USB console unplugged | DTR goes low (detected at TX interrupt) | autonomous mode continues; bridge unaffected |
+| Firmware hang (> 30 s) | RP2040 WDT | SoC cold reset |
+| LittleFS corrupt / missing | `config_init()` fallback | factory defaults loaded; continue |
+| Shell command buffer overflow | `SHELL_CMD_BUFF_SIZE=256` | shell survives; garbled command → error printed |
+| Rapid-fire shell commands (> 50/2s) | TX ring buffer 8192 B; log thread stack 2048 B | shell stays responsive |
+| Config value too long (> 47 chars) | `config_set()` returns `-ENAMETOOLONG` | error message; no memory corruption |
+| `rclc_parameter_server` partial init (ERR-032) | handle slot registered before RCL_RET_INVALID_ARGUMENT return | `param_server_init()` call removed from `main.c`; `config.json` only path |
+
+---
+
+## 18. Testing
+
+### Automated stress test (`tools/v2_stress_test.py`, formerly `stress_test.py`)
+
+| Range | Category | Tests |
+|---|---|---|
+| T01–T05 | Basic communication | Shell alive, config roundtrip, save/load, reset |
+| T06–T10 | Robustness / edge cases | Empty value, unknown key, 200-char overflow, special chars, 50-cmd rapid fire |
+| T11–T15 | Flash integrity | 20× repeated save, DHCP toggle, port boundary, invalid IP |
+| T16–T17 | Performance | Shell latency (10 samples), 100-command burst |
+
+Known root causes resolved during earlier v1.5 hardening (carried forward into v2.3):
+- **T08 (200-char overflow):** `SHELL_CMD_BUFF_SIZE` was 128 B (Zephyr default); 237-char
+  command overflowed the shell's internal parser buffer → now 256 B + `config_set()`
+  length guard.
+- **T10 (50 rapid-fire):** `LOG_PROCESS_THREAD_STACK_SIZE` was 768 B (Zephyr default); the
+  log process thread overflowed while routing `LOG_WRN("RX ring buffer full.")` through the
+  shell log backend under burst load → now 2048 B. TX ring buffer increased 512 B → 8192 B
+  to prevent `shell_pend_on_txdone(K_FOREVER)` from being triggered.
+
+### Manual tests (M01–M20)
+
+20 hardware-in-the-loop tests covering: Ethernet cable pull/swap, switch off, agent
+kill/restart (5×), USB unplug during operation, power cut during config save, 10× rapid
+power cycle, BOOTSEL press, DHCP↔static switch, 15-minute continuous run, vibration,
+temperature stress, cable wiggling.
+
+### BL-014-specific end-to-end rate tests
+
+- `tools/estop_measure.py` — E-stop rate + inter-sample gap stats (BL-014 Fázis 1).
+- `tools/rc_measure.py` — RC per-channel rate and idle-value sweeps.
