@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 firmware KÉSZ + Fázis 3 input hw-teszt zöld; okgo_led sub BL-017-ként nyitva; subnet restore Fázis 3 befejezése után)
+> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 hw-teszt 100% zöld; BL-017 LEZÁRVA — okgo_led dispatch gyógyítva a param_server kivételével; subnet restore & commit hátra)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -14,10 +14,39 @@
 > compacting utáni visszatéréskor minden szükséges info itt legyen. Mindig
 > felülírjuk az új állapottal. `policy.md §6b` szabályozza.
 
-### Munkamenet: 2026-04-21 — BL-014 Fázis 2 firmware LEZÁRVA (mode/okgo_btn/okgo_led)
+### Munkamenet: 2026-04-21 — BL-014 Fázis 2 + BL-017 LEZÁRVA (okgo_led dispatch gyógyítva)
 
-**Állapot:** Firmware részről Fázis 2 lezárva, `make build DEVICE=estop` zöld.
-Következik Fázis 3 (flash + ROS2 topic teszt + subnet restore `10.0.10.23`-ra).
+**Állapot:** BL-014 Fázis 2 firmware ÉS hw-teszt 100% zöld. BL-017 (okgo_led sub
+callback nem fut) lezárva a `param_server_init` eltávolításával. Hátra: subnet
+restore `10.0.10.23`-ra + commit(ek) + `bl-014-phase2-done` tag.
+
+**BL-017 gyökérok (fontos ERRATA anyag):** a `rclc_parameter_server_init_with_option`
+belül bukott `RCL_RET_INVALID_ARGUMENT`-tel (`error: 11`). Bár a heap változatlan
+maradt (`free=98208 alloc=0` előtt/után), a `rclc_executor_add_parameter_server_with_context`
+a belső hiba ELŐTT már regisztrált 6 handle-t az executor handles[] tömbbe
+`initialized=true`-ként. A spin_some loop (executor.c:1824:
+`for (i=0; i<max_handles && handles[i].initialized; i++)`) így végigment a 6
+törött param-service handle-en ÉS a valós okgo_led sub handle-en, de a
+törött handle-okon a dispatch silent-fail volt, ami megtörte a valós sub
+DATA feldolgozását is (vagy az XRCE READ_DATA request, vagy az rcl_take
+szinten — pontos mechanizmus nincs bizonyítva).
+
+**Fix:** `common/src/main.c`-ben a `param_server_init(&node, &executor)` hívás
+eltávolítva, a `handle_count = sub_count + PARAM_SERVER_HANDLES + service_count()`
+→ `sub_count + service_count()` (PARAM_SERVER_HANDLES 6 konstans kivéve).
+User explicit döntése: a `config.json` a single source of truth a csatorna-
+paraméterekhez, az interaktív `ros2 param` felület NEM szükséges. A
+`common/src/bridge/param_server.{c,h}` fájlok maradnak a fában holt kódként
+(nem hívjuk; BL-018 visszahozhatja ha valaha).
+
+**Verifikáció (2026-04-21 dev subnet 192.168.68.x):** boot után az executor
+`1 subs + 0 svcs = 1 handles`, nincs `param_server_init error: 11`. Publish
+`ros2 topic pub /robot/okgo_led std_msgs/msg/Bool "{data: true}"` →
+`<inf> okgo_led: write CB: val=1` a Pico logban → LED világít. 5 publish-ből
+4 callback entry logolva (1 a capture-start előtt veszett el); LED vizuális
+teszt — user megerősítés `megerősítem, a led világít`.
+
+**Új csatornák (`apps/estop/src/`):**
 
 **Új csatornák (`apps/estop/src/`):**
 
@@ -71,16 +100,23 @@ Flash megvolt, session aktív (`4 channels, 1 subscribers`), manuális input-tes
 | `/robot/estop` (GP27 NC) | ✅ False↔True, felengedve vissza |
 | `/robot/mode` (GP2/GP3 Int32) | ✅ 0/1/2 mind a 3 állás |
 | `/robot/okgo_btn` (GP4+GP5 AND Bool) | ✅ AND helyes, IRQ edge-both |
-| `/robot/okgo_led` (GP22 output Bool sub) | ❌ sub_callback nem fut — **BL-017** |
+| `/robot/okgo_led` (GP22 output Bool sub) | ✅ true→magas / false→alacsony, LED világít (BL-017 fix után) |
 
-**Nyitott (BL-017 után):**
+**Build BL-017 fix után:** RAM 96.62% (-0.8% a param_server 6 handle allokációjának megtakarítása miatt; FLASH marginal).
 
-1. `okgo_led` subscribe bug bontása (param_server / rclc_executor
-   handle-allokáció oldal).
-2. `devices/E_STOP/config.json` prod subnet restore (`ip=10.0.10.23`,
+**Nyitott:**
+
+1. `devices/E_STOP/config.json` prod subnet restore (`ip=10.0.10.23`,
    `gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`).
-3. `git tag bl-014-phase2-done` annotated tag a zöld állapotra (csak ha
-   okgo_led is zöld — jelenleg nem).
+2. Commit(ek): (a) `param_server_init` call removal + executor handle_count
+   csökkentés; (b) okgo_led `LOG_DBG` entry dokumentáló kommentárral; (c)
+   `devices/E_STOP/config.json` prod restore.
+3. `git tag bl-014-phase2-done` annotated tag a zöld állapotra.
+4. ERRATA.md új entry: ERR-032 — partial param_server handle registration
+   poisons executor dispatch.
+5. BL-018 nyitása: ha interaktív paramserver visszakell, a
+   `rclc_parameter_server_init_service`-ben érdemes debuggolni (első
+   gyanúsított: `rcl_node_get_name()` + service_name concat 32-byte stack buffer).
 
 ---
 

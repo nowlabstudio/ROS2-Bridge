@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 input hw-teszt zöld; BL-017 — okgo_led sub nem fut — nyitva)
+> Utolsó frissítés: 2026-04-21 (BL-014 Fázis 2 hw-teszt 100% zöld; BL-017 LEZÁRVA — okgo_led dispatch OK a param_server eltávolítása után)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -347,7 +347,7 @@ okgo-btn-b GP5, okgo-led GP22).
   orphan kulcsok törölve (13 kulcs túllépte volna `CFG_MAX_CHANNELS=12`
   limitet). RC és PEDAL config cleanup marad BL-016-nak.
 
-**Fázis 3 — Hardware verifikáció (RÉSZBEN LEZÁRVA 2026-04-21) + subnet restore:**
+**Fázis 3 — Hardware verifikáció (LEZÁRVA 2026-04-21) + subnet restore:**
 
 Flash megvolt, 4 csatorna regisztrálva, session aktív (dev subnet,
 `192.168.68.203` DHCP, agent `192.168.68.125`).
@@ -357,16 +357,15 @@ Flash megvolt, 4 csatorna regisztrálva, session aktív (dev subnet,
 | `/robot/estop` (GP27 NC) | `ros2 topic echo` + gomb | ✅ False↔True helyes |
 | `/robot/mode` (GP2/GP3) | `ros2 topic echo` + rotary 3 állás | ✅ 0=LEARN / 1=FOLLOW / 2=AUTO |
 | `/robot/okgo_btn` (GP4+GP5 AND) | `ros2 topic echo` + gomb | ✅ AND + IRQ edge-both |
-| `/robot/okgo_led` (GP22 out) | `ros2 topic pub` → multiméter | ❌ GP22 alacsony marad, callback nem fut — **BL-017** |
+| `/robot/okgo_led` (GP22 out) | `ros2 topic pub` → LED | ✅ BL-017 után true→magas, false→alacsony |
 
-**Hátralévő lépések (BL-017 után):**
+**Hátralévő lépések:**
 
-1. BL-017 lezárása (`okgo_led` sub_callback helyreállítás).
-2. Subnet restore (BL-013 pattern): `devices/E_STOP/config.json` prod-ra
+1. Subnet restore (BL-013 pattern): `devices/E_STOP/config.json` prod-ra
    (`ip=10.0.10.23`, `gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`),
    upload_config, commit.
-3. `tools/estop_measure.py stream` regresszió check — 20 Hz még megvan.
-4. Fázis 3 lezárás → git tag `bl-014-phase2-done` annotated tag.
+2. `tools/estop_measure.py stream` regresszió check — 20 Hz még megvan.
+3. Fázis 3 lezárás → git tag `bl-014-phase2-done` annotated tag.
 
 ### Érintett fájlok (állapot-jelzéssel)
 
@@ -442,56 +441,47 @@ Fázis 3 (NYITVA, hw-access):
 
 ---
 
-## BL-017 — `okgo_led` Bool subscribe callback nem fut (E_STOP, apps/estop/src/okgo_led.c)
+## Lezárt tételek
 
-- **Tünet:** `ros2 topic pub /robot/okgo_led std_msgs/msg/Bool 'data: true'`
-  hatására GP22 (overlay alias `okgo-led`, ACTIVE_HIGH) nem vált magasra,
-  és egy diagnosztikai GP25-toggle (user LED) sem reagál — tehát a
-  `okgo_led_write()` callback ténylegesen **nem fut le**. 2026-04-21 dev
-  subneten (192.168.68.x) E_STOP board, `apps/estop/` bináris.
-- **Eddigi megfigyelések:**
-  - Boot log szerint init zöld: `drv_gpio: GPIO OUT configured: pin 22`
-    + `channel_manager: okgo_led init OK`.
-  - Session is aktív: `channel_manager: okgo_led subscriber: okgo_led`
-    + `main: micro-ROS session active. 4 channels, 1 subscribers.`
-  - `ros2 topic echo /robot/okgo_led` látja a publish-olt üzenetet → DDS
-    routing zöld, az üzenet eljut az xrce-dds agentig.
-  - Micro-ROS client oldalon se `okgo_led_write()` LOG_INF, se GP25-toggle
-    — dispatch nem történik meg.
-  - `ros2 topic info -v /robot/okgo_led`: több ghost SUBSCRIPTION endpoint
-    halmozódik session-ciklusokból (agent cleanup-hiány), de az aktuális
-    sessionben csak 1 sub van az executorban.
-  - Boot logban **`param_server_init error: 11`** (EAGAIN) — párhuzamos
-    gyanú: a rclc_executor handle-allokációja (`handle_count =
-    sub_count + PARAM_SERVER_HANDLES(6) + service_count()`) és a
-    részleges param_server állapot konfliktál a sub dispatch-csel.
-  - USB CDC log a boot utáni buffer-megtelés után nem továbbít új üzeneteket
-    (nem dispatch-bug, csak nehezíti a diagnosztikát).
-- **Input oldal OK (ugyanez a firmware 2026-04-21):**
-  - `/robot/estop` (GP27 NC) — OK
-  - `/robot/mode` (GP2/GP3 rotary Int32) — OK (0=LEARN/1=FOLLOW/2=AUTO)
-  - `/robot/okgo_btn` (GP4+GP5 AND IRQ edge-both Bool) — OK
-- **Hipotézisek (priority szerint):**
-  1. `param_server_init` hibája blokkolja a rclc_executor subscription
-     dispatch-et. Teszt: `prj.conf`-ban ideiglenesen kikapcsolni a param
-     server-t vagy a `PARAM_SERVER_HANDLES`-t kivenni a handle_count-ból
-     ha init hibás.
-  2. `rclc_subscription_init_default` QoS mismatch — History depth
-     UNKNOWN a `ros2 topic info`-n; lehet, hogy a micro-ROS Bool-sub
-     RELIABLE/BEST_EFFORT szinkronja nem megy.
-  3. Session-cikluson át nem takarított sub[i] slot-leak okoz dispatch-et
-     elnyelő ghost referenciát.
-- **Érintett fájlok:** `common/src/bridge/channel_manager.c`
-  (create_entities + add_subs_to_executor + sub_callback),
-  `common/src/bridge/param_server.c`, `apps/estop/src/okgo_led.c`,
-  `common/src/main.c` (`ros_session_init` handle_count).
-- **Smoke gate lezáráshoz:** publish → GP22 magasra vált → `false`
-  publish-re alacsonyra. Másik device-on (rc/pedal) is tesztelni egy
-  subscribe-only output kialakítással, hogy reprodukálható-e.
+### BL-017 — `okgo_led` Bool subscribe callback nem futott — LEZÁRVA 2026-04-21
+
+**Gyökérok:** a `param_server_init` belül bukott `RCL_RET_INVALID_ARGUMENT`-tel
+(`error: 11`), de a `rclc_executor_add_parameter_server_with_context`
+a belső service-init hiba ELŐTT már regisztrálta az összes 6 handle-t a
+`rclc_executor.handles[]` tömbbe `initialized=true` állapotban. Emiatt a
+`rclc_executor_spin_some` loop (`for (i=0; i<max_handles && handles[i].initialized; i++)`)
+végigment mind a 6 törött param-service handle-ön ÉS a valós okgo_led sub
+handle-ön is, de a törött handle-ok dispatch-fázisában vagy a belső state
+inkonzisztens volt, vagy a DATA pull nem vitt adatot. Konkrét tünet:
+`okgo_led_write()` callback **soha nem futott** a sub DATA érkezésére.
+
+**Fix:** a `param_server_init` hívás eltávolítva a `common/src/main.c`-ből
+(`ros_session_init`). Az executor handle_count-ból is kivéve a
+`PARAM_SERVER_HANDLES (6)` konstans — executor most tiszta 1 handle-lel
+működik az E_STOP-on. A `config.json` a jedina ill. egyetlen igazság-forrás
+a csatorna-paraméterekhez; a `ros2 param` interaktív paraméterkezelés
+nem elérhető, de a user explicit elvetette (nem kell).
+
+**Verifikáció (2026-04-21, dev subnet 192.168.68.x):** flash után
+`ros2 topic pub /robot/okgo_led std_msgs/msg/Bool "{data: true}"` →
+Pico log: `<inf> okgo_led: write CB: val=1` → GP22 ACTIVE_HIGH magas →
+LED világít. 5 publish-ből 4 callback entry log látszott (1 a capture-
+start előtt veszett el); LED tényleges váltása vizuálisan megerősítve.
+
+**Érintett fájlok:**
+- `common/src/main.c` — `param_server_init` call kivéve, handle_count
+  csökkentve, új `LOG_INF("Executor: %d subs + %d svcs = %d handles")`
+- `apps/estop/src/okgo_led.c` — `LOG_DBG("write CB: val=%d")` a dispatch-path
+  dokumentálására (default off)
+
+**Nyitott követő tétel:** a `common/src/bridge/param_server.{c,h}` fájlok
+maradnak a fában (nem hívott holt kód). BL-018 lesz: ha valaha visszakerül
+az interaktív paramserver, root-cause kell az `error: 11`-re (valószínű
+gyanúsítottak: node/namespace string-kezelés a `rclc_parameter_server_init_service`-ben
+`rcl_node_get_name()`+service_name konkatenáció 32-byte buffer, vagy a
+service init stream_id előkészítésében). Most nem prioritás.
 
 ---
-
-## Lezárt tételek
 
 ### BL-001 — `west.yml` pinelése — LEZÁRVA 2026-04-19
 

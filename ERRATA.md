@@ -1,6 +1,6 @@
 # Errata — W6100 EVB Pico micro-ROS Bridge
 
-**Utolsó frissítés:** 2026-04-19 (ERR-031 lezárva — end-to-end zöld)
+**Utolsó frissítés:** 2026-04-21 (ERR-032 dokumentálva — rclc_parameter_server partial handle-registration megmérgezi az executor dispatch-et)
 
 Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és javítási státusszal.
 
@@ -41,6 +41,109 @@ Ez a dokumentum az összes ismert hibát tartalmazza, root cause elemzéssel és
 | [ERR-029](#err-029) | W5500 driver RTR register check -ENODEV a W6100 chipen — superseded by ERR-030 | Kritikus | **Elavult** (W5500 driver nincs használatban) |
 | [ERR-030](#err-030) | W6100 chip nem válaszolt SPI-n: CIDR=0x00, minden regiszter olvasás 0x00 (hiányzó reset pulzus + CHPLCKR/NETLCKR lock) | Kritikus | **Javítva** (out-of-tree W6100 driver) |
 | [ERR-031](#err-031) | W6100 `set_config(MAC_ADDRESS)` frissíti a chip SHAR-t, de nem az iface->link_addr-t — MACRAW keret src MAC beragad | Kritikus | **Javítva** (net_if_set_link_addr hívás hozzáadva) |
+| [ERR-032](#err-032) | `rclc_parameter_server_init_with_option` `RCL_RET_INVALID_ARGUMENT` (11) bukás után a 6 részlegesen regisztrált service handle poisons the executor dispatch loop — valós subscription callback-ek (pl. okgo_led Bool write) sem futnak | Kritikus | **Kerülve** (param_server_init call eltávolítva a common/src/main.c-ből) |
+
+---
+
+## ERR-032
+
+### rclc_parameter_server részleges handle-regisztráció megmérgezi az rclc_executor dispatch-et
+
+**Tünet (2026-04-21, BL-017):** E_STOP boardon a `/robot/okgo_led`
+`std_msgs/Bool` subscription callback (`okgo_led_write`) **soha nem fut**
+publish hatására, pedig:
+- A `channel_manager_add_subs_to_executor` `rclc_executor_add_subscription_with_context`
+  hívása sikerrel visszatér (sub regisztrálva handle[0]-ként).
+- A boot log szerint session aktív: `micro-ROS session active. 4 channels, 1 subscribers.`
+- `ros2 topic echo /robot/okgo_led` látja a publish-olt Bool-t → DDS +
+  agent szint rendben.
+- Boot logban ott a `<err> param_server: param_server_init error: 11`
+  (RCL_RET_INVALID_ARGUMENT), de a main.c ezt warning-ra veszi és tovább megy.
+
+A diagnosztikai `LOG_DBG` a callback belsejében soha nem log-olódik,
+ergo a dispatch maga a `rclc_executor_spin_some` szinten nem hívja meg
+a callback-et — nem a GPIO driver, nem a `channel_value_t` konverzió,
+nem a config, hanem a dispatch loop a problémás.
+
+**Gyökérok:** a `common/src/main.c` `ros_session_init` így sorrendez:
+
+```c
+int handle_count = sub_count + PARAM_SERVER_HANDLES(6) + service_count();
+rclc_executor_init(&executor, &support.context, handle_count, &allocator);
+channel_manager_add_subs_to_executor(&executor);  // sub → handles[0]
+if (param_server_init(&node, &executor) < 0) {
+    LOG_WRN("Param server init failed — continuing without params");
+}
+```
+
+A `param_server_init` a `rclc_parameter_server_init_with_option`-on
+keresztül próbálja 6 paraméter-service-t (`get/get_types/set/
+set_atomically/list/describe`) init-elni. A libmicroros `parameter_server.c`
+implementációja a 6 `rclc_service_init` hívását `ret |= ` -gyel akkumulálja
+— de a `rclc_executor_add_parameter_server_with_context` (ami a `main.c`-ben
+a `rclc_parameter_server_init_with_option` UTÁN fut BE a `param_server_init`
+belsejében) az executor handles[1..6]-be **beregisztrálja mind a 6 service
+slot-ot `initialized=true`-ként** MIELŐTT észlelné az init hibát.
+
+Az `rclc_executor.c:1824` spin_some loop ezen alapul:
+```c
+for (size_t i = 0; (i < executor->max_handles && executor->handles[i].initialized); i++) {
+  ...
+}
+```
+
+A loop végigmegy handle[0] (valós sub) + handle[1..6] (törött param services)
+minden iterációjában. A 6 törött handle-on vagy a `rcl_take_response` /
+`rcl_take_request` silent-fail, vagy belső state assert miatt a stream
+consumer (uxr_buffer_request_data) pozíciója megakad, és az XRCE transport
+a DATA payload-ot nem továbbítja tovább dispatch-re. Pontos mechanizmus
+nincs izolálva (nem tudtunk step-debug-olni), de az empirikus bizonyíték
+egyértelmű: **6 handle kivétele → minden sub rögtön dispatchel**.
+
+Bizonyíték (ua. firmware, csak main.c `param_server_init` hívás eltávolítva):
+```
+<inf> main: Executor: 1 subs + 0 svcs = 1 handles
+<inf> main: micro-ROS session active. 4 channels, 1 subscribers.
+[publish /robot/okgo_led true]
+<inf> okgo_led: write CB: val=1     ← ELŐZŐLEG SOHA NEM FUTOTT
+```
+
+**Miért nem lett önmagában ERR-001?** Az ERR-001 (`param_server_init
+error: 11`) már 2026-04-19 óta ott van a boot logban (BL-004
+diagnosztika), de addig ártalmatlannak tűnt, mert a main.c a warning-on
+túlment és a többi csatorna publisher-only volt — dispatch-corruption csak
+subscription esetén látszik. BL-014 Fázis 2 hozta be az első sub-ot
+(`okgo_led`), ekkor lett látható az ERR-001 valós kockázata.
+
+**Fix (alkalmazott 2026-04-21):** a `param_server_init(&node, &executor)`
+hívás **törölve** a `common/src/main.c`-ből, és a `handle_count` számításból
+kivett `PARAM_SERVER_HANDLES(6)`. Az interaktív `ros2 param` nem használható
+többé (user explicit elvetette — a `devices/<device>/config.json` a single
+source of truth). A `common/src/bridge/param_server.{c,h}` fájlok a fában
+maradnak mint holt kód (backlog-ban BL-018 nyitva: ha valaha interaktív
+paramserver kell, a `rclc_parameter_server_init_service` root-cause-t
+(`rcl_node_get_name()` + service_name 32-byte stack buffer gyanús) kell
+először javítani).
+
+**Tanulság:** a rclc_executor `handles[]` tömbje olyan, mintha
+megbízható-invariáns lenne, de valójában a `rclc_executor_add_*` függvények
+**atomicity nélkül** állítják `initialized=true`-ra a handle-t, mielőtt a
+belső init teljesen végigfutna. Bármilyen hibával kilépő
+`rclc_executor_add_parameter_server_with_context` / service init /
+subscription init **megmérgezi az egész dispatch loop-ot** — mivel a
+spin_some az első uninitialized handle-nél kilép, és minden handle előtte
+korruptan dispatchelődik. Jövőbeli fejlesztéseknél: ha egy sub callback
+rejtélyesen silent, az ELSŐ dolog amit nézni kell: van-e másik handle (pl.
+service, param, action) ugyanezen executor-on, ami bukott init után mégis
+registered marad.
+
+**Érintett fájlok:**
+- `common/src/main.c` (`ros_session_init`) — fix
+- `common/src/bridge/param_server.{c,h}` — holt kód (maradt)
+- `apps/estop/src/okgo_led.c` — `LOG_DBG("write CB: val=%d")` dokumentáció
+
+**Related:** ERR-001 (a `error: 11` diagnosztika), BL-017 (tracking),
+BL-018 (jövőbeli param_server root-cause).
 
 ---
 
