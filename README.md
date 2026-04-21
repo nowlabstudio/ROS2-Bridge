@@ -186,12 +186,8 @@ W6100_EVB_Pico_Zephyr_MicroROS/
 │           ├── user_channels.c      ← registers: pedal_heartbeat
 │           └── pedal.{c,h}          ← /robot/heartbeat (Bool 1 Hz)
 │
-├── modules/
-│   └── w6100_driver/                ← Out-of-tree W6100 SPI MACRAW driver (BL-010)
-│
-└── app/                             ← LEGACY, BL-015 Step 5 will remove it.
-                                       `make build-legacy` keeps a regression net
-                                       until then.
+└── modules/
+    └── w6100_driver/                ← Out-of-tree W6100 SPI MACRAW driver (BL-010)
 ```
 
 ---
@@ -237,12 +233,6 @@ Per-device build stats (E_STOP, BL-014 Fázis 2):
 Each device has its own `apps/<device>/prj.conf` and overlay — the UF2
 from one device **cannot** be flashed onto another device without rebuild
 (overlay DT differs).
-
-Legacy single-binary build (regression net, to be removed in BL-015 Step 5):
-
-```bash
-make build-legacy
-```
 
 ### 4. Flash the firmware
 
@@ -676,13 +666,6 @@ ros2 topic echo /robot/temperature
 ---
 
 ## Built-in Channels
-
-### Test channels (legacy `app/` tree only)
-
-Located in `app/src/user/test_channels.c`. **Not present** in the per-device
-`apps/<device>/` binaries — PEDAL has its own `pedal.c` (`pedal_heartbeat`
-channel) instead of the placeholder `test_heartbeat`. Kept for
-`make build-legacy` regression until BL-015 Step 5 removes the legacy tree.
 
 ### E-Stop channels (`apps/estop/`)
 

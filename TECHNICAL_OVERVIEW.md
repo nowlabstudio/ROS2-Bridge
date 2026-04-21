@@ -107,9 +107,9 @@ agent compatible) as the ROS 2 transport layer, over **UDP/IPv4 via hardwired Et
 
 ## 3. Repository Structure
 
-Per-device build tree since BL-015 Step 1-4 (2026-04-21). The legacy common
-`app/` tree remains only as a `make build-legacy` regression net and will be
-deleted in BL-015 Step 5.
+Per-device build tree since BL-015 (2026-04-21). The former common `app/`
+tree was removed in Step 5 — every device now builds from its own
+`apps/<device>/` root.
 
 ```
 ROS2-Bridge/
@@ -160,8 +160,6 @@ ROS2-Bridge/
 ├── modules/
 │   └── w6100_driver/             # Out-of-tree W6100 SPI MACRAW driver (BL-010)
 │
-├── app/                          # LEGACY — BL-015 Step 5 will remove.
-                                    `make build-legacy` keeps regression net.
 ├── workspace/                    # West workspace
 │   ├── zephyr/                   # Zephyr RTOS source
 │   ├── modules/lib/
@@ -577,9 +575,6 @@ All builds run inside a Docker container to ensure reproducibility:
 ```bash
 # Per-device build (auto-pristine)
 make build DEVICE=estop    # or rc, pedal
-
-# Legacy single-binary build (BL-015 Step 5 will remove)
-make build-legacy
 
 # Force full CMake regeneration (needed after include/ changes)
 docker run --rm \

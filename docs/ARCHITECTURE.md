@@ -81,10 +81,6 @@ ROS2-Bridge/
 │                                — out-of-tree Zephyr modul, mindhárom app
 │                                  `ZEPHYR_EXTRA_MODULES`-on át hivatkozza
 │
-├── app/                        ← **LEGACY**, BL-015 Step 5 fogja törölni.
-│                                 Addig `make build-legacy` regressziós
-│                                 háló (nem használjuk aktívan).
-│
 ├── devices/                    ← runtime config per device (upload_config.py)
 │   ├── E_STOP/config.json      MAC, IP (10.0.10.23 prod, dhcp=false),
 │   │                           channels: estop, mode, okgo_btn, okgo_led
@@ -148,9 +144,6 @@ make flash
 # Runtime konfig feltöltés (reboot közben)
 python3 tools/upload_config.py --config devices/<DEVICE>/config.json --port /dev/ttyACM0
  → bridge config set + save + reboot
-
-# Legacy regresszió check (BL-015 Step 5-ig még él)
-make build-legacy
 ```
 
 A per-device binárisok izolálják a pin-foglalást és a kódméretet — ugyanaz a
@@ -190,8 +183,8 @@ swap-re.
 
 - `policy.md` — session indítás, TODO szabály, memory.md karbantartás.
 - `memory.md` — aktuális munkamenet compacting-proof state-je.
-- `docs/backlog.md` — aktív BL-###-ok (BL-013 RC subnet restore, BL-015
-  Step 5 legacy app/ törlés, BL-016 config cleanup, stb.).
+- `docs/backlog.md` — aktív BL-###-ok (BL-013 RC subnet restore, BL-016
+  config cleanup, stb.).
 - `ERRATA.md` — aktív és lezárt ERR-ek (ERR-030 W6100 SPI, ERR-031 MACRAW
   MAC, ERR-032 rclc_parameter_server partial handle-regisztráció).
 - `CHANGELOG_DEV.md` — időrendi napló, újabb-először sorrend.

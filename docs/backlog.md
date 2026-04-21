@@ -102,10 +102,12 @@ _(BL-010, BL-011 lezárva — lásd a „Lezárt tételek" szekciót.)_
 
 ## BL-015 — Repo restructure: per-device app profile (közös `common/` + `apps/<device>/`)
 
-> **Státusz:** nyitva, elindítandó friss session-ben.
-> **Előfeltétel (teljesítve):** `bl-014-phase1-done` git tag a jelenlegi
-> zöld állapoton (E_STOP 20 Hz, mindhárom device közös `app/`-ból flash-el).
-> **Blocker:** BL-014 Fázis 2 (új E_STOP csatornák) csak ez után indulhat.
+> **Státusz:** LEZÁRVA (2026-04-21). Step 1-4 `apps/{estop,rc,pedal}/` +
+> `common/` szétválasztással fut, Step 5 a régi `app/` fa és a
+> `make build-legacy` target törlésével zárult.
+> **Baseline tag:** `bl-014-phase2-done` (E_STOP 4 csatorna zöld, prod
+> subnet restore-olva). Régi `bl-014-phase1-done` tag továbbra is a közös
+> `app/` utolsó zöld verziójára mutat.
 
 ### Kontextus és ok
 
