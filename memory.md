@@ -1,6 +1,6 @@
 # memory.md — Projekt-emlékezet (élő dokumentum)
 
-> Utolsó frissítés: 2026-04-21 (BL-018 LEZÁRVA — RC GP8..GP11 generic Bool I/O cmd+state; BL-016 RC rész lezárva; BL-012 superseded; ERR-033 dokumentálva; BL-019 nyitva — host-side rc_lights_bridge; CH3→GP8 end-to-end hw-verifikálva)
+> Utolsó frissítés: 2026-04-21 (BL-018 + BL-016 RC + BL-013 lezárva és pusholva `e2bd402`-ben; RC bridge prod subnetre flashelve és upload_config-gal bootolva; `10.0.10.22` robotra kész. BL-019 + BL-016 PEDAL + BL-014 Fázis 3 nyitva.)
 > Hatóköre: ROS2-Bridge repo (W6100 EVB Pico + micro-ROS + RoboClaw stack).
 > Karbantartás: minden munkamenet végén frissíteni kell; új technikai tény,
 > mérés vagy döntés kerüljön ide. A `policy.md` rendelkezik erről.
@@ -84,11 +84,26 @@ használtuk sustained publishekre. `cat /dev/ttyACM0` szintén problémás volt
 `dsrdtr=False, rtscts=False, setDTR(False), setRTS(False)` szkripttel
 olvastuk a Zephyr shell log-ot.
 
-**Nyitott (push előtti utolsó dolog):**
-1. `devices/RC/config.json` prod subnet restore (BL-013 pattern):
-   `ip=10.0.10.22`, `gateway=10.0.10.1`, `agent_ip=10.0.10.1`, `dhcp=false`.
-2. Commit: `feat(apps/rc): BL-018 + BL-016 — RC GP8-11 Bool I/O csatornák + config cleanup + prod subnet restore`.
-3. Push origin/main (user megerősítés után).
+**Session záró állapot (2026-04-21 este):**
+- Commit `e2bd402` pusholva `origin/main`-re (BL-018 + BL-016 RC + BL-013
+  + ERR-033 + BL-019 nyitás egyben).
+- RC Pico board reflash-elve az új firmware-rel (FLASH 2.52%, RAM 96.69%,
+  UF2 846336 B).
+- `upload_config.py` felvitte a prod subnet config-ot a LittleFS-re;
+  `bridge config show` visszaigazolta: `dhcp=false, ip=10.0.10.22,
+  gateway=10.0.10.1, agent_ip=10.0.10.1`. Board reboot-olt, prod subneten
+  jön fel.
+- Fizikailag mehet a robotra; Jetson oldali `ros2 topic list` ellenőrzés
+  a következő session feladata (most nincs Jetson-access).
+
+**Nyitott backlog-itemek (nem push-blokkerek):**
+- **BL-005** — Dockerfile digest-pin + Python csomag pin.
+- **BL-006** — board target név doksi (`w5500_evb_pico` vs. "W6100 EVB Pico").
+- **BL-009** — upstream PR-ok (A/B/C anyag kész, benyújtás kézi).
+- **BL-014 Fázis 3** — E_STOP prod subnet restore + `bl-014-phase2-done` tag.
+- **BL-016 PEDAL rész** — `devices/PEDAL/config.json` orphan cleanup.
+- **BL-019** — host-side `rc_lights_bridge` formalizálása `host_ws/`-be
+  (prototípus `/tmp/rc_lights_bridge.py` megvolt; Jetson-access kell).
 
 ---
 
