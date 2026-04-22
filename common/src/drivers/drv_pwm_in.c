@@ -32,17 +32,6 @@ int rc_pwm_init(rc_pwm_channel_t *channels, int count)
 	for (int i = 0; i < count; i++) {
 		rc_pwm_channel_t *ch = &channels[i];
 
-		/* BL-020 diag: skip CH3 IRQ regisztrációt — preemption-bias hipotézis
-		 * megerősítésére. Ha a CH2 +27.5 µs bias eltűnik aktív CH3 mellett,
-		 * a shared IO_IRQ_BANK0 dispatch latency a gyökérok. Patch ideiglenes,
-		 * a megerősítés után törlendő (vagy átmegy PIO-alapú driverbe). */
-		if (i == 2) {
-			LOG_WRN("RC CH%d: IRQ regisztráció kihagyva (BL-020 diag)", i + 1);
-			ch->pulse_us       = 1500;
-			ch->last_update_ms = 0;
-			continue;
-		}
-
 		if (!device_is_ready(ch->spec.port)) {
 			LOG_ERR("RC CH%d: GPIO device not ready", i + 1);
 			return -ENODEV;
