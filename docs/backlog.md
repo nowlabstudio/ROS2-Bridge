@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-22 (BL-020 nyitva — RC CH3-active → CH2 szisztematikus +27.5 µs bias, gyanús gyökérok: RP2040 GPIO bank0 shared IRQ dispatch latency; biztonsági hatás: bal motor random mozgás RC módban)
+> Utolsó frissítés: 2026-04-22 (BL-020 nyitva — RC CH2 +27.5 µs bias, két diag mérés CÁFOLTA a tisztán szoftveres ISR preemption hipotézist; új gyanú: hardveres — TX vevő VCC sag, chip-belüli adjacent pin coupling, vagy keret-időzítés. HW-isolation diagnózis kell.)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -81,7 +81,84 @@ ez a késés a CH2 mért puls-szélességét növeli.
    Magyarázat: CH5 impulzusa ~50 ms távolságra van CH2-től a PPM ciklusban
    (a TX keretsorrend másik végén), tehát az ISR-ek nem esnek egybe.
 
-### Javaslat: diagnosztikus megerősítő patch (1 sor)
+### Frissítés 2026-04-22: két diagnosztikus mérés CÁFOLTA a tisztán szoftveres ISR preemption hipotézist
+
+A „Gyanús gyökérok" szekció és a „Mi zárja ki a többi hipotézist" §5
+(CH5 mentes) **felülbírálva** az alábbi két mérés alapján.
+
+**Mérés A — CH3 IRQ skip patch** (commit `b2cab49` → később revertálva
+`f0f3d51`-ben). A `rc_pwm_init()` `if (i == 2) continue;` flag-gel a CH3
+callback regisztráció kihagyva, `lights_input` topic konstans `0.000`.
+Foxglove CSV (~750 mp aktív window):
+- `rc_mode` (CH5) **HIGH** → `motor_left` avg = **+0.053**
+- `rc_mode` (CH5) **MID/LOW** → `motor_left` avg ≈ **+0.001**
+
+A CH5-tel korreláló bias látszólag a CH5 ISR preemption-jét vádolta —
+a `Mi zárja ki §5`-öt megdöntötte.
+
+**Mérés B — CH5 IRQ skip patch** (uncommitted, mérés után discard-olva).
+A `rc_pwm_init()` `if (i == 4) continue;`, `rc_mode` topic konstans `0.000`.
+Friss CSV (1580–1645 mp) sec-by-sec:
+- `lights_input` (CH3) **LOW** (-1.0) → `motor_left` avg = **+0.012..+0.017**
+- `lights_input` (CH3) **HIGH** (+0.93) → `motor_left` avg = **+0.06..+0.08**
+
+A CH3-mal korreláló bias most VISZONT a CH3 ISR preemption-jét vádolta
+— a két mérés összevetve **logikai paradox**:
+
+| mérés | CH3 IRQ | CH5 IRQ | bias forrás (látszólag) | bias jelen? |
+|---|---|---|---|---|
+| A | **skip** | aktív | CH5 toggle | **igen, +0.05** |
+| B | aktív | **skip** | CH3 toggle | **igen, +0.06** |
+
+Ha az ISR preemption tisztán szoftveres lenne, akkor az IRQ kikapcsolt
+csatorna nem tudna bias-t okozni. Mégis MINDKÉT mérésben volt bias —
+a vádolt csatorna éppen az volt, amelyik IRQ-ja **aktív** maradt. A
+korreláció valójában a TX-en a két stick **szinkronizált mozgatásával**
+magyarázható: a tesztelő mindkét mérésben a CH3+CH5 kapcsolókat egyszerre
+toggle-olta (vagy a TX-en egy rotary az obi-egyszerre vezérli), és a
+kikapcsolt csatorna `0`-án maradt → a maradék (aktív) csatorna értéke
+korrelált a bias-szal — **félrevezető függési illúzió**.
+
+**Új interpretáció:** a bias forrása **független a Zephyr ISR feldolgozástól**.
+A TX-en `bármelyik HIGH csatorna` (CH3 vagy CH5) jelenléte HW-szinten
+okozza a +27.5 µs eltolódást a CH2-n. Lehetséges hardveres mechanizmusok:
+1. **TX vevő VCC sag a magasabb duty-cycle-től:** ha CH3+CH5 hosszabb
+   pulzusokat ad (HIGH = ~1.95 ms / 22 ms = 9% vs LOW ~5%), a vevő 3.3V
+   regulator többet terhelődik → minden CH kimenet enyhén alacsonyabb
+   feszültség → a CH2 falling edge a Schmitt küszöbön később detektálódik
+   → mért pulse_us +27.5 µs-mal hosszabb.
+2. **Chip-belüli adjacent pin coupling** (GP3 ↔ GP4, GP3 ↔ GP6): az
+   RP2040 belső kapacitás-mátrixa az adjacent pinek edge-átmenetét
+   átsugározza a CH2 vonalra → spurious Schmitt-trigger → torzult mérés.
+3. **TX/vevő keret-szintű időzítés:** a vevő belső szekvenciája átrendezi
+   a csatorna-kimeneteket a stick állása alapján — azonos cycle-en belül
+   más csatorna HIGH = más relatív timing CH2-n.
+
+**Következmények a fix-tervre:**
+- A korábban tervezett **PIO-alapú driver** (Step 2) **NEM garantáltan
+  oldja meg** a bias-t, ha a probléma a fizikai jel torzítása szintjén
+  van (Schmitt-trigger, vevő VCC sag). A PIO ugyanazt a Schmitt-edge-et
+  látja, csak ISR-mentesen.
+- **Hardver-isolation diagnózis kell** mielőtt PIO-ra invesztálunk:
+  - **HW-A:** Külön akkumulátor a TX vevőhöz (a Pico USB-ről táplálva
+    marad), bias mérés CH3 HIGH/LOW két állapotában. Ha a bias eltűnik
+    → vevő VCC sag a fő ok.
+  - **HW-B:** Pull-up vagy R/C low-pass szűrő (10 kΩ + 100 pF) a CH2 vonalon
+    → Schmitt-trigger küszöb tisztábban detektált → ha bias csökken, kapacitív
+    coupling a fő ok.
+  - **HW-C:** TX-en CH4 vagy CH6 stick HIGH-ra (CH3+CH5 LOW) → ha CH4/CH6
+    is okoz bias-t, akkor minden HIGH csatorna szimmetrikus hatású →
+    erősíti a vevő VCC sag hipotézist.
+  - **HW-D:** Külső szignál-generátor a CH2 vonalra (1500 µs konstans pulzus,
+    nem TX-vevő) → bias eltűnik-e? Ha igen, a probléma egyértelműen TX-vevő
+    oldali, nem Pico/Zephyr oldali.
+
+A korábbi tervezett 1-soros patch + PIO-driver (alább, megtartva
+referenciaként) **csak akkor lesz végleges fix**, ha a HW-D mérés
+megerősíti, hogy a Pico-szintű probléma a domináns. Egyébként a
+megoldás hardveres (jobb vevő, külső táp, vagy szűrő).
+
+### Eredeti javaslat: diagnosztikus megerősítő patch (1 sor) — VÉGREHAJTVA, paradox eredmény (lásd fent)
 
 `common/src/drivers/drv_pwm_in.c` `rc_pwm_init()` loopjába ideiglenesen:
 
@@ -125,11 +202,10 @@ Host-oldal (`rc_teleop_node.py` vagy új filter node):
   gyökerét nem kezeli. Dokumentáció alapú workaround, ne commitoljuk
   tartósan.
 
-### Részleges enyhítés (már commitolva, NEM oldja meg a bias-t)
+### Részleges enyhítés (commitolva 2026-04-22 `ebf26c3`-ben, NEM oldja meg a bias-t)
 
-2026-04-21 este során két javítás bekerült a fába (nem BL-020, hanem a
-diagnózis melléktermékei — zárójelben dokumentálva itt, hogy a BL-020
-fix során ne rontsuk el):
+2026-04-21 este során két javítás született, amelyek 2026-04-22 reggel
+kerültek commitba (`ebf26c3` — a tegnapi szándékot véglegesítettük):
 
 - `apps/rc/boards/w5500_evb_pico.overlay` — `rc_ch1..rc_ch6` GPIO flag
   `0` → `GPIO_PULL_DOWN`. Kihúzott vezeték esetén a pin `0`-ra húz,
@@ -137,7 +213,10 @@ fix során ne rontsuk el):
 - `apps/rc/src/rc.c` — `rc_normalize()` elején `rc_pwm_valid()` check,
   invalid jelnél `ema_initialized = false` + `return 0.0f`. Timeout
   (`RC_PWM_TIMEOUT_MS = 500`) után a csatorna hard-nullára áll, EMA
-  state nem „ragad be" a kihúzás előtti értéken.
+  state nem „ragad be" a kihúzás előtti értéken. **Mérési hatás:**
+  a 2026-04-22-i Foxglove CSV-ben látható, hogy TX off állapotban a
+  `motor_left` 8 percen át tökéletes `0.000` (n=~12000 minta) — a
+  failsafe stand-still állapotban garantáltan biztonságos.
 
 Ezek kizárják a floating-pin mellékhatásokat (fail-safe OK volt a K1/K2
 méréskor: CH1/CH2 kihúzva `/robot/motor_left = 0.000` stabilan).
