@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-22 (BL-020 nyitva — RC CH2 +27.5 µs bias, két diag mérés CÁFOLTA a tisztán szoftveres ISR preemption hipotézist; új gyanú: hardveres — TX vevő VCC sag, chip-belüli adjacent pin coupling, vagy keret-időzítés. HW-isolation diagnózis kell.)
+> Utolsó frissítés: 2026-04-22 délután (BL-020 nyitva — RC CH2 +27.5 µs bias. 3 HW-isolation teszt KIZÁRTA az összes TX/vevő-oldali hardveres okot (kábel-crosstalk, vevő VCC sag, vevő keret-időzítés). Az ISR preemption hipotézis MEGERŐSÍTVE — pontosított megfogalmazás: minden HIGH csatorna ISR-je adagolódik a CH2 dispatch latency-jába. PIO-driver (Step 2) újra élő végleges fix.)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -11,11 +11,13 @@ Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dát
 
 ## BL-020 — RC PWM-input ISR preemption bias (CH3 aktív → CH2 szisztematikus +27.5 µs eltolás)
 
-> **Státusz:** nyitva, safety-impact. Diagnózis kész, fix másnapra halasztva
-> (user döntés 2026-04-21 este). Részleges enyhítés már benn van a repóban
-> (overlay PULL_DOWN + `rc_normalize` failsafe — lásd „Részleges enyhítés"
-> szekció alább). Ez NEM oldja meg az ISR bias-t, csak a floating-pin
-> mellékhibákat zárta ki.
+> **Státusz:** nyitva, safety-impact. Diagnózis 2026-04-22 délutánra LEZÁRVA
+> (3 HW-isolation teszt + paradox-feloldás — lásd alább). Gyökérok: RP2040
+> bank0 shared IRQ dispatch latency, **minden HIGH csatorna ISR-je adagolódik**
+> a CH2 timestamp-ba. Fix: PIO-alapú PWM input capture (Step 2). Részleges
+> enyhítés már benn van (overlay PULL_DOWN + `rc_normalize` failsafe —
+> floating-pin mellékhibákat zárta ki, NEM a bias-t). Interim opció: CH3..CH6
+> IRQ skip + polling, ha PIO csúszik.
 
 ### Tünet
 
@@ -119,44 +121,74 @@ toggle-olta (vagy a TX-en egy rotary az obi-egyszerre vezérli), és a
 kikapcsolt csatorna `0`-án maradt → a maradék (aktív) csatorna értéke
 korrelált a bias-szal — **félrevezető függési illúzió**.
 
-**Új interpretáció:** a bias forrása **független a Zephyr ISR feldolgozástól**.
-A TX-en `bármelyik HIGH csatorna` (CH3 vagy CH5) jelenléte HW-szinten
-okozza a +27.5 µs eltolódást a CH2-n. Lehetséges hardveres mechanizmusok:
-1. **TX vevő VCC sag a magasabb duty-cycle-től:** ha CH3+CH5 hosszabb
-   pulzusokat ad (HIGH = ~1.95 ms / 22 ms = 9% vs LOW ~5%), a vevő 3.3V
-   regulator többet terhelődik → minden CH kimenet enyhén alacsonyabb
-   feszültség → a CH2 falling edge a Schmitt küszöbön később detektálódik
-   → mért pulse_us +27.5 µs-mal hosszabb.
-2. **Chip-belüli adjacent pin coupling** (GP3 ↔ GP4, GP3 ↔ GP6): az
-   RP2040 belső kapacitás-mátrixa az adjacent pinek edge-átmenetét
-   átsugározza a CH2 vonalra → spurious Schmitt-trigger → torzult mérés.
-3. **TX/vevő keret-szintű időzítés:** a vevő belső szekvenciája átrendezi
-   a csatorna-kimeneteket a stick állása alapján — azonos cycle-en belül
-   más csatorna HIGH = más relatív timing CH2-n.
+**Első (téves) interpretáció:** "a bias hardveres". Ezt cáfolták a
+2026-04-22 délutáni HW-tesztek (lásd alább) — visszahúzva. A tényleges
+helyes interpretáció: a paradox MEGFOGALMAZÁSI hiba volt. A korrekt
+megfogalmazás:
 
-**Következmények a fix-tervre:**
-- A korábban tervezett **PIO-alapú driver** (Step 2) **NEM garantáltan
-  oldja meg** a bias-t, ha a probléma a fizikai jel torzítása szintjén
-  van (Schmitt-trigger, vevő VCC sag). A PIO ugyanazt a Schmitt-edge-et
-  látja, csak ISR-mentesen.
-- **Hardver-isolation diagnózis kell** mielőtt PIO-ra invesztálunk:
-  - **HW-A:** Külön akkumulátor a TX vevőhöz (a Pico USB-ről táplálva
-    marad), bias mérés CH3 HIGH/LOW két állapotában. Ha a bias eltűnik
-    → vevő VCC sag a fő ok.
-  - **HW-B:** Pull-up vagy R/C low-pass szűrő (10 kΩ + 100 pF) a CH2 vonalon
-    → Schmitt-trigger küszöb tisztábban detektált → ha bias csökken, kapacitív
-    coupling a fő ok.
-  - **HW-C:** TX-en CH4 vagy CH6 stick HIGH-ra (CH3+CH5 LOW) → ha CH4/CH6
-    is okoz bias-t, akkor minden HIGH csatorna szimmetrikus hatású →
-    erősíti a vevő VCC sag hipotézist.
-  - **HW-D:** Külső szignál-generátor a CH2 vonalra (1500 µs konstans pulzus,
-    nem TX-vevő) → bias eltűnik-e? Ha igen, a probléma egyértelműen TX-vevő
-    oldali, nem Pico/Zephyr oldali.
+> **Bármelyik HIGH csatorna ISR-je hozzájárul a CH2 dispatch latency-jához.**
+> Nem CSAK CH3 vagy CSAK CH5 az ok — minden aktív EDGE_BOTH callback
+> idő-költsége adagolódik a `IO_IRQ_BANK0` ISR teljes futási idejébe,
+> ami a CH2 falling-edge `k_cycle_get_32()` timestamp-ját a HIGH csatornák
+> számával arányosan kitolja.
 
-A korábbi tervezett 1-soros patch + PIO-driver (alább, megtartva
-referenciaként) **csak akkor lesz végleges fix**, ha a HW-D mérés
-megerősíti, hogy a Pico-szintű probléma a domináns. Egyébként a
-megoldás hardveres (jobb vevő, külső táp, vagy szűrő).
+Ezzel a paradox FELOLDÓDIK:
+- Mérés A (CH3 IRQ skip, CH5 aktív): CH5 HIGH-ja még adja a maradék
+  +0.05 bias-t. CH3 IRQ skip önmagában **nem teljes fix**.
+- Mérés B (CH5 IRQ skip, CH3 aktív): CH3 HIGH-ja még adja a +0.06..+0.08
+  bias-t. CH5 IRQ skip önmagában **nem teljes fix**.
+
+### Frissítés 2026-04-22 délután: 3 HW-isolation teszt KIZÁRTA az összes hardveres okot
+
+A user a délutáni session-ben mind a 3 lehetséges HW okot izolálta:
+
+**HW-B (kábel-crosstalk teszt):** A 6 csatorna szalagkábele szétszedve,
+úgy hogy a vezetékek nem érnek össze. Eredmény: **bias változatlan**,
++0.07..+0.09 CH3 HIGH-on. → Vezeték-szintű kapacitív coupling KIZÁRVA.
+
+**HW-A (vevő VCC sag teszt):** CH3 áthelyezve egy MÁSODIK RX vevőre,
+amely független az eredeti CH1/CH2 vevőtől (saját 3.3V regulator).
+Eredmény: **bias változatlan**. → A CH1/CH2 vevője nem terhelődik
+CH3-tól, mégis van bias → **TX vevő VCC sag KIZÁRVA**.
+
+**HW-D-szerű (vevő keret-időzítés teszt):** CH5 is áthelyezve a második
+RX vevőre. Most a CH3 + CH5 jel két KÜLÖNBÖZŐ PPM keretből jön (eltérő
+TX-szekvencia, eltérő frame-fázis). Eredmény: **bias változatlan**. →
+A vevő belső csatorna-átrendezése sem felelős → **vevő keret-időzítés KIZÁRVA**.
+
+**Mi maradt zárolt:**
+- Külső szignál-generátor teszt (eredeti HW-D): nem volt kivitelezve,
+  de a fenti 3 teszt logikailag kizárja a TX/vevő oldali okokat. A
+  Pico/Zephyr oldali ok bizonyított kizárás módszerével.
+
+### Konklúzió: az ISR preemption hipotézis MEGERŐSÍTVE
+
+A HW-isolation kizárta:
+- Vezeték-szintű crosstalk (HW-B)
+- TX vevő VCC sag (HW-A)
+- Vevő belső keret-időzítés (HW-D-szerű)
+
+Marad EGYETLEN lehetséges magyarázat: a **Pico/Zephyr ISR dispatch**.
+A reggeli paradox a megfogalmazás finomításával feloldódott — a probléma
+NEM "CSAK CH3" vagy "CSAK CH5", hanem **minden HIGH csatorna ISR-je
+adagolódik**. A skip-patch-ek csak részleges fix-ek voltak, ezért
+maradt mindkét mérésben bias.
+
+### Következmények a fix-tervre
+
+**A PIO-alapú driver (Step 2) ÚJRA ÉLŐ végleges fix.** A reggeli
+"PIO sem garantált" óvatossági figyelmeztetés visszavonva — a HW-tesztek
+kizárták, hogy a fizikai jel torzított lenne. A PIO állapotgép
+deterministic timing-et ad CPU ISR nélkül, így minden HIGH csatorna
+ISR-jének adagolt latency-je megszűnik.
+
+**Részleges szoftveres fix (interim, opcionális, ha PIO csúszik):**
+mind a 4 nem-motor csatornát (CH3..CH6) skip-pelni a `rc_pwm_init()`-ben
++ azokat polling-ból olvasni (50 Hz, periodikus `gpio_pin_get_dt`). Ezzel
+csak CH1+CH2 ISR-je marad → a 4-csatornás latency-adag eltűnik. Pulzus-
+mérés CH3..CH6-on ezzel szögesen szegényedik (csak digital level, nem
+1.0..2.0 ms felbontás), ami a `rc_mode` (CH5 binary toggle) és `lights_input`
+(CH3 binary toggle) számára elég, DE más analóg-szerű csatornán nem.
 
 ### Eredeti javaslat: diagnosztikus megerősítő patch (1 sor) — VÉGREHAJTVA, paradox eredmény (lásd fent)
 
