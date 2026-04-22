@@ -1,6 +1,6 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-22 délután (BL-020 nyitva — RC CH2 +27.5 µs bias. 3 HW-isolation teszt KIZÁRTA az összes TX/vevő-oldali hardveres okot (kábel-crosstalk, vevő VCC sag, vevő keret-időzítés). Az ISR preemption hipotézis MEGERŐSÍTVE — pontosított megfogalmazás: minden HIGH csatorna ISR-je adagolódik a CH2 dispatch latency-jába. PIO-driver (Step 2) újra élő végleges fix.)
+> Utolsó frissítés: 2026-04-22 este (BL-020 Step 2 RÉSZLETES TERV elkészítve, branch `bl020-pio-driver` létrehozva a `bl020-pre-pio` tag-ről. Implementáció új session-ben kezdődik, lásd „Új session indítása ehhez a tervhez" szakasz.)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
@@ -206,23 +206,193 @@ preemption-bias-t bizonyítja. Ha maradna, szoftveres logikai bug is
 jöhet (kizárja a HW-szintű magyarázatot). Patch alkalmazása + build +
 flash + K1/K2 mérés ismétlés → 15-30 perc, nem destruktív.
 
-### Hosszú távú fix — RP2040 PIO-alapú PWM input capture
+### Hosszú távú fix — RP2040 PIO-alapú PWM input capture (Step 2)
 
-Az RP2040 **PIO state machine**-jei deterministic timing capture-t adnak
-GPIO-szintű ISR nélkül: egy SM per csatorna (van 8 SM = 2 PIO × 4 SM),
-8 ns felbontás, CPU-tól függetlenül mér. A Zephyr-ben elérhető a
-`zephyr/drivers/misc/pio_rpi_pico` és a `CONFIG_PIO_RPI_PICO=y` —
-mintaként a soft-UART és az LED-strip driverek használják.
+**Branch:** `bl020-pio-driver` (új, `bl020-pre-pio` tag = `b457679` alapról).
+**Restore-pont:** `git reset --hard bl020-pre-pio` ha a fix nem működik.
+**Cél:** a 6 RC csatorna PWM-mérése IRQ-mentes legyen, a CH2 bias < 0.005
+normalizált (jelenleg +0.055), CPU-terhelés ne nőjön mérhetően.
 
-Scope:
-- `common/src/drivers/drv_pwm_in_pio.c` új driver, `pio_rpi_pico` allokátorral.
-- PIO program pulse-width mérésre (falling-edge → counter, rising-edge →
-  capture + reset). Referencia: Adafruit `pico-examples/pio/pwm_input/`.
-- 6 SM-ből 6-ot foglalunk (PIO0 mind a 4 + PIO1 2-ből 2-t); marad 2 SM
-  más drivernek (jelenleg egyik sem használ PIO-t).
-- A `channel_t.read()` DMA-backed ring bufferből olvas — nincs ISR-contention.
-- Regressziós gate: BL-011 `tools/rc_measure.py` std ≤ jelenlegi érték;
-  K1/K2 mérés Δ ≤ 0.005 normalizált (a PWM mérésen belüli maradék zajszint).
+#### Architektúra döntések
+
+1. **Új driver külön file-ban**, NEM a meglévő `drv_pwm_in.c` módosítása.
+   Indok: a meglévő IRQ-driver mint fallback marad (Kconfig-kapcsoló);
+   más board-ok (E-STOP, PEDAL) nem érintettek; visszaállás 1 Kconfig
+   flag-gel.
+2. **API-kompatibilis**: `rc_pwm_init(channels, count)`, `rc_pwm_get(ch)`,
+   `rc_pwm_valid(ch)` szignatúra változatlan → `apps/rc/src/rc.c` és a
+   `rc_normalize()` érintetlen marad. A `rc_pwm_channel_t` struct belseje
+   bővül (PIO sm number, last_capture, …), de a `.spec` mező marad külső
+   konfigurációként a board overlay-ből.
+3. **Polling-alapú olvasás, NEM DMA** az első iterációban. Indok:
+   egyszerűség, debug-olhatóság; a `rc_pwm_get()` a PIO RX FIFO-ból a
+   legutolsó értéket olvassa (kis kerneltrap, `pio_sm_get_blocking` nem
+   kell — `pio_sm_is_rx_fifo_empty()` poll). Ha mérési zaj túl nagy, akkor
+   utána DMA ring buffer (külön ticket, BL-021).
+4. **Egy közös PIO program**, mind a 6 SM-en futtatva. A `pio_add_program`
+   PIO0-ra 1×, PIO1-re 1× tölti fel a ~8 utasításos kódot. Marad 24
+   utasítás szabad PIO blokkonként.
+5. **SM-allokáció dinamikus**: `pio_rpi_pico_allocate_sm()`-mel — nem
+   hardcode-olt SM-szám. Felosztás: PIO0-ra 4 SM (CH1..CH4), PIO1-re 2
+   SM (CH5, CH6). 2 SM marad szabadon.
+
+#### PIO program tervezet (`pwm_input.pio.h` headerbe inline-olva)
+
+Pulse-szélesség mérés falling-edge-en, ciklusonként 1 µs (clkdiv = 125 a
+125 MHz sysclock-ból → 1 MHz tick = 1 µs felbontás). A counter `x` a HIGH
+fázisban dekrementálódik, falling edge-en az inverz a FIFO-ba kerül.
+
+```
+;; pwm_input — measure HIGH pulse width in µs
+;; clkdiv = 125 (125 MHz / 125 = 1 MHz = 1 µs/tick)
+;; expected pulse: 1000..2000 µs (RC), max ~32 ms a 16-bit counterre
+
+.program pwm_input
+    pull noblock        ; X = OSR (timeout reload, opcionális; itt csak init)
+    mov x, osr
+loop:
+    wait 0 pin 0        ; várj LOW-ra (esetleges előző HIGH végét)
+    wait 1 pin 0        ; várj rising edge-re
+    mov x, ~null        ; x = 0xFFFFFFFF (counter init)
+high:
+    jmp pin still_high  ; pin még HIGH? loop tovább
+    mov isr, ~x         ; nem — falling edge: ISR = ~x = elapsed ticks
+    push noblock        ; FIFO-ba (drop régi, ha tele)
+    jmp loop            ; vissza a wait-re
+still_high:
+    jmp x-- high        ; counter--, ha nem 0 akkor loop
+    ;; counter overflow (~32 µs felett a 16-bites x), itt nincs kezelve
+    ;; — RC pulse max 2200 µs ≪ 65 535, nem fenyeget
+```
+
+(Pontos opcode-okat `pioasm` generál vagy a `RPI_PICO_PIO_DEFINE_PROGRAM`
+makróval kézzel írjuk be — minta: `zephyr/drivers/serial/uart_rpi_pico_pio.c`
+`uart_rx` programja, ami hasonló bit-számláló pattern.)
+
+**Mit NEM mér:** a LOW-fázis hossza (period). Ezt itt nem kell — a
+`rc_normalize()` csak a HIGH pulzust kéri (`pulse_us`).
+
+#### Fájl-szintű munka-bontás
+
+**1. lépés — Devicetree overlay bővítés**
+- Fájl: `apps/rc/boards/w5500_evb_pico.overlay`
+- Hozzáad: `&pio0 { status = "okay"; };` `&pio1 { status = "okay"; };`
+- Új gyermek node-ok PIO0 alatt (4 csatorna) és PIO1 alatt (2 csatorna),
+  `compatible = "nowlab,pwm-input-pio"`. Mindegyik a saját pinctrl-jét hozza.
+- `&pinctrl { ... };` blokk: 6 db pinctrl group, mindegyik egy `PIO0_Pn` vagy
+  `PIO1_Pn` makróval. Pl. `pinmux = <PIO0_P2>;` a CH1-hez.
+- A meglévő `rc_inputs { compatible = "gpio-keys"; ... }` blokkot **megtartjuk**,
+  mert a `GPIO_DT_SPEC_GET(DT_ALIAS(rc_ch1), gpios)` macro a gpio0-ra hivatkozó
+  pin-számot ad — ezt a PIO driver `pin = X` mezőjébe konvertáljuk
+  (`spec.pin` a 0..29 GP-szám). Az `rc_ch1..6` gpio bekötés nem konfliktusol
+  a pinmux PIO functionnel — a pinctrl override kapja a győzelmet.
+
+**2. lépés — Új devicetree binding**
+- Fájl: `dts/bindings/sensor/nowlab,pwm-input-pio.yaml` (új, repo-szintű
+  `dts/bindings/` alá; a Zephyr build automatikusan beolvas).
+- `compatible: "nowlab,pwm-input-pio"`, `include: "raspberrypi,pico-pio-device.yaml"`.
+- Properties: `pin: int required` (a GPIO szám, 0..29).
+
+**3. lépés — Új driver source és header**
+- Fájl: `common/src/drivers/drv_pwm_in_pio.c` (új)
+- Fájl: `common/include/drv_pwm_in.h` — bővítjük a `rc_pwm_channel_t` struct-ot
+  egy `union`-nel: `{ struct gpio_callback cb_data; struct { size_t sm; PIO pio; } pio_state; }` —
+  vagy szebb: külön struct mező, mindkettő benne (kis RAM ár, kb +12 byte/channel = 72 byte).
+- A `drv_pwm_in_pio.c` implementálja:
+  - `rc_pwm_init()`: `pio_rpi_pico_get_pio()` + `pio_rpi_pico_allocate_sm()` minden
+    csatornára, `pio_add_program` 1× PIO0-ra és 1× PIO1-re, `pio_sm_init` + `pio_sm_set_enabled`.
+  - `rc_pwm_get()`: `pio_sm_is_rx_fifo_empty()` check, ha nem üres → kiolvas, eltárol
+    `pulse_us` mezőbe, `last_update_ms = k_uptime_get()`. Ha üres → utolsó cached érték.
+  - `rc_pwm_valid()`: változatlan timeout-check.
+- A read-loop egy 50 Hz workqueue handler-ben fut (nem ISR-ben), végigjár a 6 csatornán
+  → drain FIFO → frissít `pulse_us`. RC keret-rate is 50 Hz, latency ≤ 1 frame.
+
+**4. lépés — Build-system integráció**
+- Fájl: `common/CMakeLists.txt` — `target_sources(app PRIVATE ...)` hozzáad:
+  `${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in_pio.c` Kconfig-feltétellel.
+- Új Kconfig fájl: `common/Kconfig` (ha nincs, hozzáadni `west.yml`-en át vagy
+  manuálisan source-olni a Zephyr Kconfig-ből), opció:
+  ```
+  config RC_PWM_DRIVER_PIO
+      bool "Use PIO-based PWM input driver (BL-020 fix)"
+      default n
+      depends on PIO_RPI_PICO
+      help
+        Use the deterministic PIO state-machine PWM input driver instead
+        of the IRQ-based GPIO callback driver. Eliminates the +27.5 µs
+        ISR-dispatch bias on shared bank0 IRQ.
+  ```
+- A `common/CMakeLists.txt`-ben:
+  ```cmake
+  if(CONFIG_RC_PWM_DRIVER_PIO)
+      target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in_pio.c)
+  else()
+      target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in.c)
+  endif()
+  ```
+- Fájl: `apps/rc/prj.conf` — hozzáad: `CONFIG_PIO_RPI_PICO=y`, `CONFIG_RC_PWM_DRIVER_PIO=y`.
+
+**5. lépés — Build-validálás (kód még nem megy a hardware-re)**
+- `west build -p auto -b w5500_evb_pico apps/rc` — clean build, csak warning-mentes
+  kompiláció a cél itt.
+- `arm-zephyr-eabi-size build/zephyr/zephyr.elf` — ellenőrzés:
+  - Várt RAM növekedés: < 5 KiB (lásd memória-becslés feljebb)
+  - Várt FLASH növekedés: < 5 KiB
+
+**6. lépés — Hardware smoke-test (NEM teljesítmény még)**
+- Soft `bridge bootsel` flash → `tools/flash.sh /dev/ttyACM0`.
+- `ros2 topic echo /robot/rc_ch1` — TX bekapcsolva, stick mozgatása → érték
+  változik 0..1 között. Ha igen: a PIO program fut és FIFO-ba ír.
+- Mind a 6 csatornán (`rc_ch1..rc_ch6`) ugyanaz a check.
+- Failsafe: TX off → 500 ms után minden csatorna `0.000` (a `rc_normalize` failsafe
+  változatlan, erről nem kell gondoskodni).
+
+**7. lépés — Regressziós mérés (a fix VALIDÁLÁSA)**
+- `tools/rc_measure.py stream 30s` CH3 LOW állapotban → CH2 avg, std rögzítve.
+- `tools/rc_measure.py stream 30s` CH3 HIGH állapotban → CH2 avg, std rögzítve.
+- **Pass kritériumok** (Definition of Done):
+  - `|avg_CH3_HIGH - avg_CH3_LOW| < 0.005` normalizált (cél: nem érzékelhető bias).
+  - CH2 std mindkét állapotban ≤ 0.010 (jelenlegi idle szint).
+- 10 perc folyamatos RC mód + minden HIGH csatorna kombináció (CH3+CH5+CH6)
+  → nincs random motor-mozgás.
+- Foxglove CSV mentés `/home/eduard/Dropbox/share/RC control PIO.csv` névvel,
+  összevetés a 2026-04-22 délutáni IRQ-driver baseline-nal.
+
+**8. lépés — Commit + merge**
+- Commit-stack a `bl020-pio-driver` branch-en, atomi lépésekben:
+  1. `dts(bindings): add nowlab,pwm-input-pio binding for RP2040 PIO PWM input`
+  2. `feat(common/drivers): add drv_pwm_in_pio.c — PIO-based PWM input driver`
+  3. `build: add CONFIG_RC_PWM_DRIVER_PIO Kconfig switch + cmake fork`
+  4. `feat(apps/rc): enable PIO PWM input driver — BL-020 Step 2 fix`
+- Ha a 7. lépés validáció zöld → squash-merge `main`-be `--no-ff` (preserve branch),
+  vagy fast-forward ha a commit-stack tiszta.
+- Push: `git push origin main bl020-pio-driver` — a branch maradjon a remote-on
+  referenciaként.
+- Új tag: `bl020-fixed` a merge-commit-on.
+- ERRATA-bejegyzés: `ERRATA.md`-be új ERR-034 (RP2040 GPIO bank0 shared IRQ
+  latency pattern, megoldás PIO-ra áttérés).
+
+#### Kockázat-jegyzék és mitigációk
+
+| Kockázat | Mitigáció |
+|---|---|
+| PIO program hibás (logika v. timing) → minden csatorna 0 v. zaj | Smoke-test (6. lépés) + LOG_DBG a `pio_sm_get` után; szerializált ki-be kapcsolás `CONFIG_RC_PWM_DRIVER_PIO=n`-re. |
+| Pinctrl konfliktus a meglévő `gpio-keys` rc_inputs node-dal | A pinctrl override felülbírálja a default GPIO functiont; ha mégis ütközés, törölni a `rc_inputs` node-ot a PIO-os build-ben (`#ifdef CONFIG_RC_PWM_DRIVER_PIO`). |
+| RAM túlfogyasztás (jelenleg 78%) | Build után `arm-zephyr-eabi-size` ellenőrzés; ha > 90%, micro-ROS RMW pool csökkentése (BL-021 új ticket). |
+| W6100 driver megsérül (network leáll) | A network nem érinti a PIO-t; ha mégis, smoke-test 6. lépés `ros2 topic` parancsa azonnal kimutatja. |
+| A 24 órás session-folytatás után a bl020-pio-driver branch elfelejtődik | Branch a remote-on; tag `bl020-pre-pio` mentve; a backlog itt rögzíti a tervet — új session elsőként a backlog BL-020 Step 2 szakaszt olvassa. |
+
+#### Mit NE csinálj (anti-pattern)
+
+- **Ne** kezdd DMA-val. A polling-alapú olvasás működik 1 ms latency alatt
+  50 Hz-en, és 10× egyszerűbb debugolni. DMA opcionális későbbi optimalizáció.
+- **Ne** használd a `RPI_PICO_PIO_GET_PROGRAM` trükköt out-of-tree headerből —
+  tedd a programot egyenesen a `drv_pwm_in_pio.c` C source-ba, hogy a build
+  pioasm-toolchain nélkül is menjen.
+- **Ne** próbáld a 8. SM-et is foglalni "tartalékként". 6 csatorna = 6 SM,
+  marad 2 szabad — ez tudatosan tervezett buffer, nem pazarlás.
+- **Ne** módosítsd a `rc_normalize()`-ot vagy a `channel_t` rendszert. A PIO
+  csak a `drv_pwm_in.h` szintjén látszik — a felette álló réteg vak rá.
 
 ### Interim mitigáció (opcionális, ha a PIO fix elhúzódik)
 
@@ -253,16 +423,26 @@ kerültek commitba (`ebf26c3` — a tegnapi szándékot véglegesítettük):
 Ezek kizárják a floating-pin mellékhatásokat (fail-safe OK volt a K1/K2
 méréskor: CH1/CH2 kihúzva `/robot/motor_left = 0.000` stabilan).
 
-### Érintett fájlok (várható)
+### Érintett fájlok (Step 2 — pontos lista)
 
-**Diagnosztikus patch (BL-020 Step 1):**
-- `common/src/drivers/drv_pwm_in.c` — ideiglenes `if (i == 2) continue;`
+**Új fájlok:**
+- `common/src/drivers/drv_pwm_in_pio.c` — PIO driver implementáció
+- `dts/bindings/sensor/nowlab,pwm-input-pio.yaml` — devicetree binding
 
-**PIO driver (BL-020 Step 2, hosszú táv):**
-- `common/src/drivers/drv_pwm_in_pio.{c,h}` (új)
-- `apps/rc/prj.conf` — `CONFIG_PIO_RPI_PICO=y`
-- `apps/rc/boards/w5500_evb_pico.overlay` — PIO node bindings
-- `tools/rc_measure.py` — regresszió mérés (meglévő eszköz, nem módosul)
+**Módosított fájlok:**
+- `common/include/drv_pwm_in.h` — `rc_pwm_channel_t` struct bővítés
+  (PIO sm + pio mező; meglévő `gpio_callback` mező marad a fallback driverhez)
+- `common/CMakeLists.txt` — `if(CONFIG_RC_PWM_DRIVER_PIO)` elágazás
+- `common/Kconfig` (új vagy meglévő bővítés) — `CONFIG_RC_PWM_DRIVER_PIO`
+- `apps/rc/boards/w5500_evb_pico.overlay` — `&pio0` `&pio1` `okay`,
+  6 db pwm-input-pio child node, `&pinctrl` blokk 6 pinmux groupal
+- `apps/rc/prj.conf` — `CONFIG_PIO_RPI_PICO=y`, `CONFIG_RC_PWM_DRIVER_PIO=y`
+- `ERRATA.md` — új ERR-034 bejegyzés
+- `tools/rc_measure.py` — változatlan, regresszió mérő eszköz
+
+**Érintetlen fájlok (kifejezett tervezési cél):**
+- `apps/rc/src/rc.c` — a `rc_pwm_init/get/valid` API változatlan
+- `common/src/drivers/drv_pwm_in.c` — fallback driverként marad
 
 ### Definition of Done
 
@@ -271,15 +451,27 @@ méréskor: CH1/CH2 kihúzva `/robot/motor_left = 0.000` stabilan).
   (sem bal, sem jobb oldalon), kerekek nyugalomban stickek középen.
 - `tools/rc_measure.py stream 30s` CH3 konstans aktív alatt: CH2 std
   ≤ 0.010 (jelenlegi idle szint).
-- ERRATA.md új bejegyzés: ERR-034 (RP2040 GPIO bank0 shared IRQ latency
+- Mind a 6 csatornán (`/robot/rc_ch1..rc_ch6`) érték változik a TX stick
+  mozgásával, range -1.0..+1.0.
+- Failsafe változatlan: TX off → 500 ms után minden csatorna `0.000`.
+- RAM kihasználtság < 90% (`arm-zephyr-eabi-size build/zephyr/zephyr.elf`).
+- `ERRATA.md` új bejegyzés: ERR-034 (RP2040 GPIO bank0 shared IRQ latency
   — pattern, nem bug; megoldás a PIO-ra áttérés).
+- Visszaállás Kconfig-flag-gel működik (`CONFIG_RC_PWM_DRIVER_PIO=n` build
+  ugyanúgy működik, mint a `bl020-pre-pio` tag).
 
-### Miért nem fix ma
+### Új session indítása ehhez a tervhez
 
-User explicit döntés 2026-04-21 este: „nem most készítjük el, hanem
-holnap". Safety-impact ismert, de az RC módú motor-használat szünetel
-addig (egyéb módok — learn, follow, auto — nem függnek a CH3-CH2
-interaction-től, a TX CH3 inaktív hagyásával a hiba nem jelentkezik).
+A jelen terv egy új Claude session-ben folytatható. Az új session
+indításakor:
+1. `git checkout bl020-pio-driver` (branch már létezik a `bl020-pre-pio`
+   tag-ről kifőzve).
+2. Olvasd el a `docs/backlog.md` BL-020 Step 2 szekciót (ez a terv).
+3. Olvasd el `~/.claude/projects/-home-eduard-Dev-ROS2-Bridge/memory/project_bl020_rc_isr_bias.md`
+   (a megerősített ISR-konklúzió).
+4. Kezdés a fenti "Fájl-szintű munka-bontás 1. lépés"-sel (devicetree overlay).
+5. Build-validáció után STOP, kérd a felhasználót: smoke-test (6. lépés)
+   csak fizikai felügyelettel megy, mert motor-mozgással járhat.
 
 ---
 
