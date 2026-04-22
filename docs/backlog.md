@@ -473,9 +473,38 @@ indításakor:
 5. Build-validáció után STOP, kérd a felhasználót: smoke-test (6. lépés)
    csak fizikai felügyelettel megy, mert motor-mozgással járhat.
 
----
+### BL-020 Follow-up — kvantitatív bias verifikáció (NEM prioritás)
 
-_(BL-001, BL-002 lezárva — lásd a „Lezárt tételek" szekciót.)_
+A smoke-test kvalitatíven lezárult: stickek arányosak, CH3 switch toggle
+alatt nincs érzékelhető ugrás a CH1/CH2-n, robot zökkenőmentesen lép RC
+módba. A +27.5 µs bias régen ennyire feltűnő volt, hogy ha továbbra is
+jelen lenne, érezhető lenne — a kvalitatív végeredmény ezért elegendő
+bizonyítéknak számít a merge-hez.
+
+Ha később mégis kell számszerű zárás (pl. upstream bug-report, whitepaper,
+vagy board redesign előtti reprodukció), az alábbi egyszerű protokoll fut:
+
+1. Ideiglenes patch a `drv_pwm_in_pio.c` drain handler-jébe:
+   - 100 Hz sampling burst CH2-ről (`pio_sm_get` közvetlen minden drain-ben).
+   - Kapcsolt számlálók: `mean / stddev` ~20 sec-es ablakon.
+   - A rövid diag-szekció a `project_bl020_rc_isr_bias.md` memóriában van
+     mentve referenciaként (a jelen BL-020 bring-up-ban ugyanezt a mintát
+     használtuk per-CH samples/rejects/last_raw értékkel).
+2. Mérési protokoll:
+   - K1: TX sticks középen, minden switch LOW → 0 HIGH csatorna CH2 mellett
+     → várt pulse_us ≈ 1500, stddev ≈ 1-2 µs (PIO quantizáció).
+   - K2: CH3 switch HIGH-ra → CH2-höz 1 HIGH szomszéd kerül.
+   - K3: CH3 + CH5 + CH6 is HIGH → 3 HIGH szomszéd.
+   - Elvárt PIO eredmény: |mean(K3) − mean(K1)| < 2 µs (quantum-szintű).
+   - Régi IRQ driveren ugyanez ~27-40 µs volt, lineárisan növelve.
+3. Eredmények `docs/backlog.md`-be a BL-020 "Lezárt tételek" szekcióba,
+   plusz `ERRATA.md` ERR-034-be konkrét méréssel (a RP2040 shared IRQ
+   latency jelenség dokumentálásához).
+
+**Miért nem prioritás**: a funkció (PIO driver) a kvalitatív próbán
+rendben átment, és a jelenlegi pipeline (robot, Foxglove) nem igényel
+számszerű bias-zárást a production működéshez. Ha a BL-020 PR-jára egy
+reviewer konkrét méréses bizonyítékot kér, akkor vesszük elő.
 
 ---
 

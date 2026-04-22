@@ -27,8 +27,18 @@ target_sources(app PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bridge/service_manager.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_adc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in.c
 )
+
+# BL-020 Step 2 — PWM input driver kiválasztása Kconfig-alapon.
+# CONFIG_RC_PWM_DRIVER_PIO=y  → deterministic RP2040 PIO driver (RC app).
+# CONFIG_RC_PWM_DRIVER_PIO=n  → GPIO EDGE_BOTH IRQ fallback driver (default,
+#   estop/pedal app is ezt kapja — sem a Kconfig szimbólumot nem definiálják,
+#   sem a DT-ben nincs `nowlab,pwm-input-pio` node).
+if(CONFIG_RC_PWM_DRIVER_PIO)
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in_pio.c)
+else()
+    target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/drv_pwm_in.c)
+endif()
 
 # A modulonkénti header-ek a src/<modul>/ mellett laknak (channel.h,
 # config.h, drv_*.h, user/user_channels.h ...). Hozzáadjuk az `app` target

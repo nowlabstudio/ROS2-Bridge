@@ -2,7 +2,15 @@
  * apps/rc/boards/w5500_evb_pico.overlay — RC-only board overlay.
  *
  * Pin-kiosztás:
- *   - rc_ch1..6   GP2..GP7  — PWM input (edge-both IRQ a drv_pwm_in-ben)
+ *   - rc_ch1..6   GP2..GP7  — PWM input
+ *                             * IRQ-fallback driver (drv_pwm_in.c):
+ *                               a pineket a `rc_inputs` gpio-keys blokk
+ *                               adja GPIO_PULL_DOWN flaggel.
+ *                             * PIO driver (drv_pwm_in_pio.c, BL-020 Step 2):
+ *                               a pinek PIO funkcióra váltanak a
+ *                               pinctrl-0 groupok aktiválásakor; a
+ *                               `&pio0 / &pio1` child node-ok adják a
+ *                               csatorna-metszeteket.
  *   - gp8..gp11   GP8..GP11 — generic Bool output + pin-readback feedback
  *                             (ACTIVE_HIGH, cmd sub + state pub csatornák;
  *                              GP8 fizikailag világítás-relét hajt, a többi
@@ -93,5 +101,141 @@
 			label = "storage";
 			reg = <0x00f00000 0x00100000>;
 		};
+	};
+};
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * BL-020 Step 2 — PIO-alapú PWM input capture (IRQ-mentes, deterministic).
+ *
+ * A 6 RC csatornát 6 külön PIO state machine méri: CH1..CH4 a PIO0-n, CH5..CH6
+ * a PIO1-en. Minden csatorna saját `nowlab,pwm-input-pio` child node-ot kap
+ * egy-egy dedikált pinctrl group-pal, így a driver (drv_pwm_in_pio.c) minden
+ * instance-hez külön tudja allokálni az SM-et és alkalmazni a pinmux-ot.
+ *
+ * A pinctrl groupok `input-enable` + `bias-pull-down` párost kapnak, hogy:
+ *   - az RC vevő kihúzásakor a pin ne lebegjen (ISR-storm elkerülése
+ *     továbbra is ugyanúgy fontos, mint a fallback IRQ driveren), és
+ *   - a PIO program `wait pin 0/1` utasításai valid logikai szintet lássanak.
+ *
+ * A meglévő `rc_inputs { compatible = "gpio-keys" }` blokkot és a `rc-ch*`
+ * aliasokat fentebb meghagytuk: a fallback IRQ driver (drv_pwm_in.c) és a
+ * per-device user_channels.c onnan olvassa ki a GP-számot a
+ * `GPIO_DT_SPEC_GET(DT_ALIAS(rc_ch1), gpios)` makróval. A PIO driver a
+ * `pin = <N>` property-t használja, a fallback driver a DT_ALIAS spec.pin-t —
+ * a két nézet ugyanarra a fizikai GP-re mutat, két szabványos DT mechanizmussal.
+ *
+ * A pinctrl override a PIO driver init-jekor veszi át a pad funkcióját SIO-ról
+ * PIO-ra; a fallback (IRQ) buildben ezek a groupok deklaráltak, de nem
+ * aktivizálódnak (mert sem `&pio0`, sem `&pio1` nem `status = okay`).
+ * Ha a build a fallback IRQ drivert használja, a `&pio0 {status = "okay"}`
+ * és `&pio1 {status = "okay"}` sor akkor is bent maradhat — üres aktív PIO
+ * node nem foglal SM-et, amíg nincs benne aktiv child.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
+&pinctrl {
+	pio0_pwm_in_ch1_default: pio0_pwm_in_ch1_default {
+		group1 {
+			pinmux = <PIO0_P2>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+
+	pio0_pwm_in_ch2_default: pio0_pwm_in_ch2_default {
+		group1 {
+			pinmux = <PIO0_P3>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+
+	pio0_pwm_in_ch3_default: pio0_pwm_in_ch3_default {
+		group1 {
+			pinmux = <PIO0_P4>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+
+	pio0_pwm_in_ch4_default: pio0_pwm_in_ch4_default {
+		group1 {
+			pinmux = <PIO0_P5>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+
+	pio1_pwm_in_ch5_default: pio1_pwm_in_ch5_default {
+		group1 {
+			pinmux = <PIO1_P6>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+
+	pio1_pwm_in_ch6_default: pio1_pwm_in_ch6_default {
+		group1 {
+			pinmux = <PIO1_P7>;
+			input-enable;
+			bias-pull-down;
+		};
+	};
+};
+
+&pio0 {
+	status = "okay";
+
+	pwm_in_ch1: pwm_in_ch1 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <2>;
+		pinctrl-0 = <&pio0_pwm_in_ch1_default>;
+		pinctrl-names = "default";
+	};
+
+	pwm_in_ch2: pwm_in_ch2 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <3>;
+		pinctrl-0 = <&pio0_pwm_in_ch2_default>;
+		pinctrl-names = "default";
+	};
+
+	pwm_in_ch3: pwm_in_ch3 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <4>;
+		pinctrl-0 = <&pio0_pwm_in_ch3_default>;
+		pinctrl-names = "default";
+	};
+
+	pwm_in_ch4: pwm_in_ch4 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <5>;
+		pinctrl-0 = <&pio0_pwm_in_ch4_default>;
+		pinctrl-names = "default";
+	};
+};
+
+&pio1 {
+	status = "okay";
+
+	pwm_in_ch5: pwm_in_ch5 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <6>;
+		pinctrl-0 = <&pio1_pwm_in_ch5_default>;
+		pinctrl-names = "default";
+	};
+
+	pwm_in_ch6: pwm_in_ch6 {
+		compatible = "nowlab,pwm-input-pio";
+		status = "okay";
+		pin = <7>;
+		pinctrl-0 = <&pio1_pwm_in_ch6_default>;
+		pinctrl-names = "default";
 	};
 };

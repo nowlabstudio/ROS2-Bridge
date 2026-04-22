@@ -1,0 +1,19 @@
+# apps/rc/Kconfig — RC app belépő Kconfig.
+#
+# A Zephyr build itt keresi az app-specifikus Kconfig fájlt (ha nem létezik,
+# csak a default Kconfig.zephyr töltődik be). Az RC app itt húzza be a
+# common/ réteg saját Kconfig opcióit (BL-020 Step 2: RC_PWM_DRIVER_PIO
+# kapcsoló).
+
+mainmenu "ROS2-Bridge — RC app"
+
+# Közös (common/) opciók — lásd common/Kconfig.
+# A COMMON_DIR env var abszolút útvonalat ad (a Docker build során
+# /repo/common, a host build során a repo-gyökér/common), ezért abszolút
+# `source`-ot használunk, nem `rsource`-ot — a relatív útvonal eltörne,
+# mert az app a konténerben /workdir/app-ra van mountolva, nem a
+# repo-gyökér alatt. Ugyanezt a mintát követi az apps/rc/CMakeLists.txt is
+# (`add_subdirectory($ENV{COMMON_DIR} ...)`).
+source "$(COMMON_DIR)/Kconfig"
+
+source "Kconfig.zephyr"

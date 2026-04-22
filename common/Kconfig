@@ -1,0 +1,27 @@
+# common/Kconfig — közös Kconfig opciók a per-device app-ok között.
+#
+# A fájlt minden app Kconfig-ja ráhúzhatja `rsource "../../common/Kconfig"`-gel,
+# ha a itt definiált szimbólumot hasznosítani akarja. Ha egy app nem source-olja,
+# a szimbólum nem létezik az ő build-jében, így a `common/CMakeLists.txt`-ben
+# lévő `if(CONFIG_...)` elágazás üresen / false-nak látja — a common réteg
+# ilyenkor a default (IRQ-alapú) drv_pwm_in.c-t fűzi be.
+
+menu "ROS2-Bridge common layer"
+
+config RC_PWM_DRIVER_PIO
+	bool "Use PIO-based PWM input driver (BL-020 Step 2 fix)"
+	default n
+	depends on PIO_RPI_PICO
+	help
+	  Use the deterministic RP2040 PIO state-machine PWM input driver
+	  (common/src/drivers/drv_pwm_in_pio.c) instead of the legacy GPIO
+	  EDGE_BOTH IRQ driver (common/src/drivers/drv_pwm_in.c). Eliminates
+	  the shared IO_IRQ_BANK0 dispatch latency that adds +27.5 µs of bias
+	  to the CH2 timestamp when any other HIGH RC channel is active
+	  (see docs/backlog.md BL-020).
+
+	  The PIO driver requires the board overlay to provide
+	  `nowlab,pwm-input-pio` children under &pio0 / &pio1; see
+	  apps/rc/boards/w5500_evb_pico.overlay for the reference layout.
+
+endmenu

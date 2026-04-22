@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Nowlab Studio
+# SPDX-License-Identifier: Apache-2.0
+#
+# BL-020 Step 2 — deterministic PWM input capture a RP2040 PIO blokkjaival.
+#
+# Egy `nowlab,pwm-input-pio` csatorna pontosan egy PIO state machine-t foglal
+# a szülő pio0 / pio1 blokkból, és egy GPIO pin PWM pulzusszélességét méri
+# 1 µs felbontással (clkdiv = 125). A driver a `pin` property-ből tudja meg a
+# GP számot (0..29); a `pinctrl-0`-ban megadott group végzi a pad függvény
+# átkapcsolását SIO-ról PIO-ra és a pull-down konfigurálást.
+#
+# Ennek a binding-nak a célja a `common/src/drivers/drv_pwm_in_pio.c` driver
+# felélesztése — CH1..CH6 a PIO0/PIO1-en, lásd apps/rc/boards/w5500_evb_pico.overlay.
+
+description: |
+  Nowlab PIO-based PWM input capture channel (single RC channel per instance,
+  one PIO state machine per channel). Used to eliminate the shared IO_IRQ_BANK0
+  dispatch latency on the RP2040 when multiple GPIO callbacks are active; see
+  docs/backlog.md BL-020 for the measurement background and design notes.
+
+compatible: "nowlab,pwm-input-pio"
+
+include: ["raspberrypi,pico-pio-device.yaml"]
+
+properties:
+  pin:
+    type: int
+    required: true
+    description: |
+      GP number (0..29) of the PWM input. Must be the same pin that the
+      pinctrl-0 group routes to PIO function. The driver passes this to
+      `sm_config_set_in_pins()` / `sm_config_set_jmp_pin()` so the PIO
+      program observes the correct input.
