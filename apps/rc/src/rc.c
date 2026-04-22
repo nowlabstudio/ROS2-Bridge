@@ -40,6 +40,11 @@ static bool  ema_initialized[RC_CH_COUNT];
 
 static float rc_normalize(int hw_idx)
 {
+	if (!rc_pwm_valid(&rc_hw[hw_idx])) {
+		ema_initialized[hw_idx] = false;
+		return 0.0f;
+	}
+
 	uint16_t raw = rc_pwm_get(&rc_hw[hw_idx]);
 	const cfg_rc_trim_ch_t *t = &g_config.rc_trim.ch[hw_idx];
 	uint16_t dz = g_config.rc_trim.deadzone;

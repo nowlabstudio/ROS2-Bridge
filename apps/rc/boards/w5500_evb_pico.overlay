@@ -53,12 +53,12 @@
 	rc_inputs {
 		compatible = "gpio-keys";
 
-		rc_ch1: rc_ch1 { gpios = <&gpio0 2 0>; label = "RC CH1 (GP2)"; };
-		rc_ch2: rc_ch2 { gpios = <&gpio0 3 0>; label = "RC CH2 (GP3)"; };
-		rc_ch3: rc_ch3 { gpios = <&gpio0 4 0>; label = "RC CH3 (GP4)"; };
-		rc_ch4: rc_ch4 { gpios = <&gpio0 5 0>; label = "RC CH4 (GP5)"; };
-		rc_ch5: rc_ch5 { gpios = <&gpio0 6 0>; label = "RC CH5 (GP6)"; };
-		rc_ch6: rc_ch6 { gpios = <&gpio0 7 0>; label = "RC CH6 (GP7)"; };
+		rc_ch1: rc_ch1 { gpios = <&gpio0 2 GPIO_PULL_DOWN>; label = "RC CH1 (GP2)"; };
+		rc_ch2: rc_ch2 { gpios = <&gpio0 3 GPIO_PULL_DOWN>; label = "RC CH2 (GP3)"; };
+		rc_ch3: rc_ch3 { gpios = <&gpio0 4 GPIO_PULL_DOWN>; label = "RC CH3 (GP4)"; };
+		rc_ch4: rc_ch4 { gpios = <&gpio0 5 GPIO_PULL_DOWN>; label = "RC CH4 (GP5)"; };
+		rc_ch5: rc_ch5 { gpios = <&gpio0 6 GPIO_PULL_DOWN>; label = "RC CH5 (GP6)"; };
+		rc_ch6: rc_ch6 { gpios = <&gpio0 7 GPIO_PULL_DOWN>; label = "RC CH6 (GP7)"; };
 	};
 
 	aliases {

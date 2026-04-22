@@ -1,11 +1,174 @@
 # docs/backlog.md — Nyitott feladatok és TODO-k
 
-> Utolsó frissítés: 2026-04-21 (BL-018 LEZÁRVA — RC GP8-11 generic Bool I/O csatornák + BL-016 RC rész lezárva + BL-012 superseded; ERR-033 dokumentálva; BL-019 nyitva — host-side rc_lights_bridge)
+> Utolsó frissítés: 2026-04-22 (BL-020 nyitva — RC CH3-active → CH2 szisztematikus +27.5 µs bias, gyanús gyökérok: RP2040 GPIO bank0 shared IRQ dispatch latency; biztonsági hatás: bal motor random mozgás RC módban)
 > Hatókör: a teljes ROS2-Bridge repo.
 > Szabály (`policy.md#2`): minden TODO ide kerül; minden bejegyzés tartalmazza
 > a **kontextust**, az **okot** és az **érintett fájlokat**.
 
 Rendezés: súlyosság szerint csökkenő. Lezárt tételek a fájl alján, dátummal.
+
+---
+
+## BL-020 — RC PWM-input ISR preemption bias (CH3 aktív → CH2 szisztematikus +27.5 µs eltolás)
+
+> **Státusz:** nyitva, safety-impact. Diagnózis kész, fix másnapra halasztva
+> (user döntés 2026-04-21 este). Részleges enyhítés már benn van a repóban
+> (overlay PULL_DOWN + `rc_normalize` failsafe — lásd „Részleges enyhítés"
+> szekció alább). Ez NEM oldja meg az ISR bias-t, csak a floating-pin
+> mellékhibákat zárta ki.
+
+### Tünet
+
+RC módban, a TX CH3 kapcsoló aktiválásakor (CH3 stick ≈ +1.0) a **bal motor
+random, ugráló mozgást végez** akkor is, ha a CH1/CH2 stickek középen vannak.
+CH3-ot kihúzva az RC vevőből a hiba megszűnik — mintha „átvenné" CH3 a CH2-t.
+A jobb motor (CH1) szintén érintve van, ha CH3 aktív és CH1 be van kötve;
+a mix-effektus csak a két motor-csatornán jelentkezik, a többi CH-n nem.
+
+### Kvantitatív mérés (2026-04-22)
+
+`ros2 topic echo /robot/motor_left` CH1/CH2 stick-eket középen tartva,
+CH3-on két állapotban:
+
+| állapot | leírás | min | max | avg | std (becs.) |
+|---|---|---|---|---|---|
+| **K1** | CH3 stick inaktív (≈ -1.0, tx kapcsoló lenn) | -0.010 | +0.010 | -0.000 | ~0.006 |
+| **K2** | CH3 stick aktív (≈ +1.0, tx kapcsoló fenn) | +0.045 | +0.065 | **+0.055** | ~0.006 |
+
+**Δ = +0.055 normalizált szisztematikus bias** CH2-n, amikor CH3 aktív.
+A bias DC (nem zaj) — az std alig változik a két állapot között, de a
+középérték ugrik. Ez nem elektromos átsugárzás tünete (az szimmetrikus
+zajként jelenne meg), hanem egy konkrét időzítési torzítás.
+
+### Gyanús gyökérok — RP2040 GPIO bank0 shared IRQ dispatch latency
+
+**Hipotézis:** az RP2040-en minden `GPx` pin ugyanazt az `IO_IRQ_BANK0`
+vektort használja; az egy ISR sorban dispatcheli az aktív callback-eket.
+A PWM input méréshez 6 csatornán (GP2..GP7) futó `GPIO_INT_EDGE_BOTH`
+callback **`k_cycle_get_32()` timestamp-et vesz az ISR elején** a puls-szélesség
+számításához (`common/src/drivers/drv_pwm_in.c`).
+
+Amikor CH3 stick közel max (impulzus ≈ 1950–2000 µs), a CH3 falling edge-e
+időben közel esik a CH2 falling edge-éhez (CH2 középen = 1500 µs, fázis-
+eltolódás 50 Hz PPM/SPPM esetén változó). Amelyik ISR másodikként fut,
+annak `k_cycle_get_32()` hívása **+ISR runtime-nyi késést** szenved —
+ez a késés a CH2 mért puls-szélességét növeli.
+
+**Kvantitatív egyezés:**
+- 0.055 normalizált × (max-center = 500 µs range) = **+27.5 µs**
+- Egy minimalis Zephyr GPIO callback + EDGE_BOTH dispatch path ~20–30 µs
+  RP2040-en (133 MHz, no hardware prioritization a pin szinten).
+- A „CH3 aktív" állapot a CH3 impulzus hosszát ~500 µs-ről ~1500 µs-re
+  növeli, ami a falling edge-eket közelebb hozza a CH2 edge-hez → a mérési
+  anomália csak aktív CH3-nál jelentkezik.
+
+### Mi zárja ki a többi hipotézist
+
+1. **Elektromos crosstalk (kábelköteg):** CH3-ot teljesen leforrasztottuk
+   a Pico-ról (pin fizikailag lebegett) → hiba megmaradt. Tehát nem
+   vezetőszintű átsugárzás.
+2. **Floating pin ISR-storm:** 2,2 kΩ külső pull-down GP4↔GND-re →
+   hiba megmaradt. A pin elektromosan stabil volt, az IRQ szoftveresen
+   mégis „él" (mert a csatorna engedélyezve van a config.json-ban).
+3. **Relé-spike GP8-on:** minden GP8..GP11 fizikailag bekötetlen volt a
+   teszt alatt (a világítás-relé ki). Nincs tranziens.
+4. **Host-oldali tank-mix kereszt-kontamináció:** a TX-en a hardver-mix
+   ki volt kapcsolva (raw stick értékek mentek át), `rc_teleop_node.py`
+   csak CH1/CH2/CH5-re subscribe-ol (nem CH3-ra). A bias közvetlenül a
+   `/robot/motor_left` topic-on mérhető — mielőtt a host feldolgozná.
+5. **CH5 (`rc_mode`) analógia:** CH5 ugyanabban a kábelkötegben és
+   egyidejűleg magas jelet kap RC módban, mégsem okoz bias-t CH2-n.
+   Magyarázat: CH5 impulzusa ~50 ms távolságra van CH2-től a PPM ciklusban
+   (a TX keretsorrend másik végén), tehát az ISR-ek nem esnek egybe.
+
+### Javaslat: diagnosztikus megerősítő patch (1 sor)
+
+`common/src/drivers/drv_pwm_in.c` `rc_pwm_init()` loopjába ideiglenesen:
+
+```c
+for (size_t i = 0; i < n; i++) {
+    if (i == 2) continue;   // SKIP CH3 IRQ regisztrációt — BL-020 diag
+    // ... meglévő setup
+}
+```
+
+Ezzel CH3 callback nem fut; ha a CH2 bias eltűnik aktív CH3 mellett, az
+preemption-bias-t bizonyítja. Ha maradna, szoftveres logikai bug is
+jöhet (kizárja a HW-szintű magyarázatot). Patch alkalmazása + build +
+flash + K1/K2 mérés ismétlés → 15-30 perc, nem destruktív.
+
+### Hosszú távú fix — RP2040 PIO-alapú PWM input capture
+
+Az RP2040 **PIO state machine**-jei deterministic timing capture-t adnak
+GPIO-szintű ISR nélkül: egy SM per csatorna (van 8 SM = 2 PIO × 4 SM),
+8 ns felbontás, CPU-tól függetlenül mér. A Zephyr-ben elérhető a
+`zephyr/drivers/misc/pio_rpi_pico` és a `CONFIG_PIO_RPI_PICO=y` —
+mintaként a soft-UART és az LED-strip driverek használják.
+
+Scope:
+- `common/src/drivers/drv_pwm_in_pio.c` új driver, `pio_rpi_pico` allokátorral.
+- PIO program pulse-width mérésre (falling-edge → counter, rising-edge →
+  capture + reset). Referencia: Adafruit `pico-examples/pio/pwm_input/`.
+- 6 SM-ből 6-ot foglalunk (PIO0 mind a 4 + PIO1 2-ből 2-t); marad 2 SM
+  más drivernek (jelenleg egyik sem használ PIO-t).
+- A `channel_t.read()` DMA-backed ring bufferből olvas — nincs ISR-contention.
+- Regressziós gate: BL-011 `tools/rc_measure.py` std ≤ jelenlegi érték;
+  K1/K2 mérés Δ ≤ 0.005 normalizált (a PWM mérésen belüli maradék zajszint).
+
+### Interim mitigáció (opcionális, ha a PIO fix elhúzódik)
+
+Host-oldal (`rc_teleop_node.py` vagy új filter node):
+- Median filter window=5 a `/robot/motor_left`-on és `/robot/motor_right`-on.
+- Enlarged deadzone: `|v| < 0.10` → 0.0 (jelenleg firmware-ben
+  `deadzone=20 µs ≈ 0.04 normalizált`).
+- Masked kihatás, de precízió-veszteség a finom trim-nél; a bias
+  gyökerét nem kezeli. Dokumentáció alapú workaround, ne commitoljuk
+  tartósan.
+
+### Részleges enyhítés (már commitolva, NEM oldja meg a bias-t)
+
+2026-04-21 este során két javítás bekerült a fába (nem BL-020, hanem a
+diagnózis melléktermékei — zárójelben dokumentálva itt, hogy a BL-020
+fix során ne rontsuk el):
+
+- `apps/rc/boards/w5500_evb_pico.overlay` — `rc_ch1..rc_ch6` GPIO flag
+  `0` → `GPIO_PULL_DOWN`. Kihúzott vezeték esetén a pin `0`-ra húz,
+  nincs floating-jel miatti ISR-storm.
+- `apps/rc/src/rc.c` — `rc_normalize()` elején `rc_pwm_valid()` check,
+  invalid jelnél `ema_initialized = false` + `return 0.0f`. Timeout
+  (`RC_PWM_TIMEOUT_MS = 500`) után a csatorna hard-nullára áll, EMA
+  state nem „ragad be" a kihúzás előtti értéken.
+
+Ezek kizárják a floating-pin mellékhatásokat (fail-safe OK volt a K1/K2
+méréskor: CH1/CH2 kihúzva `/robot/motor_left = 0.000` stabilan).
+
+### Érintett fájlok (várható)
+
+**Diagnosztikus patch (BL-020 Step 1):**
+- `common/src/drivers/drv_pwm_in.c` — ideiglenes `if (i == 2) continue;`
+
+**PIO driver (BL-020 Step 2, hosszú táv):**
+- `common/src/drivers/drv_pwm_in_pio.{c,h}` (új)
+- `apps/rc/prj.conf` — `CONFIG_PIO_RPI_PICO=y`
+- `apps/rc/boards/w5500_evb_pico.overlay` — PIO node bindings
+- `tools/rc_measure.py` — regresszió mérés (meglévő eszköz, nem módosul)
+
+### Definition of Done
+
+- K1/K2 mérés CH2-n: |avg_K2 - avg_K1| < 0.005 normalizált.
+- 10 perc folyamatos RC mód + CH3 aktív → nincs random motor-mozgás
+  (sem bal, sem jobb oldalon), kerekek nyugalomban stickek középen.
+- `tools/rc_measure.py stream 30s` CH3 konstans aktív alatt: CH2 std
+  ≤ 0.010 (jelenlegi idle szint).
+- ERRATA.md új bejegyzés: ERR-034 (RP2040 GPIO bank0 shared IRQ latency
+  — pattern, nem bug; megoldás a PIO-ra áttérés).
+
+### Miért nem fix ma
+
+User explicit döntés 2026-04-21 este: „nem most készítjük el, hanem
+holnap". Safety-impact ismert, de az RC módú motor-használat szünetel
+addig (egyéb módok — learn, follow, auto — nem függnek a CH3-CH2
+interaction-től, a TX CH3 inaktív hagyásával a hiba nem jelentkezik).
 
 ---
 
